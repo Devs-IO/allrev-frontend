@@ -1,15 +1,54 @@
-<div class="container">
-    <h2>Login</h2>
-    <form [formGroup]="loginForm" (ngSubmit)="login()">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" class="form-control" id="email" formControlName="email" required>
+<!-- Section: Design Block -->
+<section class="background-radial-gradient overflow-hidden vh-100">
+  <div class="container h-100 px-4 py-5 px-md-5 text-center text-lg-start">
+    <div class="row gx-lg-5 align-items-center h-100">
+      <div class="col-lg-6 mb-5 mb-lg-0" style="z-index: 10">
+        <h1 class="my-5 display-5 fw-bold ls-tight" style="color: #FFF">
+          Bem-vindo ao Sistema <br />
+          <span style="color: #8D201B">de Gestão</span>
+        </h1>
+        <p class="mb-4 opacity-70" style="color: #DDD">
+          Gerencie seus projetos e tarefas de forma simples e eficiente. Inicie agora!
+        </p>
       </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" formControlName="password" required>
+
+      <div class="col-lg-6 mb-5 mb-lg-0 position-relative">
+        <div id="radius-shape-1" class="position-absolute rounded-circle shadow-5-strong"></div>
+        <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
+
+        <div class="card bg-glass">
+          <div class="card-body px-4 py-5 px-md-5">
+            <form [formGroup]="loginForm" (ngSubmit)="login()">
+
+              <h5 class="mb-4">Faça seu Login</h5>
+
+              <!-- Email input -->
+              <div data-mdb-input-init class="form-outline mb-4">
+                <input type="email" id="email" class="form-control" formControlName="email" required />
+                <label class="form-label" for="email">Endereço de Email</label>
+              </div>
+
+              <!-- Password input -->
+              <div data-mdb-input-init class="form-outline mb-4">
+                <input type="password" id="password" class="form-control" formControlName="password" required />
+                <label class="form-label" for="password">Senha</label>
+              </div>
+
+              <!-- Submit button -->
+              <button type="submit" [disabled]="loginForm.invalid" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block mb-4">
+                Login
+              </button>
+
+              <!-- em casos de dúvidas entre em contato -->
+              <p class="mb-0">Não possui uma conta? <a  href="https://wa.me/5531994298913" target=”_blank” class="text-primary">Entre em contato</a></p>
+
+            </form>
+          </div>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid">Login</button>
-    </form>
+    </div>
   </div>
+</section>
+<!-- Section: Design Block -->
+
   

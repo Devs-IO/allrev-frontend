@@ -1,0 +1,31 @@
+:root {
+    /* Cores principais */
+    --primary-color: #57040F;
+    --secondary-color: #8D201B;
+    --dark-color: #1C1C1C;
+    --light-color: #ffffff;
+  
+    /* Outras configurações */
+    --glass-background: hsla(0, 0%, 100%, 1.9);
+    --blur-effect: 25px;
+  
+    /* Gradientes */
+    --gradient-primary: radial-gradient(var(--secondary-color), var(--primary-color));
+    --gradient-background: radial-gradient(
+        650px circle at 0% 0%,
+        var(--secondary-color) 15%,
+        var(--primary-color) 35%,
+        var(--dark-color) 75%,
+        var(--dark-color) 80%,
+        transparent 100%
+      ),
+      radial-gradient(
+        1250px circle at 100% 100%,
+        var(--secondary-color) 15%,
+        var(--primary-color) 35%,
+        var(--dark-color) 75%,
+        var(--dark-color) 80%,
+        transparent 100%
+      );
+  }
+  
