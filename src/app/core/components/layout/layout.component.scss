@@ -1,22 +1,25 @@
 .main-content {
-    background-color: var(--background-color);
-    height: 100vh;
-    margin-left: 200px; // Garantindo que o conteúdo não sobreponha o sidebar
-    transition: margin-left 0.3s ease-in-out;
-    padding: 20px; // Adicionando um espaçamento para os textos
-  
-    h1 {
-      margin-top: 20px; // Garantindo espaço adequado abaixo do header
+  background-color: var(--background-color);
+  height: calc(100vh - 60px);
+  margin-left: 200px;
+  transition: margin-left 0.3s ease-in-out;
+  padding: 20px;
+  position: relative;
+  top: 60px; // Para considerar o header fixo
+
+  h1 {
+      margin-top: 20px;
       font-size: 1.8rem;
       text-align: center;
-    }
   }
-  
-  /* Quando o sidebar estiver fechado */
-aside.collapsed + .main-content {
-    margin-left: 70px;
-    transition: margin-left 0.3s ease-in-out;
 }
-body:has(aside.collapsed) .main-content {
-    margin-left: 70px;
-  }
+
+/* Quando o sidebar estiver fechado */
+aside.collapsed + .main-content {
+  margin-left: 70px;
+}
+
+.layout-container .collapsed .main-content {
+  margin-left: 70px;
+  background-color: var(--background-color);
+}

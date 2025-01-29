@@ -3,13 +3,21 @@
     color: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    // overflow: hidden;
-    // position: fixed;
+    height: 60px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000; // Garante que fique acima de outros elementos
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
   
     .logo {
       width: 60px;
       height: 60px;
       object-fit: contain; // Ajusta o logo para caber no espaço
+      cursor: pointer; // Adiciona um cursor de clique para indicar interatividade
     }
   
     .company-name {

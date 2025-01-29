@@ -10,7 +10,8 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit {
-  isCollapsed = signal(false); // Estado para controle do menu aberto/fechado
+  collapsed = false;
+  openSubmenus: { [key: string]: boolean } = {};
   activeSubmenu = signal<string | null>(null);
   currentDate = signal(new Date()); // Estado para exibir a data/hora
   userName = signal('Usuário Exemplo'); // Simulando o nome do usuário logado
@@ -23,10 +24,20 @@ export class SidebarComponent implements OnInit {
   }
 
   toggleSidebar() {
-    this.isCollapsed.update(state => !state); // Alterna o estado do menu lateral
+    this.collapsed = !this.collapsed;
   }
 
   toggleSubmenu(menu: string) {
-    this.activeSubmenu.set(this.activeSubmenu() === menu ? null : menu);
+    if (!this.collapsed) {
+      this.openSubmenus[menu] = !this.openSubmenus[menu];
+    }
+  }
+
+  isCollapsed(): boolean {
+    return this.collapsed;
+  }
+
+  isOpen(menu: string): boolean {
+    return this.openSubmenus[menu];
   }
 }

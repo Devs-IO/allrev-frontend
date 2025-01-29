@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -8,20 +8,16 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   selector: 'app-layout',
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, SidebarComponent, /*FooterComponent*/],
-  template: `
-    <div class="layout">
-      <app-sidebar></app-sidebar>
-      
-      <div class="layout-content">
-
-        <div class="main-content">
-        <app-header></app-header>
-          <router-outlet></router-outlet>
-        </div>
-      </div>
-      <!-- <app-footer></app-footer> -->
-    </div>
-  `,
+  templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+
+  sidebarOpen = true;
+  isCollapsed = signal(false); // Estado para menu aberto/fechado
+  
+  toggleSidebar() {
+    this.isCollapsed.update(state => !state); // Alterna o estado do menu lateral
+  }
+
+}

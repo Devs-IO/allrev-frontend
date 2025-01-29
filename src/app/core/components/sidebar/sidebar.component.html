@@ -1,26 +1,27 @@
 <aside [class.collapsed]="isCollapsed()">
 
-    <!-- Home na posição da seta -->
-    <li class="home">
-      <a routerLink="/home">
-        <i class="bi bi-house-door"></i>
-        <span *ngIf="!isCollapsed()">Home</span>
-      </a>
-    </li>
-
     <!-- Botão para expandir/retrair -->
-    <button class="toggle-btn" (click)="toggleSidebar()">
+     <button class="toggle-btn" (click)="toggleSidebar()">
       <i class="bi" [class.bi-arrow-left-circle]="!isCollapsed()" [class.bi-arrow-right-circle]="isCollapsed()"></i>
     </button>
   
     <!-- Menu -->
     <ul class="menu">
+
+      <!-- Home na posição da seta -->
+      <li>
+        <a routerLink="/home">
+          <i class="bi bi-house-door"></i>
+          <span *ngIf="!isCollapsed()">Home</span>
+        </a>
+      </li>
+
   
       <li>
         <a routerLink="/products" class="has-submenu">
           <i class="bi bi-box"></i>
           <span *ngIf="!isCollapsed()">Produtos</span>
-          <i class="bi bi-chevron-down submenu-icon"></i>
+          <i class="bi bi-chevron-down submenu-icon arrow"></i>
         </a>
         <ul class="submenu">
           <li><a routerLink="/products" class="has-submenu"><i class="bi bi-plus-circle"></i> <span *ngIf="!isCollapsed()">Cadastrar</span></a></li>
@@ -33,7 +34,7 @@
         <a routerLink="/customers" class="has-submenu">
           <i class="bi bi-people"></i>
           <span *ngIf="!isCollapsed()">Clientes</span>
-          <i class="bi bi-chevron-down submenu-icon"></i>
+          <i class="bi bi-chevron-down submenu-icon arrow"></i>
         </a>
         <ul class="submenu">
           <li><a routerLink="/customers"><i class="bi bi-person-plus"></i> <span *ngIf="!isCollapsed()">Novo Cliente</span></a></li>
@@ -45,7 +46,7 @@
         <a routerLink="/reports" class="has-submenu">
           <i class="bi bi-bar-chart"></i>
           <span *ngIf="!isCollapsed()">Relatórios</span>
-          <i class="bi bi-chevron-down submenu-icon"></i>
+          <i class="bi bi-chevron-down submenu-icon arrow"></i>
         </a>
         <ul class="submenu">
           <li><a routerLink="/reports"><i class="bi bi-cash"></i> <span *ngIf="!isCollapsed()">Financeiro</span></a></li>
