@@ -13,11 +13,10 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 })
 export class LayoutComponent {
 
-  sidebarOpen = true;
-  isCollapsed = signal(false); // Estado para menu aberto/fechado
+  isCollapsed = signal(true); // Estado do menu lateral
   
   toggleSidebar() {
-    this.isCollapsed.update(state => !state); // Alterna o estado do menu lateral
+    this.isCollapsed.update(state => !state); // Alterna o estado
   }
 
 }

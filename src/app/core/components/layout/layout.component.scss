@@ -1,24 +1,49 @@
+// .layout-content {
+//   display: flex;
+//   transition: all 0.3s ease-in-out;
+//   background-color: var(--secondary-color );
+//   color: black;
+
+//   .main-content {
+//     flex-grow: 1;
+//     margin-left: 200px;
+//     transition: margin-left 0.3s ease-in-out;
+//   }
+
+//   &.collapsed {
+//     .main-content {
+//       margin-left: 40px; // Ajusta conforme a sidebar fechada
+//     }
+//   }
+// }
+
 .layout-content {
+  // display: flex;
+  position: relative;
+  height: calc(100vh - 60px); // Considerando o header fixo
+  transition: all 0.7s ease-in-out;
+  top: 60px; // Ajusta conforme o header fixo
+  margin-left: 40px; // Ajusta conforme a sidebar aberta
+  width: calc(100% - 40px); // Ajusta conforme a sidebar aberta
   background-color: var(--background-color);
-  height: calc(100vh - 60px);
-  top: 60px; // Para considerar o header fixo
-  // margin-left: 200px;
-  // transition: margin-left 0.3s ease-in-out;
-  // padding: 20px;
-   position: relative;
 
-
-  h1 {
-    margin-top: 20px;
-    font-size: 1.8rem;
-    text-align: center;
+  app-sidebar {
+    flex-shrink: 0; // Sidebar não reduz além do tamanho definido
   }
 
   .main-content {
-    width: 100%;
-    background-color: var(--background-color);
+    flex-grow: 1; // Garante que ocupe todo o espaço disponível
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    overflow: auto; // Evita que conteúdo fique escondido
+  }
+
+  &.collapsed {
+    .main-content {
+      margin-left: 160px; // Ajusta quando sidebar fechada
+      width: calc(100% - 160px); // Ajusta quando sidebar fechada
+      transition: all 0.7s ease-in-out;
+    }
   }
 }

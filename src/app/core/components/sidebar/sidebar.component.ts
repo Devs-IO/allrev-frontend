@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from  '@angular/common'; 
 import { RouterModule } from '@angular/router';
 
@@ -10,7 +10,9 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit {
-  collapsed = false;
+  @Output() toggle = new EventEmitter<void>(); // Emite evento ao alternar
+  
+  collapsed = true; // Estado do menu lateral
   openSubmenus: { [key: string]: boolean } = {};
   activeSubmenu = signal<string | null>(null);
   currentDate = signal(new Date()); // Estado para exibir a data/hora
@@ -25,6 +27,7 @@ export class SidebarComponent implements OnInit {
 
   toggleSidebar() {
     this.collapsed = !this.collapsed;
+    this.toggle.emit(); // Dispara evento para atualizar layout
   }
 
   toggleSubmenu(menu: string) {
