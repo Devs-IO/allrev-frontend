@@ -5,7 +5,12 @@ import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { JwtModule, JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { jwtInterceptor } from './app/services/jwt.interceptor'; // Supondo que você tenha um interceptor
+import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
+import { provideStore } from '@ngrx/store'; // Supondo que você tenha um interceptor
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { appReducers } from './app/core/state/app.state';
+import { provideEffects } from '@ngrx/effects';
+import { AuthEffects } from './app/core/state/auth/auth.effects';
 
 // Função para fornecer as opções de configuração do JWT
 export function jwtOptionsFactory() {
@@ -19,15 +24,22 @@ export function jwtOptionsFactory() {
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes), // Registrar as rotas
+    provideStore(appReducers), // Configura os reducers
+    provideEffects([AuthEffects]), // Adiciona os efeitos (vazio inicialmente)
     provideHttpClient(withInterceptors([jwtInterceptor])), // Configurar HttpClient com interceptor
     FormsModule, // Formulários template-driven
     ReactiveFormsModule, // Formulários reativos
     {
-      provide: JWT_OPTIONS,
-      useValue: JWT_OPTIONS, // Usar o valor padrão
-      useFactory: jwtOptionsFactory,
+        provide: JWT_OPTIONS,
+        useValue: JWT_OPTIONS, // Usar o valor padrão
+        useFactory: jwtOptionsFactory,
     }, // Configuração do JWT_OPTIONS
     JwtModule, // Registrar o JwtModule diretamente, sem .forRoot
-    JwtHelperService, // Registrar o JwtHelperService
-  ],
+    JwtHelperService,
+    provideStore(),
+    provideStoreDevtools({
+      maxAge: 25, // Limita o histórico de ações
+      //logOnly: !environment.production, // Apenas visualização em produção
+    }),
+],
 }).catch((err) => console.error(err));

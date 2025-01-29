@@ -1,0 +1,22 @@
+.main-content {
+    background-color: var(--background-color);
+    height: 100vh;
+    margin-left: 200px; // Garantindo que o conteúdo não sobreponha o sidebar
+    transition: margin-left 0.3s ease-in-out;
+    padding: 20px; // Adicionando um espaçamento para os textos
+  
+    h1 {
+      margin-top: 20px; // Garantindo espaço adequado abaixo do header
+      font-size: 1.8rem;
+      text-align: center;
+    }
+  }
+  
+  /* Quando o sidebar estiver fechado */
+aside.collapsed + .main-content {
+    margin-left: 70px;
+    transition: margin-left 0.3s ease-in-out;
+}
+body:has(aside.collapsed) .main-content {
+    margin-left: 70px;
+  }

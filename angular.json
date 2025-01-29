@@ -29,11 +29,19 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
               }
             ],
             "styles": [
               "src/styles.scss",
-              "node_modules/bootstrap/dist/css/bootstrap.min.css"
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "src/styles/variables.scss",
+              "src/styles/main.scss",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css"
             ],
             "scripts": ["node_modules/@fortawesome/fontawesome-free/js/all.min.js"]
           },
@@ -98,7 +106,10 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/styles/variables.scss",
+              "src/styles/main.scss",
+              "node_modules/bootstrap-icons/font/bootstrap-icons.css"
             ],
             "scripts": ["node_modules/@fortawesome/fontawesome-free/js/all.min.js"]
           }

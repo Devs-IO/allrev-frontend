@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { map } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

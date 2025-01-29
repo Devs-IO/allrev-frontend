@@ -1,0 +1,134 @@
+aside {
+    width: 200px;
+    height: 100vh;
+    position: fixed;
+    // top: 75px; // Agora ele fica abaixo do header
+    left: 0;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease-in-out;
+    overflow: hidden;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+
+    list-style: none;
+    .home {
+        a {
+            text-decoration: none;
+            color: white;
+            padding: 9px 7%;
+            padding-left: 9px;
+            display: flex;            
+            i {
+                font-size: 1rem;
+                margin-right: 9px;
+            }
+        }
+
+        &:hover {
+            background-color: var(--primary-color-dark);
+        }
+    }
+
+    /* Corrigindo o posicionamento do botão de alternância */
+    .toggle-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.0rem;
+        padding: 5px;
+        cursor: pointer;
+        position: absolute;
+        /* Alterado para absolute */
+        top: 5px;
+        /* Alinhando a setinha ao topo */
+        right: 5px;
+        /* Ajuste fino para garantir o alinhamento */
+    }
+
+    .menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-grow: 1;
+
+        li {
+            a {
+                display: flex;
+                padding: 3px 4%;
+                text-decoration: none;
+                color: white;
+                transition: background 0.3s;
+
+                i {
+                    font-size: 1rem;
+                    margin-right: 8px;
+                    margin-left: 8px;
+                }
+
+                &:hover {
+                    background-color: var(--primary-color-dark);
+                }
+            }
+
+            .submenu {
+                display: none;
+                list-style: none;
+                padding-left: 20px;
+
+                &.active {
+                    display: block;
+                }
+
+                li a {
+                    display: flex;
+
+                    &:hover {
+                        background-color: var(--secondary-color);
+                    }
+                }
+            }
+
+            &:hover .submenu {
+                display: block;
+            }
+        }
+    }
+
+    .sidebar-footer {
+        background: var(--primary-color-dark);
+        text-align: center;
+        font-size: 1rem;
+        padding: 5px 7%;
+        bottom: 0;
+        width: 100%;
+
+
+
+        .user-info,
+        .datetime {
+            display: flex;
+            align-items: center;
+        }
+
+        i {
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+    }
+}
+
+/* Estilo quando fechado */
+aside.collapsed {
+    width: 90px;
+
+    .menu li a span,
+    .sidebar-footer span {
+        display: none;
+    }
+
+    // .menu li a {
+    //     justify-content: center;
+    // }
+}
