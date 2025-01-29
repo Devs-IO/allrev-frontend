@@ -23,6 +23,7 @@ aside {
         align-self: flex-end;
     }
 
+    /* Menu e SubMenu */
     .menu {
         list-style: none;
         padding: 0;
@@ -30,18 +31,22 @@ aside {
         flex-grow: 1;
 
         li {
+
+            /* Estilo do item do menu */
             a {
                 display: flex;
                 padding: 3px 4%;
                 text-decoration: none;
                 color: white;
-                transition: background 0.3s;
-                margin-left: 8px;
+                transition: background 0.7s;
+                padding-left: 8px;
 
-                .arrow {
-                    display: flex;                
+                .submenu-icon {
+                    margin-left: auto; // Alinha a setinha à direita
+                    transition: transform 0.7s ease-in-out;
+                    align-self: flex-end;
                 }
-                
+
                 i {
                     font-size: 1rem;
                     margin-right: 8px;
@@ -53,15 +58,12 @@ aside {
 
             }
 
+            /* Submenu */
             .submenu {
                 display: none;
                 list-style: none;
                 padding-left: 20px;
-                position: absolute;
-                left: 100%; // Aparece ao lado do menu
-                top: 0;
                 background-color: var(--primary-color-dark);
-                width: 180px;
                 box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 
                 &.active {
@@ -79,21 +81,26 @@ aside {
                 }
             }
 
+            /* Submenu aparece quando passa o mouse */
             &:hover .submenu {
                 display: block;
             }
 
-            .submenu-icon {
-                margin-left: auto; // Alinha a setinha à direita
-                transition: transform 0.3s ease-in-out;
-            }
-
-            &.open .submenu-icon {
+            /* Animação da setinha */
+            &:hover .submenu-icon {
                 transform: rotate(180deg);
             }
+
+            /* Submenu ativo */
+            &:hover {
+                background-color: var(--primary-color-dark);
+            }
+
+
         }
     }
 
+    /* Footer */
     .sidebar-footer {
         background: var(--primary-color-dark);
         text-align: center;
@@ -126,15 +133,34 @@ aside.collapsed {
         display: none;
     }
 
-    .menu li a .arrow {
+    .menu li a .submenu-icon {
         display: none;
     }
 
+    // .menu li {
+    //     position: relative; /* Permite que o submenu se posicione corretamente */
+    // }
+
+
+    // .menu li:hover .submenu {
+    //     display: block;
+    //     position: absolute;
+    //     // left: 100%; /* Faz o submenu aparecer ao lado da sidebar */
+    //     // top: 0;
+    //     min-width: 180px;
+    //     background-color: var(--primary-color-dark);
+    //     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    //     z-index: 100; /* Garante que fique acima de outros elementos */
+    // }
+
+    /*  submenu não aparece quando está fechado o sidebar */
     .menu li .submenu {
+        display: block;
+        align-self: flex-end;
         position: absolute;
         left: 70px;
         top: 0;
-        width: 150px;
+        width: 180px;
     }
 
 }
