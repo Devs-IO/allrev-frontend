@@ -1,6 +1,7 @@
 import { Component, signal, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from  '@angular/common'; 
 import { RouterModule } from '@angular/router';
+import { interval, map, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,22 +18,34 @@ export class SidebarComponent implements OnInit {
   activeSubmenu = signal<string | null>(null);
   currentDate = signal(new Date()); // Estado para exibir a data/hora
   userName = signal('Usuário Exemplo'); // Simulando o nome do usuário logado
+  private destroy$ = new Subject<void>();
 
   ngOnInit() {
     // Atualiza a hora a cada segundo
-    setInterval(() => {
-      this.currentDate.set(new Date());
-    }, 1000);
+    interval(1000)
+      .pipe(
+        map(() => new Date()),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(date => this.currentDate.set(date));
   }
 
   toggleSidebar() {
     this.collapsed = !this.collapsed;
     this.toggle.emit(); // Dispara evento para atualizar layout
+
+    console.log('Menu lateral:', this.collapsed ? 'fechado' : 'aberto');
+    // Se o menu for fechado, limpa os submenus abertos
+    if (this.collapsed) {
+      this.activeSubmenu.set(null);
+    }
   }
 
   toggleSubmenu(menu: string) {
     if (!this.collapsed) {
-      this.openSubmenus[menu] = !this.openSubmenus[menu];
+      this.activeSubmenu.set(
+        this.activeSubmenu() === menu ? null : menu
+      );
     }
   }
 
@@ -41,6 +54,11 @@ export class SidebarComponent implements OnInit {
   }
 
   isOpen(menu: string): boolean {
-    return this.openSubmenus[menu];
+    return this.activeSubmenu() === menu;
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

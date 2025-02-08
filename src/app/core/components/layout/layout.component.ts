@@ -13,7 +13,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 })
 export class LayoutComponent {
 
-  isCollapsed = signal(false); // Estado do menu lateral
+  isCollapsed = signal(true); // Estado do menu lateral
   
   toggleSidebar() {
     this.isCollapsed.update(state => !state); // Alterna o estado

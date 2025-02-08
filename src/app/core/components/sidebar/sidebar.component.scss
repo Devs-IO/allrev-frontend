@@ -61,6 +61,8 @@ aside {
             /* Submenu */
             .submenu {
                 display: none;
+                transition: opacity 0.7s ease-in-out;
+                opacity: 0;
                 list-style: none;
                 padding-left: 20px;
                 background-color: var(--primary-color-dark);
@@ -68,6 +70,7 @@ aside {
 
                 &.active {
                     display: block;
+                    opacity: 1;
                 }
 
                 li a {
@@ -138,6 +141,26 @@ aside.collapsed {
         display: none;
     }
 
+    
+    .submenu {
+        transition: width 0.7s ease-in-out;
+        display: none !important; // Oculta imediatamente
+    }
+
+    /*  submenu não aparece quando está fechado o sidebar */
+    .menu li .submenu {
+        display: block;
+        align-self: flex-end;
+        position: absolute;
+        left: 70px;
+        top: 0;
+        width: 180px;
+
+        &.active {
+            display: block;
+        }
+    }
+
     // .menu li {
     //     position: relative; /* Permite que o submenu se posicione corretamente */
     // }
@@ -154,14 +177,15 @@ aside.collapsed {
     //     z-index: 100; /* Garante que fique acima de outros elementos */
     // }
 
-    /*  submenu não aparece quando está fechado o sidebar */
-    .menu li .submenu {
-        display: block;
-        align-self: flex-end;
-        position: absolute;
-        left: 70px;
-        top: 0;
-        width: 180px;
-    }
+    // aside.collapsed .menu li:hover .submenu {
+    //     display: block;
+    //     position: absolute;
+    //     left: 40px;  // Para evitar sobreposição com o sidebar fechado
+    //     top: 0;
+    //     background-color: var(--primary-color-dark);
+    //     z-index: 100;
+    //     width: 180px;
+    //     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    // }
 
 }
