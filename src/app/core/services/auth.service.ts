@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { UserProfile } from '../interfaces/user-profile.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -67,6 +68,10 @@ export class AuthService {
   isAuthenticated() {
     const token = this.getToken();
     return token && !this.jwtHelper.isTokenExpired(token);
+  }
+
+  getUserProfile(): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${this.apiUrl}/user/me`);
   }
 
   // Configura a renovação automática do token

@@ -1,0 +1,48 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--secondary-background-color);
+
+  h1 {
+    color: var(--primary-color);
+  }
+
+  .card {
+    border-radius: 10px;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column; /* Faz com que o conteúdo ocupe toda a altura do card */
+    min-height: 280px; /* Ajuste o valor conforme necessário */
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .card-body {
+    flex: 1; /* Faz o conteúdo da card ocupar todo o espaço disponível */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Para garantir que o botão fique no final */
+  }
+
+  .card:hover {
+    transform: scale(1.05);
+  }
+
+  /* Centralizar os ícones e aumentar o tamanho */
+  .card i {
+    font-size: 3rem; /* Ajuste o tamanho conforme necessário */
+    margin-bottom: 15px; /* Espaço entre o ícone e o conteúdo do card */
+    display: block;
+    text-align: center;
+  }
+
+  /* Estilo para o botão */
+  .btn-primary {
+    width: 100%;
+    background-color: var(--primary-color);
+    border: none; /* Remover borda */
+    outline: none; /* Remover borda azul ao focar */
+    margin-top: auto; /* Fixar o botão no final do card */
+  }
+}

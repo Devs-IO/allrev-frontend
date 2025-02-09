@@ -1,68 +1,85 @@
-<aside [class.collapsed]="isCollapsed()">
+<aside id="sidebarMenu" class="sidebar collapse show" [class.collapsed]="isCollapsed()">
 
-  <!-- Botão para expandir/retrair -->
-  <button class="toggle-btn" (click)="toggleSidebar()">
-    <i class="bi" [class.bi-arrow-left-circle]="!isCollapsed()" [class.bi-arrow-right-circle]="isCollapsed()"></i>
-  </button>
+  <!-- 🔹 Botão de Expandir/Retrair -->
+  <div class="toggle-container">
+    <button class="btn toggle-btn" (click)="toggleSidebar()">
+      <i class="bi" [class.bi-arrow-left-circle]="!isCollapsed()" [class.bi-arrow-right-circle]="isCollapsed()"></i>
+    </button>
+  </div>
 
   <!-- Menu -->
-  <ul class="menu">
-
-    <!-- Home na posição da seta -->
+  <ul class="menu nav flex-column">
+    <!-- Home -->
     <li>
-      <a routerLink="/home">
-        <i class="bi bi-house-door"></i>
+      <a routerLink="/home" class="nav-link">
+        <i class="bi bi-house-door me-2"></i>
         <span *ngIf="!isCollapsed()">Home</span>
       </a>
     </li>
 
-
+    <!-- Produtos -->
     <li>
-      <a routerLink="/products" class="has-submenu" (click)="toggleSubmenu('products')">
-        <i class="bi bi-box"></i>
-        <span *ngIf="!isCollapsed()">Produtos</span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('reports')"></i>
+      <a routerLink="/products" class="nav-link d-flex justify-content-between align-items-center"
+        (click)="toggleSubmenu('products')">
+        <span>
+          <i class="bi bi-box me-2"></i>
+          <span *ngIf="!isCollapsed()">Produtos</span>
+        </span>
+        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('products')"></i>
       </a>
-      <ul class="submenu" [class.active]="isOpen('products')">
-        <li><a routerLink="/products" class="has-submenu"><i class="bi bi-plus-circle"></i> <span
-              *ngIf="!isCollapsed()">Cadastrar</span></a></li>
-        <li><a routerLink="/products" class="has-submenu"><i class="bi bi-list"></i> <span
-              *ngIf="!isCollapsed()">Listar</span></a></li>
-        <li><a routerLink="/products" class="has-submenu"><i class="bi bi-tags"></i> <span
-              *ngIf="!isCollapsed()">Categorias</span></a></li>
+      <ul class="submenu nav flex-column" [class.active]="isOpen('products')">
+        <li><a routerLink="/products" class="nav-link"><i class="bi bi-plus-circle me-2"></i> <span
+          *ngIf="!isCollapsed()">Cadastrar</span></a></li>
+        <li><a routerLink="/products" class="nav-link"><i class="bi bi-list me-2"></i> <span
+          *ngIf="!isCollapsed()">Listar</span></a></li>
+        <li><a routerLink="/products" class="nav-link"><i class="bi bi-tags me-2"></i> <span
+          *ngIf="!isCollapsed()">Categorias</span></a></li>
       </ul>
     </li>
 
+    <!-- Clientes -->
     <li>
-      <a routerLink="/customers" class="has-submenu" (click)="toggleSubmenu('customers')">
-        <i class="bi bi-people"></i>
-        <span *ngIf="!isCollapsed()">Clientes</span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('reports')"></i>
+      <a routerLink="/customers" class="nav-link d-flex justify-content-between align-items-center"
+        (click)="toggleSubmenu('customers')">
+        <span>
+          <i class="bi bi-people me-2"></i>
+          <span *ngIf="!isCollapsed()">Clientes</span>
+        </span>
+        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('customers')"></i>
       </a>
-      <ul class="submenu" [class.active]="isOpen('customers')">
-        <li><a routerLink="/customers"><i class="bi bi-person-plus"></i> <span *ngIf="!isCollapsed()">Novo
-              Cliente</span></a></li>
-        <li><a routerLink="/customers"><i class="bi bi-people"></i> <span *ngIf="!isCollapsed()">Todos os
-              Clientes</span></a></li>
+      <ul class="submenu nav flex-column" [class.active]="isOpen('customers')">
+        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-person-plus me-2"></i> <span
+              *ngIf="!isCollapsed()">Novo Cliente</span></a></li>
+        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-people me-2"></i> <span
+              *ngIf="!isCollapsed()">Todos os Clientes</span></a></li>
       </ul>
     </li>
 
+    <!-- Relatórios -->
     <li>
-      <a routerLink="/reports" class="has-submenu" (click)="toggleSubmenu('reports')">
-        <i class="bi bi-bar-chart"></i>
-        <span *ngIf="!isCollapsed()">Relatórios</span>
+      <a routerLink="/reports" class="nav-link d-flex justify-content-between align-items-center"
+        (click)="toggleSubmenu('reports')">
+        <span>
+          <i class="bi bi-bar-chart me-2"></i>
+          <span *ngIf="!isCollapsed()">Relatórios</span>
+        </span>
         <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('reports')"> </i>
       </a>
-      <ul class="submenu" [class.active]="isOpen('reports')">
-        <li><a routerLink="/reports"><i class="bi bi-cash"></i> <span *ngIf="!isCollapsed()">Financeiro</span></a></li>
-        <li><a routerLink="/reports"><i class="bi bi-graph-up"></i> <span *ngIf="!isCollapsed()">Vendas</span></a></li>
+      <ul class="submenu nav flex-column" [class.active]="isOpen('reports')">
+        <li><a routerLink="/reports" class="nav-link"><i class="bi bi-cash"></i> <span
+              *ngIf="!isCollapsed()">Financeiro</span></a></li>
+        <li><a routerLink="/reports" class="nav-link"><i class="bi bi-graph-up"></i> <span
+              *ngIf="!isCollapsed()">Vendas</span></a></li>
       </ul>
     </li>
 
+    <!-- Configurações -->
     <li>
-      <a routerLink="/settings">
-        <i class="bi bi-gear"></i>
-        <span *ngIf="!isCollapsed()">Configurações</span>
+      <a routerLink="/settings" class="nav-link d-flex justify-content-between align-items-center">
+        <span>
+          <i class="bi bi-gear"></i>
+          <span *ngIf="!isCollapsed()">Configurações</span>
+        </span>
       </a>
     </li>
   </ul>
@@ -70,11 +87,11 @@
   <!-- Rodapé -->
   <div class="sidebar-footer">
     <div class="user-info">
-      <i class="bi bi-person-circle"></i>
-      <span *ngIf="!isCollapsed()">{{ userName() }}</span>
+      <i class="bi bi-person-circle me-2"></i>
+      <span *ngIf="!isCollapsed()">{{ userEmail() || 'Carregando...' }}</span>
     </div>
     <div class="datetime">
-      <i class="bi bi-clock"></i>
+      <i class="bi bi-clock me-2"></i>
       <span *ngIf="!isCollapsed()">{{ currentDate().toLocaleString() }}</span>
     </div>
   </div>
