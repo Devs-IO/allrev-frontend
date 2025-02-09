@@ -43,7 +43,10 @@
               "src/styles/main.scss",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css"
             ],
-            "scripts": ["node_modules/@fortawesome/fontawesome-free/js/all.min.js"]
+            "scripts": [
+              "node_modules/@fortawesome/fontawesome-free/js/all.min.js",
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -111,7 +114,10 @@
               "src/styles/main.scss",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css"
             ],
-            "scripts": ["node_modules/@fortawesome/fontawesome-free/js/all.min.js"]
+            "scripts": [
+              "node_modules/@fortawesome/fontawesome-free/js/all.min.js",
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ]
           }
         }
       }

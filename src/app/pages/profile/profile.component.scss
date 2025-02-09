@@ -1,0 +1,75 @@
+.profile-container {
+    background-color: var(--background-color);
+  }
+  
+  .profile-card {
+    border-radius: .5rem;
+  }
+  
+  .gradient-custom {
+    /* fallback for old browsers */
+    background: var(--primary-color);;
+    
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(to right bottom, #be6460, #57040F);
+    
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: linear-gradient(to right bottom, #be6460, #57040F);
+    
+    border-top-left-radius: .5rem;
+    border-bottom-left-radius: .5rem;
+    padding: 20px 10px;
+  }
+  
+  .profile-img {
+    width: 80px;
+    border-radius: 50%;
+  }
+  
+  .profile-header {
+    position: relative;
+  
+    .edit-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      color: white;
+      font-size: 14px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      transition: 0.3s;
+  
+      &:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+  
+  .card-body {
+    h6 {
+      color: #333;
+      font-weight: bold;
+    }
+  
+    p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+  
+    .fa-lg {
+      color: #666;
+      transition: 0.3s;
+  
+      &:hover {
+        color: var(--primary-color);
+      }
+    }
+  }
+  

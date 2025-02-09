@@ -1,22 +1,18 @@
 <header class="app-header d-flex align-items-center justify-content-between px-3 py-2">
-    <!-- Logo e Nome da Empresa -->
-    <div class="d-flex align-items-center">
-      <a routerLink="/home" class="logo me-2">
-        <img
-          src="assets/logo_.png"
-          alt="Logo"
-          class="logo me-2"
-        />
-      </a>
-      <!-- <span class="company-name fw-bold">AllRev</span> -->
-    </div>
+  <div class="d-flex align-items-center">
+    <a routerLink="/home" class="logo me-2">
+      <img src="assets/logo_.png" alt="Logo" class="logo me-2" />
+    </a>
+  </div>
+
+  <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="bi bi-person-circle me-2"></i> {{ userName }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+      <li><a class="dropdown-item" routerLink="/profile">Perfil</a></li>
+      <li><button class="dropdown-item" (click)="logout()">Sair</button></li>
+    </ul>
+  </div>
   
-    <!-- Menu do Usuário -->
-    <div class="user-menu d-flex align-items-center">
-      <button class="btn btn-primary d-flex align-items-center px-3 py-2">
-        <i class="bi bi-person-circle me-2"></i>
-        <span>Usuário</span>
-      </button>
-    </div>
-  </header>
-  
+</header>

@@ -1,48 +1,53 @@
 .app-header {
-    background-color: var(--primary-color-dark); // Cor de fundo escura definida diretamente na variável CSS
-    color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
+  background-color: var(--primary-color-dark);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 60px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+
+  .logo {
+    width: 60px;
     height: 60px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000; // Garante que fique acima de outros elementos
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-  
-    .logo {
-      width: 60px;
-      height: 60px;
-      object-fit: contain; // Ajusta o logo para caber no espaço
-      cursor: pointer; // Adiciona um cursor de clique para indicar interatividade
-    }
-  
-    .company-name {
-      font-size: 1.5rem;
-      font-family: var(--primary-font); // Aplicando uma fonte mais bonita
-      letter-spacing: 1px;
-    }
-  
-    .user-menu {
-      button {
-        color: white;
-        background-color: var(--primary-color); // Cor padrão do botão
-        border: none;
+    object-fit: contain;
+    cursor: pointer;
+  }
+
+  .dropdown {
+    .btn {
+      background-color: var(--primary-color); // Mantendo a cor padrão
+      border: none;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+
+      i {
         font-size: 1rem;
-        display: flex;
-        align-items: center;
-  
-        i {
-          font-size: 1rem; // Ícone maior para destaque
-        }
-  
-        &:hover {
-          background-color: var(--secondary-color); // Define uma cor mais escura diretamente da variável CSS
-        }
+      }
+
+      &:hover {
+        background-color: var(--secondary-color);
+      }
+    }
+
+    .dropdown-menu {
+      background-color: var(--bs-light);
+      border: 1px solid var(--bs-gray-300);
+    }
+
+    .dropdown-item {
+      color: var(--bs-dark);
+      &:hover {
+        background-color: var(--bs-primary);
+        color: var(--bs-light);
       }
     }
   }
-  
+}

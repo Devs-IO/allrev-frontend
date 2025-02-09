@@ -1,5 +1,6 @@
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
@@ -11,6 +12,7 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { appReducers } from './app/core/state/app.state';
 import { provideEffects } from '@ngrx/effects';
 import { AuthEffects } from './app/core/state/auth/auth.effects';
+import { AuthInterceptor } from './app/core/interceptors/auth.interceptor';
 
 // Função para fornecer as opções de configuração do JWT
 export function jwtOptionsFactory() {
@@ -27,6 +29,11 @@ bootstrapApplication(AppComponent, {
     provideStore(appReducers), // Configura os reducers
     provideEffects([AuthEffects]), // Adiciona os efeitos (vazio inicialmente)
     provideHttpClient(withInterceptors([jwtInterceptor])), // Configurar HttpClient com interceptor
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
     FormsModule, // Formulários template-driven
     ReactiveFormsModule, // Formulários reativos
     {
@@ -41,5 +48,5 @@ bootstrapApplication(AppComponent, {
       maxAge: 25, // Limita o histórico de ações
       //logOnly: !environment.production, // Apenas visualização em produção
     }),
-],
+  ],
 }).catch((err) => console.error(err));
