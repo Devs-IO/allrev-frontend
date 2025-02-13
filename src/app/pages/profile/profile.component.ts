@@ -14,6 +14,7 @@ import { HttpClientModule } from '@angular/common/http';
 })
 export class ProfileComponent implements OnInit {
   private authService = inject(AuthService);
+  
   user: UserProfile = {
     id: '',
     name: '',
@@ -41,5 +42,18 @@ export class ProfileComponent implements OnInit {
 
   editProfile() {
     alert('Função de edição ainda não implementada.');
+  }
+
+  calculateDaysToDue(dueDate: string | Date): number {
+    if (!dueDate) return 0;
+  
+    const today = new Date();
+    const due = new Date(dueDate);
+    
+    // Diferença em milissegundos
+    const diff = due.getTime() - today.getTime();
+    
+    // Converter para dias
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 }

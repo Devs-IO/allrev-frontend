@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import * as bootstrap from 'bootstrap';
+
 
 @Component({
   selector: 'app-root',
@@ -16,5 +18,11 @@ export class AppComponent implements OnInit {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']); // Redireciona para login se não autenticado
     }
+  }
+
+  ngAfterViewInit(): void {
+    document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
+      new bootstrap.Dropdown(dropdown);
+    });
   }
 }

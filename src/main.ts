@@ -13,6 +13,7 @@ import { appReducers } from './app/core/state/app.state';
 import { provideEffects } from '@ngrx/effects';
 import { AuthEffects } from './app/core/state/auth/auth.effects';
 import { AuthInterceptor } from './app/core/interceptors/auth.interceptor';
+import { PhoneMaskPipe } from './app/core/pipe/phone-mask.pipe';
 
 // Função para fornecer as opções de configuração do JWT
 export function jwtOptionsFactory() {

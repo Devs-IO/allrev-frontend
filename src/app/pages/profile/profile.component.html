@@ -1,14 +1,23 @@
 <section class="vh-100 profile-container">
   <div class="container py-5 h-100">
     <div class="row d-flex justify-content-center align-items-center h-100">
-      <div class="col col-lg-6 mb-4 mb-lg-0">
+      <div class="col col-lg-10 mb-4 mb-lg-0">
         <div class="card mb-3 profile-card">
           <div class="row g-0">
             <div class="col-md-4 gradient-custom text-center text-white profile-header">
-              <img [src]="user.photo || 'assets/avatar-default.svg'" 
-                   alt="Foto de {{ user.name }}" class="img-fluid my-5 profile-img" />
+              <div class="profile-img-container">
+                <img *ngIf="user.photo; else defaultIcon" [src]="user.photo" 
+                     alt="Foto de {{ user.name }}" class="img-fluid my-5 profile-img" />
+                <ng-template #defaultIcon>
+                  <i class="bi bi-person-circle profile-icon"></i>
+                </ng-template>
+              </div>
               <h5>{{ user.name }}</h5>
               <p>{{ user.role }}</p>
+              <p>
+                <i class="bi" [ngClass]="user.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
+                {{ user.isActive ? 'Ativo' : 'Inativo' }}
+              </p>
               <button class="edit-btn" (click)="editProfile()">
                 <i class="bi bi-pencil-fill"></i>
               </button>
@@ -18,57 +27,59 @@
                 <h6>Informações</h6>
                 <hr class="mt-0 mb-4">
                 <div class="row pt-1">
-                  <div class="col-6 mb-3">
-                    <h6>Email</h6>
+                  <div class="col-4 mb-3">
+                    <h6><i class="bi bi-envelope-fill"></i> Email</h6>
                     <p class="text-muted">{{ user.email }}</p>
                   </div>
-                  <div class="col-6 mb-3">
-                    <h6>Telefone</h6>
-                    <p class="text-muted">{{ user.phone || 'Não informado' }}</p>
+                  <div class="col-4 mb-3">
+                    <h6><i class="bi bi-telephone-fill"></i> Telefone</h6>
+                    <p class="text-muted">{{ user.phone ? user.phone : 'Não informado' }}</p>
                   </div>
-                  <div class="col-6 mb-3">
-                    <h6>Endereço</h6>
+                  <div class="col-4 mb-3">
+                    <h6><i class="bi bi-geo-alt-fill"></i> Endereço</h6>
                     <p class="text-muted">{{ user.address || 'Não informado' }}</p>
                   </div>
-                  <div class="col-6 mb-3">
-                    <h6>Status</h6>
-                    <p class="text-muted">{{ user.isActive ? 'Ativo' : 'Inativo' }}</p>
-                  </div>
-                  <div class="col-6 mb-3">
-                    <h6>Criado em</h6>
-                    <p class="text-muted">{{ user.createdAt | date:'dd/MM/yyyy' }}</p>
-                  </div>
                 </div>
-
                 <h6>Empresa</h6>
                 <hr class="mt-0 mb-4">
                 <div class="row pt-1">
-                  <div class="col-12 mb-3">
+                  <div class="col-6 mb-3">
                     <h6>Nome</h6>
                     <p class="text-muted">{{ user.tenantCompanyName }}</p>
                   </div>
                   <div class="col-6 mb-3">
                     <h6>Código</h6>
-                    <p class="text-muted">{{ user.tenantCode }}</p>
+                    <p class="text-uppercase text-primary fw-bold">{{ user.tenantCode }}</p>
                   </div>
                   <div class="col-6 mb-3">
                     <h6>Status de Pagamento</h6>
-                    <p class="text-muted">{{ user.tenantPaymentStatus }}</p>
+                    <p class="text-muted">
+                      <i class="bi" [ngClass]="user.tenantPaymentStatus === 'paid' ? 'bi-cash text-success' : 'bi-exclamation-circle text-danger'"></i>
+                      {{ user.tenantPaymentStatus === 'paid' ? 'Pago' : 'Pendente' }}
+                    </p>
                   </div>
                   <div class="col-6 mb-3">
                     <h6>Forma de Pagamento</h6>
-                    <p class="text-muted">{{ user.tenantPaymentMethod }}</p>
+                    <p class="text-muted">
+                      <i class="bi" [ngClass]="user.tenantPaymentMethod === 'Cartão' ? 'bi-credit-card' : 'bi-bank'" class="me-1"></i>
+                      {{ user.tenantPaymentMethod === 'Credit Card' ? 'Cartão' : 'Boleto' }}
+                    </p>
                   </div>
                   <div class="col-6 mb-3">
                     <h6>Frequência de Pagamento</h6>
-                    <p class="text-muted">{{ user.tenantPaymentFrequency }}</p>
+                    <p class="text-muted">
+                      <i class="bi bi-calendar me-1"></i>
+                      {{ user.tenantPaymentFrequency === 'monthly' ? 'Mensal' : 'Anual' }}
+                    </p>
                   </div>
                   <div class="col-6 mb-3">
                     <h6>Data de Vencimento</h6>
-                    <p class="text-muted">{{ user.tenantPaymentDueDate | date:'dd/MM/yyyy' }}</p>
+                    <p class="text-muted">
+                      <i class="bi bi-calendar-check me-1"></i>
+                      {{ user.tenantPaymentDueDate | date:'dd/MM/yyyy' }} (vence em {{ calculateDaysToDue(user.tenantPaymentDueDate) }} dias)
+                    </p>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
