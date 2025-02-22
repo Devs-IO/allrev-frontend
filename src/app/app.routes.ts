@@ -20,7 +20,7 @@ export const routes: Routes = [
       { path: 'profile', loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent), canActivate: [AuthGuard] },
       { path: 'products', loadComponent: () => import('./pages/products/products.component').then(m => m.ProductsComponent), canActivate: [AuthGuard] },
       { path: 'customers', loadComponent: () => import('./pages/customers/customers.component').then(m => m.CustomersComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: [Role.MANAGER_REVIEWERS] } },
-      { path: 'users', loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] } },
+      { path: 'users', loadComponent: () => import('./pages/users/pages/users-list/users-list.component').then(m => m.UsersComponent), canActivate: [AuthGuard, RoleGuard], data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] } },
       { path: 'reports', loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent), canActivate: [AuthGuard] },
       { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent), canActivate: [AuthGuard] },
     ]

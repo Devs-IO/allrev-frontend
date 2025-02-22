@@ -1,13 +1,12 @@
 import { Component, signal, WritableSignal } from '@angular/core';
-import { UsersService } from './users.service';
-import { UserProfile } from '../../core/interfaces/user-profile.interface';
+import { UsersService } from '../../services/users.service';
+import { UserProfile } from '../../../../core/interfaces/user-profile.interface';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-users',
-  templateUrl: './users.component.html',
-  styleUrl: './users.component.scss',
+  templateUrl: './users-list.component.html',
+  styleUrl: './users-list.component.scss',
   standalone: true,
   imports: [CommonModule]
 })

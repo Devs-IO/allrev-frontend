@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, switchMap, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { UserProfile } from '../../core/interfaces/user-profile.interface';
-import { AuthService } from '../../core/services/auth.service';
-import { User } from '../../core/interfaces/user.interface';
-import { Role } from '../../core/enum/roles.enum';
+import { environment } from '../../../../environments/environment';
+import { UserProfile } from '../../../core/interfaces/user-profile.interface';
+import { AuthService } from '../../../core/services/auth.service';
+import { User } from '../../../core/interfaces/user.interface';
+import { Role } from '../../../core/enum/roles.enum';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
