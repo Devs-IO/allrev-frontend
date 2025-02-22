@@ -9,79 +9,24 @@
 
   <!-- Menu -->
   <ul class="menu nav flex-column">
-    <!-- Home -->
-    <li>
-      <a routerLink="/home" class="nav-link">
-        <i class="bi bi-house-door me-2"></i>
-        <span *ngIf="!isCollapsed()">Home</span>
-      </a>
-    </li>
-
-    <!-- Produtos -->
-    <li>
-      <a routerLink="/products" class="nav-link d-flex justify-content-between align-items-center"
-        (click)="toggleSubmenu('products')">
-        <span>
-          <i class="bi bi-box me-2"></i>
-          <span *ngIf="!isCollapsed()">Produtos</span>
-        </span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('products')"></i>
-      </a>
-      <ul class="submenu nav flex-column" [class.active]="isOpen('products')">
-        <li><a routerLink="/products" class="nav-link"><i class="bi bi-plus-circle me-2"></i> <span
-          *ngIf="!isCollapsed()">Cadastrar</span></a></li>
-        <li><a routerLink="/products" class="nav-link"><i class="bi bi-list me-2"></i> <span
-          *ngIf="!isCollapsed()">Listar</span></a></li>
-        <li><a routerLink="/products" class="nav-link"><i class="bi bi-tags me-2"></i> <span
-          *ngIf="!isCollapsed()">Categorias</span></a></li>
-      </ul>
-    </li>
-
-    <!-- Clientes -->
-    <li>
-      <a routerLink="/customers" class="nav-link d-flex justify-content-between align-items-center"
-        (click)="toggleSubmenu('customers')">
-        <span>
-          <i class="bi bi-people me-2"></i>
-          <span *ngIf="!isCollapsed()">Clientes</span>
-        </span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('customers')"></i>
-      </a>
-      <ul class="submenu nav flex-column" [class.active]="isOpen('customers')">
-        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-person-plus me-2"></i> <span
-              *ngIf="!isCollapsed()">Novo Cliente</span></a></li>
-        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-people me-2"></i> <span
-              *ngIf="!isCollapsed()">Todos os Clientes</span></a></li>
-      </ul>
-    </li>
-
-    <!-- Relatórios -->
-    <li>
-      <a routerLink="/reports" class="nav-link d-flex justify-content-between align-items-center"
-        (click)="toggleSubmenu('reports')">
-        <span>
-          <i class="bi bi-bar-chart me-2"></i>
-          <span *ngIf="!isCollapsed()">Relatórios</span>
-        </span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('reports')"> </i>
-      </a>
-      <ul class="submenu nav flex-column" [class.active]="isOpen('reports')">
-        <li><a routerLink="/reports" class="nav-link"><i class="bi bi-cash"></i> <span
-              *ngIf="!isCollapsed()">Financeiro</span></a></li>
-        <li><a routerLink="/reports" class="nav-link"><i class="bi bi-graph-up"></i> <span
-              *ngIf="!isCollapsed()">Vendas</span></a></li>
-      </ul>
-    </li>
-
-    <!-- Configurações -->
-    <li>
-      <a routerLink="/settings" class="nav-link d-flex justify-content-between align-items-center">
-        <span>
-          <i class="bi bi-gear"></i>
-          <span *ngIf="!isCollapsed()">Configurações</span>
-        </span>
-      </a>
-    </li>
+    <ng-container *ngFor="let item of filteredMenuItems">
+      <li class="nav-item">
+        <a [routerLink]="item.route" class="nav-link d-flex justify-content-between align-items-center"
+          (click)="toggleSubmenu(item.menu)">
+          <span>
+            <i [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed()">{{ item.menu }}</span>
+          </span>
+          <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen(item.menu)"></i>
+        </a>
+        <ul class="submenu nav flex-column" [class.active]="isOpen(item.menu)">
+          <li><a [routerLink]="item.route" class="nav-link"><i class="bi bi-plus-circle me-2"></i> <span
+                *ngIf="!isCollapsed()">Novo</span></a></li>
+          <li><a [routerLink]="item.route" class="nav-link"><i class="bi bi-list me-2"></i> <span
+                *ngIf="!isCollapsed()">Listar</span></a></li>
+        </ul>
+      </li>
+    </ng-container>
   </ul>
 
   <!-- Rodapé -->

@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserProfile } from '../../interfaces/user-profile.interface';
+import { Role } from '../../enum/roles.enum';
+import { RoleGuard } from '../../guard/role.guard';
+import { User } from '../../interfaces/user.interface';
 
 @Component({
   selector: 'app-sidebar',
@@ -17,15 +20,31 @@ export class SidebarComponent implements OnInit {
   activeSubmenu = signal<string | null>(null);
   userEmail = signal<string | null>(null);
   currentDate = signal(new Date());
+  intervalId: any;
+  userRole: Role | null = null;
+  filteredMenuItems: any[] = [];
 
-  constructor(private authService: AuthService) {}
+  menuItems = [
+    { role: [Role.MANAGER_REVIEWERS], menu: 'Clientes', route: '/customers', icon: 'bi bi-people' },
+    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Users', route: '/users', icon: 'bi bi-person-fill' },
+    { role: [Role.ADMIN], menu: 'Produtos', route: '/products', icon: 'bi bi-box' },
+    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Relatórios', route: '/reports', icon: 'bi bi-bar-chart' },
+    { role: [Role.ADMIN], menu: 'Configurações', route: '/settings', icon: 'bi bi-gear' }
+  ];
+
+  constructor(private authService: AuthService) { }
 
   ngOnInit() {
     this.loadUserProfile();
+    this.loadUserRoles();
 
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
       this.currentDate.set(new Date());
     }, 1000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.intervalId);
   }
 
   loadUserProfile() {
@@ -35,6 +54,18 @@ export class SidebarComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao buscar perfil do usuário:', err);
+      }
+    });
+  }
+
+  loadUserRoles() {
+    this.authService.getUser().subscribe({
+      next: (user: User) => {
+        this.userRole = user.role;
+        this.filteredMenuItems = this.menuItems.filter(item => this.isAuthorized(item.role));
+      },
+      error: (err) => {
+        console.error('Erro ao buscar roles do usuário:', err);
       }
     });
   }
@@ -54,5 +85,15 @@ export class SidebarComponent implements OnInit {
 
   isOpen(menu: string): boolean {
     return this.activeSubmenu() === menu;
+  }
+
+  isAuthorized(roles: Role[]): boolean {
+    let isAuthorized = false;
+    if (roles.length === 0) {
+      isAuthorized = true;
+    } else if (this.userRole && roles.includes(this.userRole)) {
+      isAuthorized = true;
+    }
+    return isAuthorized;
   }
 }

@@ -6,6 +6,7 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { UserProfile } from '../interfaces/user-profile.interface';
+import { User } from '../interfaces/user.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -71,7 +72,11 @@ export class AuthService {
   }
 
   getUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.apiUrl}/user/me`);
+    return this.http.get<UserProfile>(`${this.apiUrl}/user/profile`);
+  }
+
+  getUser(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/user/me`);
   }
 
   // Configura a renovação automática do token
