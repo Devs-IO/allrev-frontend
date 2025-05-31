@@ -3,7 +3,6 @@ import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import * as bootstrap from 'bootstrap';
 
-
 @Component({
   selector: 'app-root',
   standalone: true, // Marcando como standalone
@@ -21,7 +20,7 @@ export class AppComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
-    document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
+    document.querySelectorAll('.dropdown-toggle').forEach((dropdown) => {
       new bootstrap.Dropdown(dropdown);
     });
   }

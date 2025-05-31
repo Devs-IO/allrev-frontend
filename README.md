@@ -1,59 +1,56 @@
 # AllrevFrontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.1.4.
+# AllRev - Frontend
 
-## Development server
+## 🚀 Tecnologias Utilizadas
 
-To start a local development server, run:
+* **Linguagem:** TypeScript
+* **Framework:** Angular 19
+* **UI:** Bootstrap com Ícones
+* **Controle de Acesso:** RoleGuard (Autenticação e Autorização por Roles)
 
-```bash
-ng serve
-```
+## 📌 Funcionalidades Atuais
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+* **Login e Autenticação:** JWT com expiração de 1 hora.
+* **Menu de Navegação:** Controlado por roles (Admin, User, Manager\_Reviewers, Client, Assistant\_Reviewers).
+* **Gestão de Usuários:** Listar usuários já implementado.
+* **Perfil:** Visualizar já implementado.
 
-## Code scaffolding
+## 🚀 Como Rodar o Frontend
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+1. Clone o repositório:
 
 ```bash
-ng generate --help
+  git clone https://github.com/seu-usuario/allrev-frontend.git
 ```
 
-## Building
-
-To build the project run:
+2. Entre na pasta do frontend:
 
 ```bash
-ng build
+  cd allrev-frontend
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+3. Instale as dependências:
 
 ```bash
-ng test
+  npm install
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+4. Execute o servidor de desenvolvimento:
 
 ```bash
-ng e2e
+  ng serve
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+5. Acesse o sistema em `http://localhost:4200`.
 
-## Additional Resources
+## ✅ TODO
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+* [x] Autenticação (JWT)
+* [x] Autorização (Roles)
+* [x] Listagem de Usuários
+* [x] Visualização de Perfil
+* [ ] CRUD de Usuários (Visualizar, Editar, Excluir, Cadastrar)
+* [ ] CRUD de Produtos
+* [ ] CRUD de Clientes
+* [ ] CRUD de Relatórios
