@@ -25,6 +25,18 @@
             "inlineStyleLanguage": "scss",
             "allowedCommonJsDependencies": ["bootstrap"],
             "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "node_modules/@fortawesome/fontawesome-free/webfonts",
+                "output": "/assets/webfonts"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/bootstrap-icons/font/fonts",
+                "output": "/assets/fonts"
+              },
               {
                 "glob": "**/*",
                 "input": "public"
