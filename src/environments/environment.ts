@@ -1,6 +1,5 @@
 export const environment = {
-    production: false,
-    apiUrl: process.env.API_URL || 'http://localhost:3000',
-    jwtExpiration: process.env.JWT_EXPIRATION || '1h',
-  };
-  
+  production: true,
+  apiUrl: 'https://allrev-backend.fly.dev',
+  jwtExpiration: '1d', // Mesmo caso
+};
