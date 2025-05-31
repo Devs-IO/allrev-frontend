@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://allrev-backend.fly.dev',
+  apiUrl: 'https://allrev-backend.onrender.com',
   jwtExpiration: '1d', // Mesmo caso
 };
