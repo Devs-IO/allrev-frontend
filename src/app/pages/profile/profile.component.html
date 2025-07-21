@@ -1,22 +1,23 @@
-<div class="container my-4" style="max-width: 1200px;">
-  <h1 class="mb-4">Perfil</h1>
+
+<div class="container my-4" style="max-width: 1100px;">
+  <h2 class="text-primary mb-4"><i class="bi bi-person-circle me-2 fs-2 text-warning"></i> Perfil</h2>
   <div class="row d-flex justify-content-center align-items-center h-100">
-    <div class="col col-lg-10 mb-4 mb-lg-0">
-      <div class="card mb-3 profile-card">
-        <div class="row g-0">
+    <div class="col-12 col-lg-10 mb-4 mb-lg-0">
+      <div class="card profile-card shadow-lg rounded-4 border-0 p-5 mb-4 animate__animated animate__fadeIn">
+        <div class="row g-4">
           <div class="col-md-4 gradient-custom text-center text-white profile-header">
             <div class="profile-img-container">
-              <img *ngIf="user.photo; else defaultIcon" [src]="user.photo" alt="Foto de {{ user.name }}"
+              <img *ngIf="user?.photo; else defaultIcon" [src]="user?.photo" alt="Foto de {{ user?.name }}"
                 class="img-fluid my-5 profile-img" />
               <ng-template #defaultIcon>
-                <i class="bi bi-person-circle profile-icon"></i>
+                <i class="bi bi-person-circle profile-icon fs-1"></i>
               </ng-template>
             </div>
-            <h5>{{ user.name }}</h5>
-            <p>{{ user.role }}</p>
+            <h5>{{ user?.name }}</h5>
+            <p><i class="bi bi-person-badge-fill me-1"></i> {{ user?.role }}</p>
             <p>
-              <i class="bi" [ngClass]="user.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
-              {{ user.isActive ? 'Ativo' : 'Inativo' }}
+              <i class="bi" [ngClass]="user?.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
+              {{ user?.isActive ? 'Ativo' : 'Inativo' }}
             </p>
             <button class="edit-btn" (click)="editProfile()">
               <i class="bi bi-pencil-fill"></i>
@@ -24,64 +25,57 @@
           </div>
           <div class="col-md-8">
             <div class="card-body p-4">
-              <h6>Informações</h6>
-              <hr class="mt-0 mb-4">
-              <div class="row pt-1">
-                <div class="col-4 mb-3">
-                  <h6><i class="bi bi-envelope-fill"></i> Email</h6>
-                  <p class="text-muted">{{ user.email }}</p>
-                </div>
-                <div class="col-4 mb-3">
-                  <h6><i class="bi bi-telephone-fill"></i> Telefone</h6>
-                  <p class="text-muted">{{ user.phone ? user.phone : 'Não informado' }}</p>
-                </div>
-                <div class="col-4 mb-3">
-                  <h6><i class="bi bi-geo-alt-fill"></i> Endereço</h6>
-                  <p class="text-muted">{{ user.address || 'Não informado' }}</p>
-                </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-envelope-fill text-info fs-3 me-2"></i>
+                <span class="fw-bold">Email:</span>
+                <span class="ms-2">{{ user?.email }}</span>
               </div>
-              <h6>Empresa</h6>
-              <hr class="mt-0 mb-4">
-              <div class="row pt-1">
-                <div class="col-6 mb-3">
-                  <h6>Nome</h6>
-                  <p class="text-muted">{{ user.tenantCompanyName }}</p>
-                </div>
-                <div class="col-6 mb-3">
-                  <h6>Código</h6>
-                  <p class="text-uppercase text-primary fw-bold">{{ user.tenantCode }}</p>
-                </div>
-                <div class="col-6 mb-3">
-                  <h6>Status de Pagamento</h6>
-                  <p class="text-muted">
-                    <i class="bi"
-                      [ngClass]="user.tenantPaymentStatus === 'paid' ? 'bi-cash text-success' : 'bi-exclamation-circle text-danger'"></i>
-                    {{ user.tenantPaymentStatus === 'paid' ? 'Pago' : 'Pendente' }}
-                  </p>
-                </div>
-                <div class="col-6 mb-3">
-                  <h6>Forma de Pagamento</h6>
-                  <p class="text-muted">
-                    <i class="bi" [ngClass]="user.tenantPaymentMethod === 'Cartão' ? 'bi-credit-card' : 'bi-bank'"
-                      class="me-1"></i>
-                    {{ user.tenantPaymentMethod === 'Credit Card' ? 'Cartão' : 'Boleto' }}
-                  </p>
-                </div>
-                <div class="col-6 mb-3">
-                  <h6>Frequência de Pagamento</h6>
-                  <p class="text-muted">
-                    <i class="bi bi-calendar me-1"></i>
-                    {{ user.tenantPaymentFrequency === 'monthly' ? 'Mensal' : 'Anual' }}
-                  </p>
-                </div>
-                <div class="col-6 mb-3">
-                  <h6>Data de Vencimento</h6>
-                  <p class="text-muted">
-                    <i class="bi bi-calendar-check me-1"></i>
-                    {{ user.tenantPaymentDueDate | date:'dd/MM/yyyy' }} (vence em {{
-                    calculateDaysToDue(user.tenantPaymentDueDate) }} dias)
-                  </p>
-                </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-telephone-fill text-success fs-3 me-2"></i>
+                <span class="fw-bold">Telefone:</span>
+                <span class="ms-2">{{ user?.phone || 'Não informado' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-geo-alt-fill text-danger fs-3 me-2"></i>
+                <span class="fw-bold">Endereço:</span>
+                <span class="ms-2">{{ user?.address || 'Não informado' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-check-circle-fill fs-3 me-2" [ngClass]="user?.isActive ? 'text-success' : 'text-danger'"></i>
+                <span class="fw-bold">Status:</span>
+                <span class="ms-2" [class]="user?.isActive ? 'text-success' : 'text-danger'">{{ user?.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card company-card border-0 shadow-sm rounded-4 p-4 bg-light">
+              <h5 class="text-secondary mb-3"><i class="bi bi-building me-2"></i> Dados da Empresa</h5>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-building text-secondary fs-4 me-2"></i>
+                <span class="fw-bold">Empresa:</span>
+                <span class="ms-2">{{ user?.tenant?.companyName || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
+                <span class="fw-bold">Código:</span>
+                <span class="ms-2">{{ user?.tenant?.code || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
+                <span class="fw-bold">Pagamento:</span>
+                <span class="ms-2">{{ user?.tenant?.paymentStatus || 'N/A' }} - {{ user?.tenant?.paymentMethod || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
+                <span class="fw-bold">Frequência:</span>
+                <span class="ms-2">{{ user?.tenant?.paymentFrequency || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
+                <span class="fw-bold">Vencimento:</span>
+                <span class="ms-2">{{ user?.tenant?.paymentDueDate ? (user?.tenant?.paymentDueDate | date:'dd/MM/yyyy') : 'N/A' }}</span>
               </div>
             </div>
           </div>

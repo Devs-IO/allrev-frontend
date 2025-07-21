@@ -1,0 +1,78 @@
+<div class="container my-4">
+  <h2 class="text-primary mb-4"><i class="bi bi-person-circle me-2 fs-2 text-warning"></i> Detalhes do Usuário</h2>
+  <div *ngIf="loading">Carregando...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="!loading && user" class="card shadow-lg rounded-4 border-0 p-5 mb-4 animate__animated animate__fadeIn" style="max-width: 1100px; margin: 0 auto;">
+    <div class="row g-4">
+      <div class="col-12">
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-person-fill text-primary fs-3 me-2"></i>
+          <span class="fw-bold">Nome:</span>
+          <span class="ms-2">{{ user.name }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-envelope-fill text-info fs-3 me-2"></i>
+          <span class="fw-bold">Email:</span>
+          <span class="ms-2">{{ user.email }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-telephone-fill text-success fs-3 me-2"></i>
+          <span class="fw-bold">Telefone:</span>
+          <span class="ms-2">{{ user.phone }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-person-badge-fill text-primary fs-3 me-2"></i>
+          <span class="fw-bold">Função:</span>
+          <span class="ms-2">{{ translateRole(user.role) }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-geo-alt-fill text-danger fs-3 me-2"></i>
+          <span class="fw-bold">Endereço:</span>
+          <span class="ms-2">{{ user.address }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <i class="bi bi-check-circle-fill fs-3 me-2" [ngClass]="user.isActive ? 'text-success' : 'text-danger'"></i>
+          <span class="fw-bold">Status:</span>
+          <span class="ms-2" [class]="user.isActive ? 'text-success' : 'text-danger'">{{ user.isActive ? 'Ativo' : 'Inativo' }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+          <h5 class="text-secondary mb-3"><i class="bi bi-building me-2"></i> Dados da Empresa</h5>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-building text-secondary fs-4 me-2"></i>
+            <span class="fw-bold">Empresa:</span>
+            <span class="ms-2">{{ user.tenant?.companyName || 'N/A' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
+            <span class="fw-bold">Código:</span>
+            <span class="ms-2">{{ user.tenant?.code || 'N/A' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
+            <span class="fw-bold">Pagamento:</span>
+            <span class="ms-2">{{ user.tenant?.paymentStatus || 'N/A' }} - {{ user.tenant?.paymentMethod || 'N/A' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
+            <span class="fw-bold">Frequência:</span>
+            <span class="ms-2">{{ user.tenant?.paymentFrequency || 'N/A' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
+            <span class="fw-bold">Vencimento:</span>
+            <span class="ms-2">{{ user.tenant?.paymentDueDate || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+      <button class="btn btn-secondary" (click)="back()">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </button>
+    </div>
+  </div>
+</div>

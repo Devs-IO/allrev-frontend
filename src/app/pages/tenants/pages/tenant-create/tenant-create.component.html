@@ -1,0 +1,50 @@
+<div class="container my-4">
+  <h2>Cadastrar Empresa</h2>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <form (ngSubmit)="submit()">
+    <div class="mb-3">
+      <label>Código</label>
+      <input class="form-control" [(ngModel)]="formData.code" name="code" required />
+    </div>
+    <div class="mb-3">
+      <label>Nome da Empresa</label>
+      <input class="form-control" [(ngModel)]="formData.companyName" name="companyName" required />
+    </div>
+    <div class="mb-3">
+      <label>Endereço</label>
+      <input class="form-control" [(ngModel)]="formData.address" name="address" />
+    </div>
+    <div class="mb-3">
+      <label>Status do Pagamento</label>
+      <input class="form-control" [(ngModel)]="formData.paymentStatus" name="paymentStatus" />
+    </div>
+    <div class="mb-3">
+      <label>Método de Pagamento</label>
+      <input class="form-control" [(ngModel)]="formData.paymentMethod" name="paymentMethod" />
+    </div>
+    <div class="mb-3">
+      <label>Ativo?</label>
+      <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
+        <option [ngValue]="true">Sim</option>
+        <option [ngValue]="false">Não</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label>Frequência de Pagamento</label>
+      <select class="form-control" [(ngModel)]="formData.paymentFrequency" name="paymentFrequency">
+        <option value="monthly">Mensal</option>
+        <option value="annual">Anual</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label>Data de Vencimento</label>
+      <input type="date" class="form-control" [(ngModel)]="formData.paymentDueDate" name="paymentDueDate" />
+    </div>
+    <div class="mb-3">
+      <label>Logo</label>
+      <input class="form-control" [(ngModel)]="formData.logo" name="logo" />
+    </div>
+    <button type="submit" class="btn btn-success">Cadastrar</button>
+    <a routerLink="/tenants" class="btn btn-secondary ms-2">Cancelar</a>
+  </form>
+</div>

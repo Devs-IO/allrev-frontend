@@ -1,17 +1,16 @@
 import { Component, signal, WritableSignal } from '@angular/core';
-import { CustomersService } from './services/customers.service';
-import { UserProfile } from '../../core/interfaces/user-profile.interface';
+import { CustomersService } from '../../services/customers.service';
+import { UserProfile } from '../../../../core/interfaces/user-profile.interface';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 
 @Component({
-  selector: 'app-customers',
-  templateUrl: './customers.component.html',
-  styleUrl: './customers.component.scss',
+  selector: 'app-customers-list',
+  templateUrl: './customers-list.component.html',
+  styleUrl: './customers-list.component.scss',
   standalone: true,
   imports: [CommonModule],
 })
-export class CustomersComponent {
+export class CustomersListComponent {
   customers: WritableSignal<UserProfile[]> = signal<UserProfile[]>([]);
 
   constructor(private customersService: CustomersService) {}
@@ -27,14 +26,14 @@ export class CustomersComponent {
   }
 
   deleteCustomer(id: string) {
-    console.log('Delete cliente:', id);
+    // Implementar lógica de exclusão
   }
 
   viewCustomer(id: string) {
-    console.log('Visualizar cliente:', id);
+    // Implementar lógica de visualização
   }
 
   editCustomer(id: string) {
-    console.log('Editar cliente:', id);
+    // Implementar lógica de edição
   }
 }

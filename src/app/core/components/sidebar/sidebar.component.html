@@ -17,13 +17,15 @@
             <i [class]="item.icon"></i>
             <span *ngIf="!isCollapsed()">{{ item.menu }}</span>
           </span>
-          <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen(item.menu)"></i>
+          <i *ngIf="item.subRoutes" class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen(item.menu)"></i>
         </a>
-        <ul class="submenu nav flex-column" [class.active]="isOpen(item.menu)">
-          <li><a [routerLink]="item.route" class="nav-link"><i class="bi bi-plus-circle me-2"></i> <span
-                *ngIf="!isCollapsed()">Novo</span></a></li>
-          <li><a [routerLink]="item.route" class="nav-link"><i class="bi bi-list me-2"></i> <span
-                *ngIf="!isCollapsed()">Listar</span></a></li>
+        <ul *ngIf="item.subRoutes" class="submenu nav flex-column" [class.active]="isOpen(item.menu)">
+          <li *ngFor="let sub of item.subRoutes">
+            <a [routerLink]="sub.route" class="nav-link">
+              <i [class]="sub.icon + ' me-2'"></i>
+              <span *ngIf="!isCollapsed()">{{ sub.label }}</span>
+            </a>
+          </li>
         </ul>
       </li>
     </ng-container>

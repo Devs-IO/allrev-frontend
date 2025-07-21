@@ -25,8 +25,18 @@ export class SidebarComponent implements OnInit {
   filteredMenuItems: any[] = [];
 
   menuItems = [
-    { role: [Role.MANAGER_REVIEWERS], menu: 'Clientes', route: '/customers', icon: 'bi bi-people' },
-    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Users', route: '/users', icon: 'bi bi-person-fill' },
+    { role: [Role.MANAGER_REVIEWERS], menu: 'Clientes', route: '/customers', icon: 'bi bi-people', subRoutes: [
+      { label: 'Novo', route: '/customers/create', icon: 'bi bi-plus-circle' },
+      { label: 'Listar', route: '/customers', icon: 'bi bi-list' }
+    ] },
+    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Usuários', route: '/users', icon: 'bi bi-person-fill', subRoutes: [
+      { label: 'Novo Usuário', route: '/users/create', icon: 'bi bi-person-plus' },
+      { label: 'Listar', route: '/users', icon: 'bi bi-list' }
+    ] },
+    { role: [Role.ADMIN], menu: 'Empresas', route: '/tenants', icon: 'bi bi-building', subRoutes: [
+      { label: 'Nova Empresa', route: '/tenants/create', icon: 'bi bi-plus-circle' },
+      { label: 'Listar', route: '/tenants', icon: 'bi bi-list' }
+    ] },
     { role: [Role.ADMIN], menu: 'Produtos', route: '/products', icon: 'bi bi-box' },
     { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Relatórios', route: '/reports', icon: 'bi bi-bar-chart' },
     { role: [Role.ADMIN], menu: 'Configurações', route: '/settings', icon: 'bi bi-gear' }
