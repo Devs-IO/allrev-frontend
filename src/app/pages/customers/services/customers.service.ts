@@ -1,16 +1,15 @@
-import { UserProfile } from '../../core/interfaces/user-profile.interface';
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
   private apiUrl = environment.apiUrl; // URL base da API
   private http = inject(HttpClient);
 
-  createCustomer(data: Partial<UserProfile>): Observable<UserProfile> {
-    return this.http.post<UserProfile>(`${this.apiUrl}/customers`, data);
+  createCustomer(data: Partial<any>): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/customers`, data);
   }
 
   getCustomers(): Observable<any[]> {

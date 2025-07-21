@@ -1,0 +1,26 @@
+
+.modal {
+  background: rgba(0,0,0,0.3);
+  .modal-dialog {
+    margin-top: 10vh;
+  }
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  opacity: 0.7;
+}
+
+.card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+.btn + .btn {
+  margin-left: 0.5rem;
+}

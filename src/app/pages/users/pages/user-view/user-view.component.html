@@ -1,0 +1,14 @@
+<div class="container my-4">
+  <h2>Detalhes do Usuário</h2>
+  <div *ngIf="loading">Carregando...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="!loading && user">
+    <p><strong>Nome:</strong> {{ user.name }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Telefone:</strong> {{ user.phone }}</p>
+    <p><strong>Função:</strong> {{ user.role }}</p>
+    <p><strong>Status:</strong> <span [class]="user.isActive ? 'text-success' : 'text-danger'">{{ user.isActive ? 'Ativo' : 'Inativo' }}</span></p>
+    <!-- <p><strong>Criado em:</strong> {{ user.createdAt | date: 'short' }}</p> -->
+    <button class="btn btn-secondary" (click)="back()">Voltar</button>
+  </div>
+</div>

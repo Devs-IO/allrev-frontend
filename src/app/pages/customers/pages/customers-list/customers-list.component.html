@@ -1,0 +1,31 @@
+<div class="container my-4">
+  <h1 class="mb-4">Clientes</h1>
+  <table class="table table-striped table-hover">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Nome</th>
+        <th scope="col">Email</th>
+        <th scope="col">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let customer of customers(); let i = index">
+        <th scope="row">{{ i + 1 }}</th>
+        <td>{{ customer.name }}</td>
+        <td>{{ customer.email }}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" (click)="viewCustomer(customer.id)">
+            👁️
+          </button>
+          <button class="btn btn-warning btn-sm" (click)="editCustomer(customer.id)">
+            ✏️
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="deleteCustomer(customer.id)">
+            ❌
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

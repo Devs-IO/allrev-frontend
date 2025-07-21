@@ -1,21 +1,29 @@
 import { Component, signal, WritableSignal } from '@angular/core';
 import { UsersService } from '../../services/users.service';
-import { UserProfile } from '../../../../core/interfaces/user-profile.interface';
+import { CreateUserDto, ResponseUserDto } from '../../../../core/dtos/user.dto';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-users',
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss',
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, FormsModule],
 })
 export class UsersComponent {
-  users: WritableSignal<UserProfile[]> = signal<UserProfile[]>([]);
+  users: WritableSignal<ResponseUserDto[]> = signal<ResponseUserDto[]>([]);
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
 
-  constructor(private usersService: UsersService) { }
+  // Estado para formulário/modal
+  showForm = false;
+  isEditMode = false;
+  selectedUser: ResponseUserDto | null = null;
+  formData: Partial<CreateUserDto> = {};
+  showDetails = false;
+
+  constructor(private usersService: UsersService) {}
 
   ngOnInit() {
     this.loadUsers();
@@ -23,36 +31,28 @@ export class UsersComponent {
 
   loadUsers(): void {
     this.usersService.getUsers().subscribe({
-      next: (data: UserProfile[]) => this.users.set(data),
-      error: (err) => console.error('Erro ao carregar usuários:', err)
+      next: (data: ResponseUserDto[]) => this.users.set(data),
+      error: (err) => console.error('Erro ao carregar usuários:', err),
     });
   }
 
-  // Função para ordenar a tabela
   sortBy(column: string): void {
     if (this.sortColumn === column) {
-      // Inverte a direção se a mesma coluna for clicada novamente
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortColumn = column;
       this.sortDirection = 'asc';
     }
-
     const sorted = [...this.users()].sort((a, b) => {
-      let aValue = a[column as keyof UserProfile];
-      let bValue = b[column as keyof UserProfile];
-
-      // Se for data, converte para timestamp
-      if (aValue instanceof Date && bValue instanceof Date) {
-        const aTimestamp = (aValue as Date).getTime();
-        const bTimestamp = (bValue as Date).getTime();
-      }
-      // Se for string, compara em letras minúsculas
-      else if (typeof aValue === 'string' && typeof bValue === 'string') {
+      const key = column as keyof ResponseUserDto;
+      let aValue = a[key];
+      let bValue = b[key];
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
-
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
       if (aValue < bValue) {
         return this.sortDirection === 'asc' ? -1 : 1;
       } else if (aValue > bValue) {
@@ -63,15 +63,77 @@ export class UsersComponent {
     this.users.set(sorted);
   }
 
-  deleteUser(id: string) {
-    console.log('Delete cliente:', id);
+  // CRUD
+  openCreateForm() {
+    this.isEditMode = false;
+    this.formData = {};
+    this.showForm = true;
   }
 
-  viewUser(id: string) {
-    console.log('Visualizar cliente:', id);
+  openEditForm(user: ResponseUserDto) {
+    this.isEditMode = true;
+    this.formData = { ...user };
+    this.selectedUser = user;
+    this.showForm = true;
+  }
+
+  submitForm() {
+    if (this.isEditMode && this.selectedUser) {
+      this.usersService
+        .updateUser(this.selectedUser.id, this.formData as Partial<CreateUserDto>)
+        .subscribe({
+          next: () => {
+            this.loadUsers();
+            this.cancelForm();
+          },
+          error: (err) => alert('Erro ao atualizar usuário: ' + err),
+        });
+    } else {
+      this.usersService.createUser(this.formData as CreateUserDto).subscribe({
+        next: () => {
+          this.loadUsers();
+          this.cancelForm();
+        },
+        error: (err) => alert('Erro ao criar usuário: ' + err),
+      });
+    }
   }
 
   editUser(id: string) {
-    console.log('Editar cliente:', id);
+    const user = this.users().find((u: ResponseUserDto) => u.id === id);
+    if (user) {
+      this.openEditForm(user);
+    }
+  }
+
+  cancelForm() {
+    this.showForm = false;
+    this.isEditMode = false;
+    this.selectedUser = null;
+    this.formData = {};
+  }
+
+  deleteUser(id: string) {
+    if (confirm('Tem certeza que deseja deletar este usuário?')) {
+      this.usersService.deleteUser(id).subscribe({
+        next: () => this.loadUsers(),
+        error: (err) => alert('Erro ao deletar usuário: ' + err),
+      });
+    }
+  }
+
+  viewUser(id: string) {
+    this.usersService.getUserById(id).subscribe({
+      next: (user) => {
+        this.selectedUser = user;
+        this.showDetails = true;
+      },
+      error: (err) => alert('Erro ao buscar detalhes: ' + err),
+    });
+  }
+
+  closeDetails() {
+    this.showDetails = false;
+    this.selectedUser = null;
   }
 }
