@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TenantsService } from '../../../tenants/tenants.service';
+import { TenantsService } from '../../../tenants/services/tenants.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,7 @@ export class UserCreateComponent {
   error: string | null = null;
   tenants: any[] = [];
   isAdmin: boolean = false;
+  tenantName: string = '';
 
   constructor(
     private usersService: UsersService,
@@ -26,8 +27,7 @@ export class UserCreateComponent {
     private tenantsService: TenantsService,
     private authService: AuthService
   ) {
-    this.loadTenants();
-    this.checkAdmin();
+    this.checkAdminAndTenant();
   }
 
   loadTenants() {
@@ -37,10 +37,21 @@ export class UserCreateComponent {
     });
   }
 
-  checkAdmin() {
-    this.authService.getUser().subscribe({
-      next: (user: any) => (this.isAdmin = user.role === 'admin'),
-      error: () => (this.isAdmin = false),
+  checkAdminAndTenant() {
+    this.authService.getUserProfile().subscribe({
+      next: (user: any) => {
+        console.log(user);
+        this.isAdmin = user.role === 'Administrador';
+        if (this.isAdmin) {
+          this.loadTenants();
+        } else if (user.tenantId) {
+          this.tenantName = user.tenantCompanyName || '';
+          this.formData.tenantId = user.tenantId;
+        }
+      },
+      error: () => {
+        this.isAdmin = false;
+      },
     });
   }
 

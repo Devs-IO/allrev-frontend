@@ -1,8 +1,10 @@
 import { Component, signal, WritableSignal } from '@angular/core';
+import { Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../../../core/dtos/user.dto';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -22,11 +24,25 @@ export class UsersComponent {
   selectedUser: ResponseUserDto | null = null;
   formData: Partial<CreateUserDto> = {};
   showDetails = false;
+  loggedUserId: string = '';
 
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.loadUsers();
+    this.authService.getUserProfile().subscribe({
+      next: (user: any) => {
+        this.loggedUserId = user.id || '';
+        this.loadUsers();
+      },
+      error: () => {
+        this.loggedUserId = '';
+        this.loadUsers();
+      },
+    });
   }
 
   loadUsers(): void {
@@ -80,7 +96,10 @@ export class UsersComponent {
   submitForm() {
     if (this.isEditMode && this.selectedUser) {
       this.usersService
-        .updateUser(this.selectedUser.id, this.formData as Partial<CreateUserDto>)
+        .updateUser(
+          this.selectedUser.id,
+          this.formData as Partial<CreateUserDto>
+        )
         .subscribe({
           next: () => {
             this.loadUsers();
@@ -100,10 +119,7 @@ export class UsersComponent {
   }
 
   editUser(id: string) {
-    const user = this.users().find((u: ResponseUserDto) => u.id === id);
-    if (user) {
-      this.openEditForm(user);
-    }
+    this.router.navigate(['/users', id, 'edit']);
   }
 
   cancelForm() {
@@ -123,13 +139,7 @@ export class UsersComponent {
   }
 
   viewUser(id: string) {
-    this.usersService.getUserById(id).subscribe({
-      next: (user) => {
-        this.selectedUser = user;
-        this.showDetails = true;
-      },
-      error: (err) => alert('Erro ao buscar detalhes: ' + err),
-    });
+    this.router.navigate(['/users', id]);
   }
 
   closeDetails() {

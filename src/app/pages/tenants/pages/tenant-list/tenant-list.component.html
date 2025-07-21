@@ -1,0 +1,28 @@
+<div class="container my-4">
+  <h2>Empresas (Tenants)</h2>
+  <div *ngIf="loading">Carregando...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <table *ngIf="!loading && tenants.length" class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nome</th>
+        <th>Endereço</th>
+        <th>Status</th>
+        <th>Frequência</th>
+        <th>Vencimento</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tenant of tenants">
+        <td>{{ tenant.code }}</td>
+        <td>{{ tenant.companyName }}</td>
+        <td>{{ tenant.address }}</td>
+        <td>{{ tenant.isActive ? 'Ativo' : 'Inativo' }}</td>
+        <td>{{ tenant.paymentFrequency }}</td>
+        <td>{{ tenant.paymentDueDate | date:'shortDate' }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div *ngIf="!loading && tenants.length === 0" class="alert alert-info">Nenhuma empresa cadastrada.</div>
+</div>

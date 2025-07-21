@@ -18,9 +18,9 @@
       <label><i class="bi bi-person-badge"></i> Função</label>
       <select class="form-control" [(ngModel)]="formData.role" name="role" required>
         <option value="" disabled selected>Selecione a função</option>
-        <option value="admin">Administrador</option>
-        <option value="user">Usuário</option>
-        <option value="manager_reviewers">Gestor de Revisores</option>
+        <option *ngIf="isAdmin" value="admin">Administrador</option>
+        <option *ngIf="isAdmin" value="user">Usuário</option>
+        <option *ngIf="isAdmin" value="manager_reviewers">Gestor de Revisores</option>
         <option value="client">Cliente</option>
         <option value="assistant_reviewers">Assistente de Revisores</option>
         <option value="none">Nenhum</option>
@@ -37,21 +37,27 @@
     <div class="mb-3">
       <label><i class="bi bi-building"></i> Empresa (Tenant)</label>
       <div class="d-flex align-items-center">
-        <select class="form-control me-2" [(ngModel)]="formData.tenantId" name="tenantId" required>
-          <option value="" disabled selected>Selecione a empresa</option>
-          <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.companyName }}</option>
-        </select>
-        <button *ngIf="isAdmin" type="button" class="btn btn-outline-primary" (click)="openTenantForm()">
-          <i class="bi bi-plus-circle"></i> Nova Empresa
-        </button>
+        <ng-container *ngIf="isAdmin; else tenantReadonly">
+          <select class="form-control me-2" [(ngModel)]="formData.tenantId" name="tenantId" required>
+            <option value="" disabled selected>Selecione a empresa</option>
+            <option *ngFor="let tenant of tenants" [value]="tenant.id">{{ tenant.companyName }}</option>
+          </select>
+          <button type="button" class="btn btn-outline-primary" (click)="openTenantForm()">
+            <i class="bi bi-plus-circle"></i> Nova Empresa
+          </button>
+        </ng-container>
+        <ng-template #tenantReadonly>
+          <input class="form-control" [value]="tenantName" name="tenant" readonly />
+          <small class="text-muted">Este campo é preenchido automaticamente e não pode ser alterado.</small>
+        </ng-template>
       </div>
     </div>
     <div class="mb-3">
       <label><i class="bi bi-toggle-on"></i> Status</label>
-      <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
-        <option [ngValue]="true">Ativo</option>
-        <option [ngValue]="false">Inativo</option>
-      </select>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" [(ngModel)]="formData.isActive" name="isActive" id="statusToggle">
+        <label class="form-check-label" for="statusToggle">{{ formData.isActive ? 'Ativo' : 'Inativo' }}</label>
+      </div>
     </div>
     <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Criar</button>
     <a routerLink="/users" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>

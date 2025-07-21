@@ -21,4 +21,5 @@ export interface ResponseUserDto {
   phone: string;
   address: string;
   photo?: string;
+  tenantName?: string;
 }

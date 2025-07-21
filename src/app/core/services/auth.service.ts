@@ -36,12 +36,13 @@ export class AuthService {
       .pipe(
         map((response) => {
           // Salva o JWT no localStorage
-          if (response && response.accessToken) { // Verifica se a resposta contém o token
+          if (response && response.accessToken) {
+            // Verifica se a resposta contém o token
             localStorage.setItem('user', JSON.stringify(response.user));
             localStorage.setItem('token', response.accessToken); // Salva o token separadamente
             this.currentUserSubject.next(response.user);
             this.startTokenRefresh(); // Inicia a renovação automática do token
-            
+
             return response;
           } else {
             throw new Error('Token não encontrado na resposta de login.');
@@ -82,18 +83,21 @@ export class AuthService {
   // Configura a renovação automática do token
   startTokenRefresh() {
     const token = this.getToken();
-    
-    if (token && this.jwtHelper.isTokenExpired(token) === false) {  
-      const expiresAt = this.jwtHelper.getTokenExpirationDate(token)?.getTime() || 0;
+
+    if (token && this.jwtHelper.isTokenExpired(token) === false) {
+      const expiresAt =
+        this.jwtHelper.getTokenExpirationDate(token)?.getTime() || 0;
       const now = Date.now();
-    
+
       // Define o tempo para renovar o token (5 minutos antes de expirar)
       const delay = expiresAt - now - 5 * 60 * 1000;
-        
+
       if (delay > 0) {
         this.refreshTokenTimeout = setTimeout(() => this.refreshToken(), delay);
       } else {
-        console.error('Token já expirado ou com tempo incorreto, realizando logout.');
+        console.error(
+          'Token já expirado ou com tempo incorreto, realizando logout.'
+        );
         this.logout(); // Faz logout se o token já estiver expirado
       }
     } else {
@@ -104,16 +108,14 @@ export class AuthService {
 
   // Renova o token automaticamente
   refreshToken() {
-    this.http
-      .post<any>(`${this.apiUrl}/auth/refresh`, {})
-      .subscribe({
-        next: (response) => {
-          localStorage.setItem('token', response.token); // Salva o novo token
-          this.startTokenRefresh(); // Reprograma a próxima renovação
-        },
-        error: () => {
-          this.logout(); // Faz logout em caso de erro
-        },
-      });
+    this.http.post<any>(`${this.apiUrl}/auth/refresh`, {}).subscribe({
+      next: (response) => {
+        localStorage.setItem('token', response.token); // Salva o novo token
+        this.startTokenRefresh(); // Reprograma a próxima renovação
+      },
+      error: () => {
+        this.logout(); // Faz logout em caso de erro
+      },
+    });
   }
 }

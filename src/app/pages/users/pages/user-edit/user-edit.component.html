@@ -1,32 +1,50 @@
+
 <div class="container my-4">
-  <h2>Editar Usuário</h2>
+  <h2><i class="bi bi-pencil-square"></i> Editar Usuário</h2>
   <div *ngIf="loading">Carregando...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
   <form *ngIf="!loading && user" (ngSubmit)="submit()">
     <div class="mb-3">
-      <label>Nome</label>
+      <label><i class="bi bi-person"></i> Nome</label>
       <input class="form-control" [(ngModel)]="formData.name" name="name" required />
     </div>
     <div class="mb-3">
-      <label>Email</label>
-      <input class="form-control" [(ngModel)]="formData.email" name="email" required />
+      <label><i class="bi bi-envelope"></i> Email</label>
+      <input class="form-control" [(ngModel)]="formData.email" name="email" required readonly />
     </div>
     <div class="mb-3">
-      <label>Telefone</label>
-      <input class="form-control" [(ngModel)]="formData.phone" name="phone" />
+      <label><i class="bi bi-telephone"></i> Telefone</label>
+      <input class="form-control" [(ngModel)]="formData.phone" name="phone" (input)="formatPhone()" maxlength="15" />
     </div>
     <div class="mb-3">
-      <label>Função</label>
-      <input class="form-control" [(ngModel)]="formData.role" name="role" />
-    </div>
-    <div class="mb-3">
-      <label>Status</label>
-      <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
-        <option [ngValue]="true">Ativo</option>
-        <option [ngValue]="false">Inativo</option>
+      <label><i class="bi bi-person-badge"></i> Função</label>
+      <select class="form-control" [(ngModel)]="formData.role" name="role" required>
+        <option value="" disabled selected>Selecione a função</option>
+        <option *ngIf="isAdmin" value="admin">Administrador</option>
+        <option *ngIf="isAdmin" value="user">Usuário</option>
+        <option *ngIf="isAdmin" value="manager_reviewers">Gestor de Revisores</option>
+        <option value="client">Cliente</option>
+        <option value="assistant_reviewers">Assistente de Revisores</option>
+        <option value="none">Nenhum</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a routerLink="/users" class="btn btn-secondary ms-2">Cancelar</a>
+    <div class="mb-3">
+      <label><i class="bi bi-geo-alt"></i> Endereço</label>
+      <input class="form-control" [(ngModel)]="formData.address" name="address" required />
+    </div>
+    <div class="mb-3">
+      <label><i class="bi bi-building"></i> Empresa (Tenant)</label>
+      <input class="form-control" [value]="tenantName" name="tenant" readonly />
+      <small class="text-muted">Este campo é preenchido automaticamente e não pode ser alterado.</small>
+    </div>
+    <div class="mb-3">
+      <label><i class="bi bi-toggle-on"></i> Status</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" [(ngModel)]="formData.isActive" name="isActive" id="statusToggle">
+        <label class="form-check-label" for="statusToggle">{{ formData.isActive ? 'Ativo' : 'Inativo' }}</label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Salvar</button>
+    <a routerLink="/users" class="btn btn-secondary ms-2"><i class="bi bi-x-circle"></i> Cancelar</a>
   </form>
 </div>

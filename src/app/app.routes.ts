@@ -139,11 +139,20 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
       },
       {
+        path: 'tenants',
+        loadComponent: () =>
+          import(
+            './pages/tenants/pages/tenant-list/tenant-list.component'
+          ).then((m) => m.TenantListComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.ADMIN] },
+      },
+      {
         path: 'tenants/create',
         loadComponent: () =>
-          import('./pages/tenants/tenant-create.component').then(
-            (m) => m.TenantCreateComponent
-          ),
+          import(
+            './pages/tenants/pages/tenant-create/tenant-create.component'
+          ).then((m) => m.TenantCreateComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN] },
       },
