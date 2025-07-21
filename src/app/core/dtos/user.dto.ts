@@ -12,14 +12,30 @@ export interface CreateUserDto {
 }
 
 export interface ResponseUserDto {
+  // Dados do usuário
   id: string;
-  role: string;
-  tenantId: string;
-  isActive: boolean;
-  email: string;
   name: string;
+  email: string;
   phone: string;
   address: string;
   photo?: string;
-  tenantName?: string;
+  role: string;
+  isActive: boolean;
+  tenantId: string;
+
+  // Dados do tenant agrupados
+  tenant?: {
+    id: string;
+    companyName?: string;
+    companyAddress?: string;
+    companyPhone?: string;
+    companyEmail?: string;
+    logo?: string;
+    code?: string;
+    paymentDueDate?: string | Date;
+    paymentFrequency?: string;
+    paymentMethod?: string;
+    paymentStatus?: string;
+    name?: string;
+  };
 }

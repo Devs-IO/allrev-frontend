@@ -1,5 +1,5 @@
 <div class="container my-4">
-  <h1 class="mb-4">Usuários</h1>
+  <h1 class="mb-4 text-primary">Usuários</h1>
   <!-- Botão de novo usuário removido, agora disponível apenas no menu lateral -->
 
   <!-- Formulário de criação/edição -->
@@ -42,24 +42,80 @@
     </div>
   </div>
 
-  <!-- Modal de detalhes -->
+
+  <!-- Modal de detalhes - UI/UX aprimorado -->
   <div *ngIf="showDetails && selectedUser" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.3)">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Detalhes do Usuário</h5>
-          <button type="button" class="btn-close" (click)="closeDetails()"></button>
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content rounded-4 shadow-lg">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h4 class="modal-title d-flex align-items-center">
+            <i class="bi bi-person-circle me-2 fs-2 text-warning"></i>
+            {{ selectedUser.name }}
+          </h4>
+          <button type="button" class="btn-close btn-close-white" (click)="closeDetails()"></button>
         </div>
-        <div class="modal-body">
-          <p><strong>Nome:</strong> {{ selectedUser.name }}</p>
-          <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-          <p><strong>Telefone:</strong> {{ selectedUser.phone }}</p>
-          <p><strong>Função:</strong> {{ selectedUser.role }}</p>
-          <p><strong>Status:</strong> <span [class]="selectedUser.isActive ? 'text-success' : 'text-danger'">{{ selectedUser.isActive ? 'Ativo' : 'Inativo' }}</span></p>
-          <!-- <p><strong>Criado em:</strong> {{ selectedUser.createdAt | date: 'short' }}</p> -->
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-envelope-fill text-info fs-4 me-2"></i>
+                <span class="fw-bold">Email:</span>
+                <span class="ms-2">{{ selectedUser.email }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-telephone-fill text-success fs-4 me-2"></i>
+                <span class="fw-bold">Telefone:</span>
+                <span class="ms-2">{{ selectedUser.phone }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-person-badge-fill text-primary fs-4 me-2"></i>
+                <span class="fw-bold">Função:</span>
+                <span class="ms-2">{{ selectedUser.role }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-geo-alt-fill text-danger fs-4 me-2"></i>
+                <span class="fw-bold">Endereço:</span>
+                <span class="ms-2">{{ selectedUser.address }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-building text-secondary fs-4 me-2"></i>
+                <span class="fw-bold">Empresa:</span>
+                <span class="ms-2">{{ selectedUser.tenant?.companyName || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
+                <span class="fw-bold">Código:</span>
+                <span class="ms-2">{{ selectedUser.tenant?.code || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
+                <span class="fw-bold">Pagamento:</span>
+                <span class="ms-2">{{ selectedUser.tenant?.paymentStatus || 'N/A' }} - {{ selectedUser.tenant?.paymentMethod || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
+                <span class="fw-bold">Frequência:</span>
+                <span class="ms-2">{{ selectedUser.tenant?.paymentFrequency || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
+                <span class="fw-bold">Vencimento:</span>
+                <span class="ms-2">{{ selectedUser.tenant?.paymentDueDate || 'N/A' }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-check-circle-fill fs-4 me-2" [ngClass]="selectedUser.isActive ? 'text-success' : 'text-danger'"></i>
+                <span class="fw-bold">Status:</span>
+                <span class="ms-2" [class]="selectedUser.isActive ? 'text-success' : 'text-danger'">{{ selectedUser.isActive ? 'Ativo' : 'Inativo' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeDetails()">Fechar</button>
+        <div class="modal-footer bg-light rounded-bottom-4">
+          <button type="button" class="btn btn-secondary" (click)="closeDetails()">
+            <i class="bi bi-x-circle"></i> Fechar
+          </button>
         </div>
       </div>
     </div>

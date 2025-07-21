@@ -1,6 +1,6 @@
 
 <div class="container my-4">
-  <h2><i class="bi bi-pencil-square"></i> Editar Usuário</h2>
+  <h2 class="text-primary"><i class="bi bi-pencil-square"></i> Editar Usuário</h2>
   <div *ngIf="loading">Carregando...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
   <form *ngIf="!loading && user" (ngSubmit)="submit()">

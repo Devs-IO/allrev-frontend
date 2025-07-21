@@ -9,7 +9,7 @@ import { ResponseUserDto } from '../../../../core/dtos/user.dto';
   templateUrl: './user-view.component.html',
   styleUrls: ['./user-view.component.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule],
 })
 export class UserViewComponent implements OnInit {
   user: ResponseUserDto | null = null;
@@ -33,8 +33,27 @@ export class UserViewComponent implements OnInit {
         error: (err) => {
           this.error = 'Erro ao carregar usuário';
           this.loading = false;
-        }
+        },
       });
+    }
+  }
+
+  translateRole(role: string): string {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'user':
+        return 'Usuário';
+      case 'manager_reviewers':
+        return 'Gestor de Revisores';
+      case 'client':
+        return 'Cliente';
+      case 'assistant_reviewers':
+        return 'Assistente de Revisores';
+      case 'none':
+        return 'Nenhum';
+      default:
+        return 'Desconhecido';
     }
   }
 
