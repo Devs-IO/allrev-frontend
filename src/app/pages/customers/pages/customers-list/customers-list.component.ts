@@ -1,7 +1,8 @@
 import { Component, signal, WritableSignal } from '@angular/core';
 import { CustomersService } from '../../services/customers.service';
-import { UserProfile } from '../../../../core/interfaces/user-profile.interface';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { Client } from '../../interfaces/client.interface';
 
 @Component({
   selector: 'app-customers-list',
@@ -11,9 +12,12 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
 })
 export class CustomersListComponent {
-  customers: WritableSignal<UserProfile[]> = signal<UserProfile[]>([]);
+  customers: WritableSignal<Client[]> = signal<Client[]>([]);
 
-  constructor(private customersService: CustomersService) {}
+  constructor(
+    private customersService: CustomersService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.loadCustomers();
@@ -26,14 +30,19 @@ export class CustomersListComponent {
   }
 
   deleteCustomer(id: string) {
-    // Implementar lógica de exclusão
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+      this.customersService.deleteCustomer(id).subscribe({
+        next: () => this.loadCustomers(),
+        error: () => alert('Erro ao excluir cliente'),
+      });
+    }
   }
 
   viewCustomer(id: string) {
-    // Implementar lógica de visualização
+    this.router.navigate(['/customers', id]);
   }
 
   editCustomer(id: string) {
-    // Implementar lógica de edição
+    this.router.navigate(['/customers', id, 'edit']);
   }
 }

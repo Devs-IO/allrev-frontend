@@ -44,9 +44,9 @@ export class UserCreateComponent {
         this.isAdmin = user.role === 'Administrador';
         if (this.isAdmin) {
           this.loadTenants();
-        } else if (user.tenantId) {
-          this.tenantName = user.tenantCompanyName || '';
-          this.formData.tenantId = user.tenantId;
+        } else if (user.tenant?.id) {
+          this.tenantName = user.tenant.companyName || '';
+          this.formData.tenantId = user.tenant.id;
         }
       },
       error: () => {

@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
-import { UserProfile } from '../../core/interfaces/user-profile.interface';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 

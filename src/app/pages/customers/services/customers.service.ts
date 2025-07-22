@@ -9,22 +9,22 @@ export class CustomersService {
   private http = inject(HttpClient);
 
   createCustomer(data: Partial<any>): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/customers`, data);
+    return this.http.post<any>(`${this.apiUrl}/client`, data);
   }
 
   getCustomers(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/customers/all`);
+    return this.http.get<any[]>(`${this.apiUrl}/client`);
   }
 
   getCustomerById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/customers/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/client/${id}`);
   }
 
   updateCustomer(id: string, data: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/customers/${id}`, data);
+    return this.http.put<any>(`${this.apiUrl}/client/${id}`, data);
   }
 
   deleteCustomer(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/customers/${id}`);
+    return this.http.delete<any>(`${this.apiUrl}/client/${id}`);
   }
 }

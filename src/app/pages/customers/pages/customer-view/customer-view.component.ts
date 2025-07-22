@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomersService } from '../../services/customers.service';
-import { UserProfile } from '../../../../core/interfaces/user-profile.interface';
+import { Client } from '../../interfaces/client.interface';
 
 @Component({
   selector: 'app-customer-view',
   templateUrl: './customer-view.component.html',
   styleUrls: ['./customer-view.component.scss'],
   standalone: true,
-  imports: [CommonModule, DatePipe]
+  imports: [CommonModule, DatePipe],
 })
 export class CustomerViewComponent implements OnInit {
-  customer: UserProfile | null = null;
+  customer: Client | null = null;
   loading = true;
   error: string | null = null;
 
@@ -33,7 +33,7 @@ export class CustomerViewComponent implements OnInit {
         error: (err) => {
           this.error = 'Erro ao carregar cliente';
           this.loading = false;
-        }
+        },
       });
     }
   }

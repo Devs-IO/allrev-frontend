@@ -1,32 +1,47 @@
-<div class="container my-4">
-  <h2>Editar Cliente</h2>
+
+<div class="container my-4" style="max-width: 900px;">
+  <h2 class="text-primary mb-4"><i class="bi bi-pencil-square me-2"></i> Editar Cliente</h2>
   <div *ngIf="loading">Carregando...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  <form *ngIf="!loading && customer" (ngSubmit)="submit()">
+  <form *ngIf="!loading && customer" (ngSubmit)="submit()" class="card shadow-lg rounded-4 border-0 p-4 mb-4">
     <div class="mb-3">
-      <label>Nome</label>
+      <label><i class="bi bi-person-fill me-1"></i> Nome</label>
       <input class="form-control" [(ngModel)]="formData.name" name="name" required />
     </div>
     <div class="mb-3">
-      <label>Email</label>
+      <label><i class="bi bi-envelope-fill me-1"></i> Email</label>
       <input class="form-control" [(ngModel)]="formData.email" name="email" required />
     </div>
     <div class="mb-3">
-      <label>Telefone</label>
+      <label><i class="bi bi-telephone-fill me-1"></i> Telefone</label>
       <input class="form-control" [(ngModel)]="formData.phone" name="phone" />
     </div>
     <div class="mb-3">
-      <label>Função</label>
-      <input class="form-control" [(ngModel)]="formData.role" name="role" />
+      <label><i class="bi bi-building me-1"></i> Universidade</label>
+      <input class="form-control" [(ngModel)]="formData.university" name="university" />
     </div>
     <div class="mb-3">
-      <label>Status</label>
+      <label><i class="bi bi-book me-1"></i> Curso</label>
+      <input class="form-control" [(ngModel)]="formData.course" name="course" />
+    </div>
+    <div class="mb-3">
+      <label><i class="bi bi-file-earmark-text me-1"></i> Observação</label>
+      <input class="form-control" [(ngModel)]="formData.observation" name="observation" />
+    </div>
+    <div class="mb-3">
+      <label><i class="bi bi-file-earmark-text me-1"></i> Nota</label>
+      <input class="form-control" [(ngModel)]="formData.note" name="note" />
+    </div>
+    <div class="mb-3">
+      <label><i class="bi bi-check-circle-fill me-1"></i> Status</label>
       <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
         <option [ngValue]="true">Ativo</option>
         <option [ngValue]="false">Inativo</option>
       </select>
     </div>
-    <button type="submit" class="btn btn-primary">Salvar</button>
-    <a routerLink="/customers" class="btn btn-secondary ms-2">Cancelar</a>
+    <div class="d-flex justify-content-end mt-3">
+      <button type="submit" class="btn btn-primary me-2"><i class="bi bi-save me-1"></i> Salvar</button>
+      <a routerLink="/customers" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i> Cancelar</a>
+    </div>
   </form>
 </div>
