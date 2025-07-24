@@ -1,6 +1,4 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './pages/login/login.component';
-import { HomeComponent } from './pages/home/home.component';
 import { AuthGuard } from './core/guard/auth.guard';
 import { RoleGuard } from './core/guard/role.guard';
 import { Role } from './core/enum/roles.enum';
@@ -10,7 +8,7 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('./pages/login/login.component').then((m) => m.LoginComponent),
+      import('../modules/login/login.component').then((m) => m.LoginComponent),
   },
 
   {
@@ -24,20 +22,20 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () =>
-          import('./pages/home/home.component').then((m) => m.HomeComponent),
+          import('../modules/home/home.component').then((m) => m.HomeComponent),
         canActivate: [AuthGuard],
       },
       { path: '', redirectTo: '/home', pathMatch: 'full' },
       {
         path: 'home',
         loadComponent: () =>
-          import('./pages/home/home.component').then((m) => m.HomeComponent),
+          import('../modules/home/home.component').then((m) => m.HomeComponent),
         canActivate: [AuthGuard],
       },
       {
         path: 'profile',
         loadComponent: () =>
-          import('./pages/profile/profile.component').then(
+          import('../modules/profile/profile.component').then(
             (m) => m.ProfileComponent
           ),
         canActivate: [AuthGuard],
@@ -45,7 +43,7 @@ export const routes: Routes = [
       {
         path: 'products',
         loadComponent: () =>
-          import('./pages/products/products.component').then(
+          import('../modules/products/products.component').then(
             (m) => m.ProductsComponent
           ),
         canActivate: [AuthGuard],
@@ -54,7 +52,7 @@ export const routes: Routes = [
         path: 'customers',
         loadComponent: () =>
           import(
-            './pages/customers/pages/customers-list/customers-list.component'
+            '../modules/customers/pages/customers-list/customers-list.component'
           ).then((m) => m.CustomersListComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
@@ -63,7 +61,7 @@ export const routes: Routes = [
         path: 'customers/create',
         loadComponent: () =>
           import(
-            './pages/customers/pages/customer-create/customer-create.component'
+            '../modules/customers/pages/customer-create/customer-create.component'
           ).then((m) => m.CustomerCreateComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
@@ -72,7 +70,7 @@ export const routes: Routes = [
         path: 'customers/:id',
         loadComponent: () =>
           import(
-            './pages/customers/pages/customer-view/customer-view.component'
+            '../modules/customers/pages/customer-view/customer-view.component'
           ).then((m) => m.CustomerViewComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
@@ -81,7 +79,7 @@ export const routes: Routes = [
         path: 'customers/:id/edit',
         loadComponent: () =>
           import(
-            './pages/customers/pages/customer-edit/customer-edit.component'
+            '../modules/customers/pages/customer-edit/customer-edit.component'
           ).then((m) => m.CustomerEditComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
@@ -89,7 +87,7 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () =>
-          import('./pages/users/pages/users-list/users-list.component').then(
+          import('../modules/users/pages/users-list/users-list.component').then(
             (m) => m.UsersComponent
           ),
         canActivate: [AuthGuard, RoleGuard],
@@ -98,16 +96,16 @@ export const routes: Routes = [
       {
         path: 'users/create',
         loadComponent: () =>
-          import('./pages/users/pages/user-create/user-create.component').then(
-            (m) => m.UserCreateComponent
-          ),
+          import(
+            '../modules/users/pages/user-create/user-create.component'
+          ).then((m) => m.UserCreateComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
       },
       {
         path: 'users/:id/edit',
         loadComponent: () =>
-          import('./pages/users/pages/user-edit/user-edit.component').then(
+          import('../modules/users/pages/user-edit/user-edit.component').then(
             (m) => m.UserEditComponent
           ),
         canActivate: [AuthGuard, RoleGuard],
@@ -116,7 +114,7 @@ export const routes: Routes = [
       {
         path: 'users/:id',
         loadComponent: () =>
-          import('./pages/users/pages/user-view/user-view.component').then(
+          import('../modules/users/pages/user-view/user-view.component').then(
             (m) => m.UserViewComponent
           ),
         canActivate: [AuthGuard, RoleGuard],
@@ -125,7 +123,7 @@ export const routes: Routes = [
       {
         path: 'reports',
         loadComponent: () =>
-          import('./pages/reports/reports.component').then(
+          import('../modules/reports/reports.component').then(
             (m) => m.ReportsComponent
           ),
         canActivate: [AuthGuard],
@@ -133,7 +131,7 @@ export const routes: Routes = [
       {
         path: 'settings',
         loadComponent: () =>
-          import('./pages/settings/settings.component').then(
+          import('../modules/settings/settings.component').then(
             (m) => m.SettingsComponent
           ),
         canActivate: [AuthGuard],
@@ -142,7 +140,7 @@ export const routes: Routes = [
         path: 'tenants',
         loadComponent: () =>
           import(
-            './pages/tenants/pages/tenant-list/tenant-list.component'
+            '../modules/tenants/pages/tenant-list/tenant-list.component'
           ).then((m) => m.TenantListComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN] },
@@ -151,7 +149,7 @@ export const routes: Routes = [
         path: 'tenants/create',
         loadComponent: () =>
           import(
-            './pages/tenants/pages/tenant-create/tenant-create.component'
+            '../modules/tenants/pages/tenant-create/tenant-create.component'
           ).then((m) => m.TenantCreateComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN] },

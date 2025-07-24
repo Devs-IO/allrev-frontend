@@ -1,0 +1,22 @@
+
+<app-page-container title="Services">
+  <table class="table" *ngIf="!loading">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Min Price</th>
+        <th>Status</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let svc of services">
+        <td>{{ svc.name }}</td>
+        <td>{{ svc.minimumPrice | currency }}</td>
+        <td>{{ svc.status }}</td>
+        <td>{{ svc.createdAt | date }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <app-spinner *ngIf="loading"></app-spinner>
+</app-page-container>

@@ -5,8 +5,8 @@ import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { UserProfile } from '../interfaces/user-profile.interface';
-import { User } from '../interfaces/user.interface';
+import { UserProfile } from '../../../modules/users/interfaces/user-profile.interface';
+import { User } from '../../../modules/users/interfaces/user.interface';
 
 @Injectable({
   providedIn: 'root',

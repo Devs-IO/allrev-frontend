@@ -1,0 +1,21 @@
+
+<app-page-container title="New Service">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <app-input formControlName="name" label="Name" required></app-input>
+    <app-textarea formControlName="description" label="Description"></app-textarea>
+    <app-input formControlName="minimumPrice" label="Minimum Price" type="number" required></app-input>
+    <app-input formControlName="defaultAssistantPrice" label="Default Assistant Price" type="number"></app-input>
+    <app-select formControlName="status" label="Status">
+      <option value="ACTIVE">ACTIVE</option>
+      <option value="INACTIVE">INACTIVE</option>
+    </app-select>
+    <app-select formControlName="responsibleUserId" label="Responsible" required>
+      <!-- Carregue opções dinamicamente -->
+      <option value="">Select...</option>
+      <!-- Exemplo: <option *ngFor="let u of responsibles" [value]="u.id">{{u.name}}</option> -->
+    </app-select>
+    <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading">
+      Save
+    </button>
+  </form>
+</app-page-container>
