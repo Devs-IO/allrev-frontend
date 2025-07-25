@@ -41,12 +41,13 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
       },
       {
-        path: 'products',
+        path: 'services',
         loadComponent: () =>
-          import('../modules/products/products.component').then(
-            (m) => m.ProductsComponent
-          ),
+          import(
+            '../modules/services/pages/services-list/services-list.component'
+          ).then((m) => m.ServicesListComponent),
         canActivate: [AuthGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
         path: 'customers',

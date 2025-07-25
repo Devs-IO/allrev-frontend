@@ -1,5 +1,6 @@
 
-<app-page-container title="New Service">
+<div class="container my-4">
+  <h1 class="mb-4 text-primary">Serviços</h1>
   <form [formGroup]="form" (ngSubmit)="submit()">
     <app-input formControlName="name" label="Name" required></app-input>
     <app-textarea formControlName="description" label="Description"></app-textarea>
@@ -18,4 +19,4 @@
       Save
     </button>
   </form>
-</app-page-container>
+</div>

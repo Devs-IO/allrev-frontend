@@ -68,10 +68,18 @@ export class SidebarComponent implements OnInit {
       ],
     },
     {
-      role: [Role.ADMIN],
+      role: [Role.MANAGER_REVIEWERS],
       menu: 'Produtos',
       route: '/products',
       icon: 'bi bi-box',
+      subRoutes: [
+        {
+          label: 'Novo Produto',
+          route: '/services/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/services', icon: 'bi bi-list' },
+      ],
     },
     {
       role: [Role.ADMIN, Role.MANAGER_REVIEWERS],

@@ -1,12 +1,15 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, Validators } from '@angular/forms';
 import { ServicesService } from '../../services/services.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-services-create',
   templateUrl: './services-create.component.html',
   styleUrls: ['./services-create.component.scss'],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
 })
 export class ServicesCreateComponent {
   form = this.fb.group({
