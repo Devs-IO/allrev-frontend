@@ -2,10 +2,10 @@ import { Component, signal, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { UserProfile } from '../../interfaces/user-profile.interface';
+import { UserProfile } from '../../../../modules/users/interfaces/user-profile.interface';
 import { Role } from '../../enum/roles.enum';
 import { RoleGuard } from '../../guard/role.guard';
-import { User } from '../../interfaces/user.interface';
+import { User } from '../../../../modules/users/interfaces/user.interface';
 
 @Component({
   selector: 'app-sidebar',
@@ -25,24 +25,91 @@ export class SidebarComponent implements OnInit {
   filteredMenuItems: any[] = [];
 
   menuItems = [
-    { role: [Role.MANAGER_REVIEWERS], menu: 'Clientes', route: '/customers', icon: 'bi bi-people', subRoutes: [
-      { label: 'Novo', route: '/customers/create', icon: 'bi bi-plus-circle' },
-      { label: 'Listar', route: '/customers', icon: 'bi bi-list' }
-    ] },
-    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Usuários', route: '/users', icon: 'bi bi-person-fill', subRoutes: [
-      { label: 'Novo Usuário', route: '/users/create', icon: 'bi bi-person-plus' },
-      { label: 'Listar', route: '/users', icon: 'bi bi-list' }
-    ] },
-    { role: [Role.ADMIN], menu: 'Empresas', route: '/tenants', icon: 'bi bi-building', subRoutes: [
-      { label: 'Nova Empresa', route: '/tenants/create', icon: 'bi bi-plus-circle' },
-      { label: 'Listar', route: '/tenants', icon: 'bi bi-list' }
-    ] },
-    { role: [Role.ADMIN], menu: 'Produtos', route: '/products', icon: 'bi bi-box' },
-    { role: [Role.ADMIN, Role.MANAGER_REVIEWERS], menu: 'Relatórios', route: '/reports', icon: 'bi bi-bar-chart' },
-    { role: [Role.ADMIN], menu: 'Configurações', route: '/settings', icon: 'bi bi-gear' }
+    {
+      role: [Role.MANAGER_REVIEWERS, Role.CLIENT, Role.ASSISTANT_REVIEWERS],
+      menu: 'Ordens',
+      route: '/orders',
+      icon: 'bi bi-building',
+      subRoutes: [
+        {
+          label: 'Nova Ordem',
+          route: '/orders/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/orders', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.MANAGER_REVIEWERS],
+      menu: 'Clientes',
+      route: '/clients',
+      icon: 'bi bi-people',
+      subRoutes: [
+        {
+          label: 'Novo Cliente',
+          route: '/clients/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/clients', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.MANAGER_REVIEWERS],
+      menu: 'Funcionalidades',
+      route: '/functionalities',
+      icon: 'bi bi-box',
+      subRoutes: [
+        {
+          label: 'Nova Funcionalidade',
+          route: '/functionalities/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/functionalities', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.ADMIN, Role.MANAGER_REVIEWERS],
+      menu: 'Usuários',
+      route: '/users',
+      icon: 'bi bi-person-fill',
+      subRoutes: [
+        {
+          label: 'Novo Usuário',
+          route: '/users/create',
+          icon: 'bi bi-person-plus',
+        },
+        { label: 'Listar', route: '/users', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.ADMIN],
+      menu: 'Empresas',
+      route: '/tenants',
+      icon: 'bi bi-building',
+      subRoutes: [
+        {
+          label: 'Nova Empresa',
+          route: '/tenants/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/tenants', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.ADMIN, Role.MANAGER_REVIEWERS],
+      menu: 'Relatórios',
+      route: '/reports',
+      icon: 'bi bi-bar-chart',
+    },
+    {
+      role: [Role.ADMIN],
+      menu: 'Configurações',
+      route: '/settings',
+      icon: 'bi bi-gear',
+    },
   ];
 
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.loadUserProfile();
@@ -64,7 +131,7 @@ export class SidebarComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao buscar perfil do usuário:', err);
-      }
+      },
     });
   }
 
@@ -72,11 +139,13 @@ export class SidebarComponent implements OnInit {
     this.authService.getUser().subscribe({
       next: (user: User) => {
         this.userRole = user.role;
-        this.filteredMenuItems = this.menuItems.filter(item => this.isAuthorized(item.role));
+        this.filteredMenuItems = this.menuItems.filter((item) =>
+          this.isAuthorized(item.role)
+        );
       },
       error: (err) => {
         console.error('Erro ao buscar roles do usuário:', err);
-      }
+      },
     });
   }
 

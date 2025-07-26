@@ -1,0 +1,54 @@
+
+<div class="container my-4" style="max-width: 900px;">
+  <h2 class="text-primary mb-4"><i class="bi bi-person-circle me-2 fs-2 text-warning"></i> Detalhes do Cliente</h2>
+  <div *ngIf="loading">Carregando...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="!loading && clients" class="card shadow-lg rounded-4 border-0 p-5 mb-4 animate__animated animate__fadeIn">
+    <div class="row g-4">
+      <div class="col-md-4 gradient-custom text-center text-white profile-header">
+        <div class="profile-img-container">
+          <i class="bi bi-person-circle profile-icon fs-1"></i>
+        </div>
+        <h5>{{ clients.name }}</h5>
+        <p>
+          <i class="bi" [ngClass]="clients.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
+          {{ clients.isActive ? 'Ativo' : 'Inativo' }}
+        </p>
+      </div>
+      <div class="col-md-8">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-envelope-fill text-info fs-3 me-2"></i>
+            <span class="fw-bold">Email:</span>
+            <span class="ms-2">{{ clients.email }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-telephone-fill text-success fs-3 me-2"></i>
+            <span class="fw-bold">Telefone:</span>
+            <span class="ms-2">{{ clients.phone || 'Não informado' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-geo-alt-fill text-danger fs-3 me-2"></i>
+            <span class="fw-bold">Curso:</span>
+            <span class="ms-2">{{ clients.course || 'Não informado' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-building text-secondary fs-3 me-2"></i>
+            <span class="fw-bold">Universidade:</span>
+            <span class="ms-2">{{ clients.university || 'Não informado' }}</span>
+          </div>
+          <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-calendar-check text-info fs-3 me-2"></i>
+            <span class="fw-bold">Criado em:</span>
+            <span class="ms-2">{{ clients.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+      <button class="btn btn-secondary" (click)="back()">
+        <i class="bi bi-arrow-left-circle"></i> Voltar
+      </button>
+    </div>
+  </div>
+</div>

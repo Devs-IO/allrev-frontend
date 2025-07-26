@@ -39,18 +39,18 @@
 
     <!-- Clientes -->
     <li>
-      <a routerLink="/customers" class="nav-link d-flex justify-content-between align-items-center"
-        (click)="toggleSubmenu('customers')">
+      <a routerLink="/clients" class="nav-link d-flex justify-content-between align-items-center"
+        (click)="toggleSubmenu('clients')">
         <span>
           <i class="bi bi-people me-2"></i>
           <span *ngIf="!isCollapsed()">Clientes</span>
         </span>
-        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('customers')"></i>
+        <i class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen('clients')"></i>
       </a>
-      <ul class="submenu nav flex-column" [class.active]="isOpen('customers')">
-        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-person-plus me-2"></i> <span
+      <ul class="submenu nav flex-column" [class.active]="isOpen('clients')">
+        <li><a routerLink="/clients" class="nav-link"><i class="bi bi-person-plus me-2"></i> <span
               *ngIf="!isCollapsed()">Novo Cliente</span></a></li>
-        <li><a routerLink="/customers" class="nav-link"><i class="bi bi-people me-2"></i> <span
+        <li><a routerLink="/clients" class="nav-link"><i class="bi bi-people me-2"></i> <span
               *ngIf="!isCollapsed()">Todos os Clientes</span></a></li>
       </ul>
     </li>
