@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import {
-  FunctionalitiesService,
-  ServiceDefinitionDto,
-} from '../../services/functionalities.service';
+import { FunctionalitiesService } from '../../services/functionalities.service';
+import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 
 @Component({
   selector: 'app-functionalities-view',
@@ -15,7 +13,7 @@ import {
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class FunctionalitiesViewComponent implements OnInit {
-  functionalities: ServiceDefinitionDto[] = [];
+  functionalities: FunctionalityDto[] = [];
   loading = true;
 
   constructor(private functionalitiesService: FunctionalitiesService) {}
