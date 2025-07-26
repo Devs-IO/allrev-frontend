@@ -24,7 +24,7 @@ export interface CreateServiceDto {
 }
 
 @Injectable({ providedIn: 'root' })
-export class ServicesService {
+export class FunctionalitiesService {
   private baseUrl = '/services';
 
   constructor(private http: HttpClient) {}

@@ -1,23 +1,23 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { CustomersService } from '../../services/customers.service';
+import { ClientsService } from '../../services/clients.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Client } from '../../interfaces/client.interface';
 import { AuthService } from '../../../../app/core/services/auth.service';
 @Component({
-  selector: 'app-customer-create',
-  templateUrl: './customer-create.component.html',
-  styleUrls: ['./customer-create.component.scss'],
+  selector: 'app-clients-create',
+  templateUrl: './clients-create.component.html',
+  styleUrls: ['./clients-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
-export class CustomerCreateComponent {
+export class ClientsCreateComponent {
   formData: Partial<Client> = {};
   error: string | null = null;
 
   constructor(
-    private customersService: CustomersService,
+    private clientsService: ClientsService,
     private router: Router,
     private authService: AuthService
   ) {}
@@ -27,8 +27,8 @@ export class CustomerCreateComponent {
       next: (user) => {
         console.log(user);
         this.formData.tenantId = user.tenant?.id;
-        this.customersService.createCustomer(this.formData).subscribe({
-          next: () => this.router.navigate(['/customers']),
+        this.clientsService.createClients(this.formData).subscribe({
+          next: () => this.router.navigate(['/clients']),
           error: (err) => (this.error = 'Erro ao criar cliente'),
         });
       },

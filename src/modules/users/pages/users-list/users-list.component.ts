@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../../app/core/services/auth.service';
 
 @Component({
@@ -11,7 +11,7 @@ import { AuthService } from '../../../../app/core/services/auth.service';
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class UsersComponent {
   users: WritableSignal<ResponseUserDto[]> = signal<ResponseUserDto[]>([]);

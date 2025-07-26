@@ -1,6 +1,6 @@
 
 <div class="container my-4">
-  <h1 class="mb-4 text-primary">Serviços</h1>
+  <h1 class="mb-4 text-primary">Funcionalidades</h1>
   <table class="table" *ngIf="!loading">
     <thead>
       <tr>
@@ -11,7 +11,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let svc of services">
+      <tr *ngFor="let svc of functionalities">
         <td>{{ svc.name }}</td>
         <td>{{ svc.minimumPrice | currency }}</td>
         <td>{{ svc.status }}</td>

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
@@ -11,7 +11,7 @@ import { AuthService } from '../../../../app/core/services/auth.service';
   templateUrl: './user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class UserEditComponent implements OnInit {
   user: ResponseUserDto | null = null;

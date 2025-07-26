@@ -26,17 +26,45 @@ export class SidebarComponent implements OnInit {
 
   menuItems = [
     {
+      role: [Role.MANAGER_REVIEWERS, Role.CLIENT, Role.ASSISTANT_REVIEWERS],
+      menu: 'Ordens',
+      route: '/orders',
+      icon: 'bi bi-building',
+      subRoutes: [
+        {
+          label: 'Nova Ordem',
+          route: '/orders/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/orders', icon: 'bi bi-list' },
+      ],
+    },
+    {
       role: [Role.MANAGER_REVIEWERS],
       menu: 'Clientes',
-      route: '/customers',
+      route: '/clients',
       icon: 'bi bi-people',
       subRoutes: [
         {
-          label: 'Novo',
-          route: '/customers/create',
+          label: 'Novo Cliente',
+          route: '/clients/create',
           icon: 'bi bi-plus-circle',
         },
-        { label: 'Listar', route: '/customers', icon: 'bi bi-list' },
+        { label: 'Listar', route: '/clients', icon: 'bi bi-list' },
+      ],
+    },
+    {
+      role: [Role.MANAGER_REVIEWERS],
+      menu: 'Funcionalidades',
+      route: '/functionalities',
+      icon: 'bi bi-box',
+      subRoutes: [
+        {
+          label: 'Nova Funcionalidade',
+          route: '/functionalities/create',
+          icon: 'bi bi-plus-circle',
+        },
+        { label: 'Listar', route: '/functionalities', icon: 'bi bi-list' },
       ],
     },
     {
@@ -65,20 +93,6 @@ export class SidebarComponent implements OnInit {
           icon: 'bi bi-plus-circle',
         },
         { label: 'Listar', route: '/tenants', icon: 'bi bi-list' },
-      ],
-    },
-    {
-      role: [Role.MANAGER_REVIEWERS],
-      menu: 'Produtos',
-      route: '/products',
-      icon: 'bi bi-box',
-      subRoutes: [
-        {
-          label: 'Novo Produto',
-          route: '/services/create',
-          icon: 'bi bi-plus-circle',
-        },
-        { label: 'Listar', route: '/services', icon: 'bi bi-list' },
       ],
     },
     {

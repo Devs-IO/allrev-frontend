@@ -10,18 +10,18 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let customer of customers(); let i = index">
+      <tr *ngFor="let clients of clients(); let i = index">
         <th scope="row">{{ i + 1 }}</th>
-        <td>{{ customer.name }}</td>
-        <td>{{ customer.email }}</td>
+        <td>{{ clients.name }}</td>
+        <td>{{ clients.email }}</td>
         <td>
-          <button class="btn btn-primary btn-sm me-1" (click)="viewCustomer(customer.id)">
+          <button class="btn btn-primary btn-sm me-1" (click)="viewClients(clients.id)">
             <i class="bi bi-eye"></i>
           </button>
-          <button class="btn btn-warning btn-sm me-1" (click)="editCustomer(customer.id)">
+          <button class="btn btn-warning btn-sm me-1" (click)="editClients(clients.id)">
             <i class="bi bi-pencil-square"></i>
           </button>
-          <button class="btn btn-danger btn-sm" (click)="deleteCustomer(customer.id)">
+          <button class="btn btn-danger btn-sm" (click)="deleteClients(clients.id)">
             <i class="bi bi-trash"></i>
           </button>
         </td>

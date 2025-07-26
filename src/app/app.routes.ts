@@ -41,47 +41,74 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
       },
       {
-        path: 'services',
+        path: 'functionalities',
         loadComponent: () =>
           import(
-            '../modules/services/pages/services-list/services-list.component'
-          ).then((m) => m.ServicesListComponent),
+            '../modules/functionalities/pages/functionalities-list/functionalities-list.component'
+          ).then((m) => m.FunctionalitiesListComponent),
         canActivate: [AuthGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
-        path: 'customers',
+        path: 'functionalities/create',
         loadComponent: () =>
           import(
-            '../modules/customers/pages/customers-list/customers-list.component'
-          ).then((m) => m.CustomersListComponent),
+            '../modules/functionalities/pages/functionalities-create/functionalities-create.component'
+          ).then((m) => m.FunctionalitiesCreateComponent),
+        canActivate: [AuthGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
+        path: 'services/:id',
+        loadComponent: () =>
+          import(
+            '../modules/functionalities/pages/functionalities-view/functionalities-view.component'
+          ).then((m) => m.FunctionalitiesViewComponent),
+        canActivate: [AuthGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      // {
+      //   path: 'functionalities/:id/edit',
+      //   loadComponent: () =>
+      //     import(
+      //       '../modules/functionalities/pages/functionalities-edit/functionalities-edit.component'
+      //     ).then((m) => m.FunctionalitiesEditComponent),
+      //   canActivate: [AuthGuard],
+      //   data: { roles: [Role.MANAGER_REVIEWERS] },
+      // },
+      {
+        path: 'clients',
+        loadComponent: () =>
+          import(
+            '../modules/clients/pages/clients-list/clients-list.component'
+          ).then((m) => m.ClientsListComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
-        path: 'customers/create',
+        path: 'clients/create',
         loadComponent: () =>
           import(
-            '../modules/customers/pages/customer-create/customer-create.component'
-          ).then((m) => m.CustomerCreateComponent),
+            '../modules/clients/pages/clients-create/clients-create.component'
+          ).then((m) => m.ClientsCreateComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
-        path: 'customers/:id',
+        path: 'clients/:id',
         loadComponent: () =>
           import(
-            '../modules/customers/pages/customer-view/customer-view.component'
-          ).then((m) => m.CustomerViewComponent),
+            '../modules/clients/pages/clients-view/clients-view.component'
+          ).then((m) => m.ClientsViewComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
-        path: 'customers/:id/edit',
+        path: 'clients/:id/edit',
         loadComponent: () =>
           import(
-            '../modules/customers/pages/customer-edit/customer-edit.component'
-          ).then((m) => m.CustomerEditComponent),
+            '../modules/clients/pages/clients-edit/clients-edit.component'
+          ).then((m) => m.ClientsEditComponent),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },

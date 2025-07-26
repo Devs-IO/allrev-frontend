@@ -1,17 +1,23 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormsModule, Validators } from '@angular/forms';
-import { ServicesService } from '../../services/services.service';
+import {
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
+import { FunctionalitiesService } from '../../services/functionalities.service';
+
 @Component({
-  selector: 'app-services-create',
-  templateUrl: './services-create.component.html',
-  styleUrls: ['./services-create.component.scss'],
+  selector: 'app-functionalities-create',
+  templateUrl: './functionalities-create.component.html',
+  styleUrls: ['./functionalities-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
-export class ServicesCreateComponent {
+export class FunctionalitiesCreateComponent {
   form = this.fb.group({
     name: ['', Validators.required],
     description: [''],
@@ -25,7 +31,7 @@ export class ServicesCreateComponent {
 
   constructor(
     private fb: FormBuilder,
-    private servicesService: ServicesService,
+    private functionalitiesService: FunctionalitiesService,
     private router: Router
   ) {}
 
@@ -43,8 +49,8 @@ export class ServicesCreateComponent {
       description: this.form.value.description || undefined,
       defaultAssistantPrice: this.form.value.defaultAssistantPrice ?? undefined,
     };
-    this.servicesService.create(value).subscribe({
-      next: () => this.router.navigate(['/services']),
+    this.functionalitiesService.create(value).subscribe({
+      next: () => this.router.navigate(['/functionalities']),
       complete: () => (this.loading = false),
     });
   }

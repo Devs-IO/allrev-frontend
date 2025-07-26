@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { TenantsService } from '../../../tenants/services/tenants.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto } from '../../types/user.dto';
@@ -12,7 +12,7 @@ import { AuthService } from '../../../../app/core/services/auth.service';
   templateUrl: './user-create.component.html',
   styleUrls: ['./user-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class UserCreateComponent {
   formData: Partial<CreateUserDto> = {};
