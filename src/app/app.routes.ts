@@ -59,6 +59,15 @@ export const routes: Routes = [
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
+        path: 'order/create',
+        loadComponent: () =>
+          import(
+            '../modules/functionalities/pages/order-create/order-create.component'
+          ).then((m) => m.OrderCreateComponent),
+        canActivate: [AuthGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
         path: 'services/:id',
         loadComponent: () =>
           import(
