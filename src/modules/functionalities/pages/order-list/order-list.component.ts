@@ -48,9 +48,6 @@ export class OrderListComponent implements OnInit {
     this.isLoading = true;
     this.authService.getUser().subscribe({
       next: (user) => {
-        if (!environment.production) {
-          console.log('Loaded user from API:', user);
-        }
         this.userRole = user.role;
 
         // Para assistants, mostrar suas atribuições por padrão
