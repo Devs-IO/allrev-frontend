@@ -1,21 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-import {
-  FunctionalitiesService,
-  ServiceDefinitionDto,
-} from '../../services/functionalities.service';
+import { RouterModule } from '@angular/router';
+import { FunctionalitiesService } from '../../services/functionalities.service';
+import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 
 @Component({
   selector: 'app-functionalities-list',
   templateUrl: './functionalities-list.component.html',
   styleUrls: ['./functionalities-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
 })
 export class FunctionalitiesListComponent implements OnInit {
-  functionalities: ServiceDefinitionDto[] = [];
+  functionalities: FunctionalityDto[] = [];
   loading = true;
 
   constructor(private functionalitiesService: FunctionalitiesService) {}

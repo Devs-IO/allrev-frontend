@@ -1,39 +1,32 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-export interface ServiceDefinitionDto {
-  id: string;
-  name: string;
-  description?: string;
-  minimumPrice: number;
-  defaultAssistantPrice?: number;
-  status: 'ACTIVE' | 'INACTIVE';
-  responsibleUserId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateServiceDto {
-  name: string;
-  description?: string;
-  minimumPrice: number;
-  defaultAssistantPrice?: number;
-  status?: 'ACTIVE' | 'INACTIVE';
-  responsibleUserId: string;
-}
+import {
+  FunctionalityDto,
+  CreateFunctionalityDto,
+  ResponsibleUser,
+} from '../interfaces/functionalities.interface';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class FunctionalitiesService {
-  private baseUrl = '/services';
+  private baseUrl = '/functionalities';
+  private apiUrl = environment.apiUrl; // URL base da API
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ServiceDefinitionDto[]> {
-    return this.http.get<ServiceDefinitionDto[]>(this.baseUrl);
+  getAll(): Observable<FunctionalityDto[]> {
+    return this.http.get<FunctionalityDto[]>(`${this.apiUrl}${this.baseUrl}`);
   }
 
-  create(dto: CreateServiceDto): Observable<ServiceDefinitionDto> {
-    return this.http.post<ServiceDefinitionDto>(this.baseUrl, dto);
+  create(dto: CreateFunctionalityDto): Observable<FunctionalityDto> {
+    return this.http.post<FunctionalityDto>(
+      `${this.apiUrl}${this.baseUrl}`,
+      dto
+    );
+  }
+
+  getResponsibleUsers(): Observable<ResponsibleUser[]> {
+    return this.http.get<ResponsibleUser[]>(`${this.apiUrl}/user/children`);
   }
 }
