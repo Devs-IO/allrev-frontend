@@ -68,6 +68,15 @@ export const routes: Routes = [
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
+        path: 'order/list',
+        loadComponent: () =>
+          import(
+            '../modules/functionalities/pages/order-list/order-list.component'
+          ).then((m) => m.OrderListComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS] },
+      },
+      {
         path: 'services/:id',
         loadComponent: () =>
           import(

@@ -25,6 +25,14 @@
     </div>
   </div>
 
+  <!-- User Info Debug (só aparece se usuário carregado) -->
+  <div *ngIf="currentUser && !isLoading" class="alert alert-info">
+    <small>
+      <i class="bi bi-person-check"></i>
+      <strong>Usuário logado:</strong> {{ currentUser.name }} ({{ currentUser.email }}) - Role: {{ currentUser.role }}
+    </small>
+  </div>
+
   <!-- Main Form -->
   <form *ngIf="!isLoading" (ngSubmit)="submit()" #orderForm="ngForm">
 
@@ -48,6 +56,22 @@
               {{ client.name }} - {{ client.email }}
             </option>
           </select>
+        </div>
+
+        <!-- Descrição Geral da Ordem -->
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="bi bi-journal-text"></i> Descrição Geral da Ordem
+          </label>
+          <textarea
+            class="form-control"
+            [(ngModel)]="formData.description"
+            name="orderDescription"
+            rows="3"
+            placeholder="Descreva informações gerais sobre esta ordem de serviço..."></textarea>
+          <div class="form-text">
+            <small>Esta descrição será aplicada à ordem como um todo.</small>
+          </div>
         </div>
       </div>
     </div>
@@ -150,6 +174,22 @@
                 [min]="getTodayDate()"
                 required />
             </div>
+
+            <!-- Service Description -->
+            <div class="col-12 mb-3">
+              <label class="form-label">
+                <i class="bi bi-journal-text"></i> Descrição do Serviço
+              </label>
+              <textarea
+                class="form-control"
+                [(ngModel)]="service.description"
+                [name]="'serviceDescription_' + i"
+                rows="2"
+                placeholder="Descreva informações específicas sobre este serviço..."></textarea>
+              <div class="form-text">
+                <small>Informações adicionais sobre este serviço específico.</small>
+              </div>
+            </div>
           </div>
 
           <!-- Responsible Assignment -->
@@ -165,6 +205,14 @@
               <label class="form-check-label" [for]="'hasResponsible_' + i">
                 <i class="bi bi-person-gear"></i> Atribuir responsável específico
               </label>
+            </div>
+
+            <!-- Info sobre atribuição automática -->
+            <div *ngIf="!service.hasResponsible" class="mt-2">
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i>
+                <strong>Atribuição automática:</strong> Você será o responsável por este serviço com prazo interno de 1 dia antes da entrega (ou hoje, se for mais próximo) e valor igual ao preço total.
+              </small>
             </div>
           </div>
 
@@ -239,6 +287,15 @@
           <div class="col-md-6">
             <p><strong>Cliente:</strong> {{ getClientName(formData.clientId) }}</p>
             <p><strong>Quantidade de Serviços:</strong> {{ formData.services.length }}</p>
+
+            <!-- Info sobre atribuições -->
+            <div class="mt-2">
+              <small class="text-muted">
+                <strong>Atribuições:</strong><br>
+                • Específicas: {{ getSpecificAssignmentsCount() }}<br>
+                • Automáticas (você): {{ getAutomaticAssignmentsCount() }}
+              </small>
+            </div>
           </div>
           <div class="col-md-6">
             <p><strong>Valor Total:</strong>
@@ -246,6 +303,12 @@
             </p>
             <p><strong>Custos Assistentes:</strong>
               R$ {{ (getTotalAssistantCosts() || 0).toFixed(2) }}
+            </p>
+            <p><strong>Sua Receita Estimada:</strong>
+              <span class="text-success">R$ {{ (getEstimatedRevenue() || 0).toFixed(2) }}</span>
+            </p>
+            <p><strong>Lucro Líquido:</strong>
+              <span class="text-success">R$ {{ getEstimatedProfit().toFixed(2) }}</span>
             </p>
           </div>
         </div>

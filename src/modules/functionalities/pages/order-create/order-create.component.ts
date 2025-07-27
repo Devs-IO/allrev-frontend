@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FunctionalitiesService } from '../../services/functionalities.service';
 import { ClientsService } from '../../../clients/services/clients.service';
+import { AuthService } from '../../../../app/core/services/auth.service';
 import {
   CreateServiceOrderDto,
   ServiceOrderItemDto,
@@ -11,6 +12,7 @@ import {
 } from '../../interfaces/service-order.interface';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 import { Client } from '../../../clients/interfaces/client.interface';
+import { UserProfile } from '../../../users/interfaces/user-profile.interface';
 
 interface ServiceOrderFormItem {
   functionalityId: string;
@@ -21,6 +23,7 @@ interface ServiceOrderFormItem {
   responsibleUserId?: string;
   assistantDeadline?: string;
   assistantAmount?: number;
+  description?: string;
 }
 
 @Component({
@@ -34,9 +37,11 @@ export class OrderCreateComponent implements OnInit {
   formData: {
     clientId: string;
     services: ServiceOrderFormItem[];
+    description: string;
   } = {
     clientId: '',
     services: [this.createEmptyServiceItem()],
+    description: '',
   };
 
   // Data for selects
@@ -48,6 +53,7 @@ export class OrderCreateComponent implements OnInit {
   error: string | null = null;
   isLoading = false;
   isSubmitting = false;
+  currentUser: UserProfile | null = null;
 
   // Payment methods
   paymentMethods = [
@@ -62,8 +68,28 @@ export class OrderCreateComponent implements OnInit {
   constructor(
     private functionalitiesService: FunctionalitiesService,
     private clientsService: ClientsService,
+    private authService: AuthService,
     private router: Router
   ) {}
+
+  private loadCurrentUser(): Promise<UserProfile> {
+    return new Promise((resolve, reject) => {
+      this.authService.getUserProfile().subscribe({
+        next: (user: UserProfile) => {
+          console.log('Current user loaded from API:', user);
+          console.log('User ID:', user.id);
+          console.log('User name:', user.name);
+          console.log('User role:', user.role);
+          this.currentUser = user;
+          resolve(user);
+        },
+        error: (error) => {
+          console.error('Error loading current user:', error);
+          reject(error);
+        },
+      });
+    });
+  }
 
   ngOnInit() {
     this.testAuthentication();
@@ -86,13 +112,8 @@ export class OrderCreateComponent implements OnInit {
     if (user) {
       try {
         const userObj = JSON.parse(user);
-        console.log('User role:', userObj.role);
-        console.log('User ID:', userObj.id);
-        console.log('Required role: MANAGER_REVIEWERS');
-        console.log(
-          'User has correct role:',
-          userObj.role === 'manager_reviewers'
-        );
+        console.log('User from localStorage (only email):', userObj);
+        console.log('Note: Full user data will be loaded from /me endpoint');
       } catch (e) {
         console.error('Error parsing user from localStorage:', e);
       }
@@ -110,6 +131,7 @@ export class OrderCreateComponent implements OnInit {
       responsibleUserId: '',
       assistantDeadline: '',
       assistantAmount: 0,
+      description: '',
     };
   }
 
@@ -122,21 +144,24 @@ export class OrderCreateComponent implements OnInit {
     console.log('Token exists:', !!token);
     console.log('Token value:', token ? 'Present' : 'Not found');
 
-    // Load all required data in parallel
+    // Load all required data in parallel, including current user
     Promise.all([
       this.clientsService.getClients().toPromise(),
       this.functionalitiesService.getAll().toPromise(),
       this.functionalitiesService.getAssistantUsers().toPromise(),
+      this.loadCurrentUser(),
     ])
-      .then(([clients, functionalities, assistants]) => {
+      .then(([clients, functionalities, assistants, currentUser]) => {
         console.log('Data loaded successfully:', {
           clients,
           functionalities,
           assistants,
+          currentUser,
         });
         this.clients = clients || [];
         this.functionalities = functionalities || [];
         this.assistants = assistants || [];
+        this.currentUser = currentUser;
         this.isLoading = false;
       })
       .catch((error) => {
@@ -276,6 +301,8 @@ export class OrderCreateComponent implements OnInit {
           return false;
         }
       }
+      // Note: Se hasResponsible = false, não validamos campos de assistant
+      // pois o usuário logado será atribuído automaticamente no submit
     }
 
     return true;
@@ -293,18 +320,79 @@ export class OrderCreateComponent implements OnInit {
     const token = localStorage.getItem('token');
     console.log('Token before submit:', !!token);
 
+    // Verificar se o usuário atual foi carregado
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('Current user is not loaded:', this.currentUser);
+      this.error = 'Erro: usuário não encontrado. Faça login novamente.';
+      this.isSubmitting = false;
+      return;
+    }
+
+    console.log('Current user ID:', this.currentUser.id);
+    console.log('Current user name:', this.currentUser.name);
+
     // Transform form data to DTO
     const dto: CreateServiceOrderDto = {
       clientId: this.formData.clientId,
-      services: this.formData.services.map((service) => {
+      description: this.formData.description,
+      services: this.formData.services.map((service, index) => {
         const serviceItem: ServiceOrderItemDto = {
           functionalityId: service.functionalityId,
           totalPrice: Number(service.totalPrice), // Garantir que seja number
           paymentMethod: service.paymentMethod,
           clientDeadline: service.clientDeadline,
+          description: service.description,
         };
 
-        if (service.hasResponsible && service.responsibleUserId) {
+        // Lógica de atribuição: se não tem responsável específico, atribuir ao usuário logado
+        const shouldAssignCurrentUser =
+          !service.hasResponsible || !service.responsibleUserId;
+
+        console.log(`Serviço ${index + 1}:`, {
+          hasResponsible: service.hasResponsible,
+          responsibleUserId: service.responsibleUserId,
+          shouldAssignCurrentUser,
+          currentUserId: this.currentUser?.id,
+        });
+
+        if (shouldAssignCurrentUser) {
+          console.log(
+            `Atribuindo serviço ${index + 1} ao usuário logado:`,
+            this.currentUser!.id
+          );
+          serviceItem.responsibleUserId = this.currentUser!.id;
+
+          // Calcular data do assistant: 1 dia antes da data do cliente
+          const clientDate = new Date(service.clientDeadline);
+          const assistantDate = new Date(clientDate);
+          assistantDate.setDate(assistantDate.getDate() - 1);
+
+          // Verificar se a data calculada não é no passado
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+          if (assistantDate < today) {
+            // Se 1 dia antes for no passado, usar a data de hoje
+            serviceItem.assistantDeadline = today.toISOString().split('T')[0];
+            console.log(
+              `Data ajustada para hoje pois 1 dia antes seria no passado`
+            );
+          } else {
+            serviceItem.assistantDeadline = assistantDate
+              .toISOString()
+              .split('T')[0];
+          }
+
+          serviceItem.assistantAmount = Number(service.totalPrice); // Usar o valor total como receita do responsável
+
+          console.log(
+            `Prazo do cliente: ${service.clientDeadline}, Prazo do responsável: ${serviceItem.assistantDeadline}`
+          );
+        } else {
+          console.log(
+            `Usando responsável específico para serviço ${index + 1}:`,
+            service.responsibleUserId
+          );
           serviceItem.responsibleUserId = service.responsibleUserId;
           serviceItem.assistantDeadline = service.assistantDeadline;
           serviceItem.assistantAmount = Number(service.assistantAmount); // Garantir que seja number
@@ -327,7 +415,7 @@ export class OrderCreateComponent implements OnInit {
         console.log('Service order created:', response);
         // Show success message and redirect
         alert('Ordem de serviço criada com sucesso!');
-        this.router.navigate(['/functionalities']);
+        this.router.navigate(['/order/list']);
       },
       error: (error) => {
         console.error('Error creating service order:', error);
@@ -348,7 +436,7 @@ export class OrderCreateComponent implements OnInit {
 
   cancel() {
     if (confirm('Deseja realmente cancelar? Todos os dados serão perdidos.')) {
-      this.router.navigate(['/functionalities']);
+      this.router.navigate(['/order/list']);
     }
   }
 
@@ -390,13 +478,54 @@ export class OrderCreateComponent implements OnInit {
     if (!this.formData?.services) {
       return 0;
     }
-    return this.formData.services.reduce(
-      (sum, service) => sum + (Number(service.assistantAmount) || 0),
-      0
-    );
+    return this.formData.services.reduce((sum, service) => {
+      // Só calcular custo se tem responsável específico atribuído
+      if (service.hasResponsible && service.assistantAmount) {
+        return sum + (Number(service.assistantAmount) || 0);
+      }
+      // Se não tem responsável específico, não há custo de assistente
+      return sum;
+    }, 0);
   }
 
   toNumber(value: any): number {
     return Number(value);
+  }
+
+  // Get count of services with specific responsible
+  getSpecificAssignmentsCount(): number {
+    if (!this.formData?.services) {
+      return 0;
+    }
+    return this.formData.services.filter((service) => service.hasResponsible)
+      .length;
+  }
+
+  // Get count of services with automatic assignment (current user)
+  getAutomaticAssignmentsCount(): number {
+    if (!this.formData?.services) {
+      return 0;
+    }
+    return this.formData.services.filter((service) => !service.hasResponsible)
+      .length;
+  }
+
+  // Calculate profit (revenue - costs)
+  getEstimatedProfit(): number {
+    return (this.getTotalValue() || 0) - (this.getTotalAssistantCosts() || 0);
+  }
+
+  // Calculate estimated revenue from services without specific assignment (automatic assignment)
+  getEstimatedRevenue(): number {
+    if (!this.formData?.services) {
+      return 0;
+    }
+    return this.formData.services.reduce((sum, service) => {
+      // Se não tem responsável específico, o valor total vira receita estimada
+      if (!service.hasResponsible) {
+        return sum + (Number(service.totalPrice) || 0);
+      }
+      return sum;
+    }, 0);
   }
 }

@@ -12,6 +12,10 @@ import {
   ServiceOrderSummaryDto,
   AssistantUser,
 } from '../interfaces/service-order.interface';
+import {
+  ServiceOrderResponse,
+  AssignmentResponse,
+} from '../interfaces/order-list.interface';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -63,6 +67,20 @@ export class FunctionalitiesService {
   getServiceOrderSummary(): Observable<ServiceOrderSummaryDto> {
     return this.http.get<ServiceOrderSummaryDto>(
       `${this.apiUrl}${this.baseUrl}/service-order/summary`
+    );
+  }
+
+  // Listar todas as ordens de serviço (para managers)
+  getAllServiceOrdersList(): Observable<ServiceOrderResponse[]> {
+    return this.http.get<ServiceOrderResponse[]>(
+      `${this.apiUrl}${this.baseUrl}/service-order`
+    );
+  }
+
+  // Listar atribuições do assistant logado
+  getMyAssignments(): Observable<AssignmentResponse[]> {
+    return this.http.get<AssignmentResponse[]>(
+      `${this.apiUrl}${this.baseUrl}/service-order/my-assignments`
     );
   }
 

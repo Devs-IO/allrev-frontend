@@ -6,11 +6,13 @@ export interface ServiceOrderItemDto {
   responsibleUserId?: string;
   assistantDeadline?: string;
   assistantAmount?: number;
+  description?: string;
 }
 
 export interface CreateServiceOrderDto {
   clientId: string;
   services: ServiceOrderItemDto[];
+  description?: string;
 }
 
 export interface ServiceOrderItemResponseDto {
