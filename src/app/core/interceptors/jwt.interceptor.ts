@@ -7,8 +7,10 @@ export const jwtInterceptor: HttpInterceptorFn = (
 ) => {
   const token = localStorage.getItem('token'); // Pega o token armazenado
 
-  console.log('JWT Interceptor - URL:', req.url);
-  console.log('JWT Interceptor - Token exists:', !!token);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('JWT Interceptor - URL:', req.url);
+    console.log('JWT Interceptor - Token exists:', !!token);
+  }
 
   if (token) {
     const clonedReq = req.clone({
