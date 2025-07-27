@@ -1,0 +1,242 @@
+<div class="container-fluid p-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3 mb-0">
+      <i class="bi bi-list-check me-2"></i>
+      {{ currentView === 'orders' ? 'Ordens de Serviço' : 'Minhas Atribuições' }}
+    </h2>
+
+    <div class="d-flex gap-2">
+      <!-- View Switcher for Managers -->
+      <div *ngIf="canViewAllOrders()" class="btn-group" role="group">
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          [class.active]="currentView === 'orders'"
+          (click)="switchView('orders')">
+          <i class="bi bi-clipboard-data me-1"></i>
+          Todas as Ordens
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          [class.active]="currentView === 'assignments'"
+          (click)="switchView('assignments')">
+          <i class="bi bi-person-check me-1"></i>
+          Atribuições
+        </button>
+      </div>
+
+      <!-- Create New Order Button -->
+            <!-- Create New Order Button -->
+      <!-- <button
+        *ngIf="canViewAllOrders()"
+        class="btn btn-primary"
+        (click)="createNewOrder()">
+        <i class="bi bi-plus-circle me-1"></i>
+        Nova Ordem
+      </button> -->
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2 text-muted">Carregando dados...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !isLoading" class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn btn-sm btn-outline-danger ms-3" (click)="loadData()">
+      <i class="bi bi-arrow-clockwise me-1"></i>
+      Tentar Novamente
+    </button>
+  </div>
+
+  <!-- Content Area -->
+  <div *ngIf="!isLoading && !error">
+    <!-- Filters -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="search" class="form-label">Buscar</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-search"></i>
+              </span>
+              <input
+                id="search"
+                type="text"
+                class="form-control"
+                placeholder="Buscar por cliente ou serviço..."
+                [(ngModel)]="searchTerm"
+                (input)="onSearchChange()">
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="status" class="form-label">Status</label>
+            <select
+              id="status"
+              class="form-select"
+              [(ngModel)]="statusFilter"
+              (change)="onStatusFilterChange()">
+              <option value="">Todos os status</option>
+              <option value="PENDING">Pendente</option>
+              <option value="IN_PROGRESS">Em Andamento</option>
+              <option value="FINISHED">Finalizado</option>
+              <option value="OVERDUE">Atrasado</option>
+              <option value="PAID">Pago</option>
+            </select>
+          </div>
+
+          <div class="col-md-2 d-flex align-items-end">
+            <button
+              type="button"
+              class="btn btn-outline-secondary w-100"
+              (click)="clearFilters()">
+              <i class="bi bi-funnel me-1"></i>
+              Limpar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Orders View (Managers) -->
+    <div *ngIf="currentView === 'orders' && canViewAllOrders()">
+      <div *ngIf="filteredOrders.length === 0" class="text-center py-5">
+        <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhuma ordem de serviço encontrada</h5>
+        <p class="text-muted">
+          {{ serviceOrders.length === 0 ? 'Ainda não há ordens de serviço cadastradas.' : 'Tente ajustar os filtros de busca.' }}
+        </p>
+      </div>
+
+      <div *ngFor="let order of filteredOrders" class="card mb-3">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <h6 class="mb-0">
+                <i class="bi bi-building me-2"></i>
+                {{ order.clientName }}
+              </h6>
+              <small class="text-muted">ID: {{ order.orderId }}</small>
+            </div>
+            <div class="col-md-3 text-md-center">
+              <span [class]="getStatusBadgeClass(order.status)">
+                {{ getStatusText(order.status) }}
+              </span>
+            </div>
+            <div class="col-md-3 text-md-end">
+              <div class="d-flex justify-content-md-end align-items-center gap-2">
+                <strong class="text-primary">{{ formatCurrency(order.total) }}</strong>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="toggleOrderDetails(order.orderId)">
+                  <i class="bi" [class.bi-chevron-down]="expandedOrderId !== order.orderId"
+                     [class.bi-chevron-up]="expandedOrderId === order.orderId"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expanded Details -->
+        <div *ngIf="expandedOrderId === order.orderId" class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>Prazo:</strong> {{ formatDate(order.deadline) }}
+            </div>
+            <div class="col-md-6">
+              <strong>Total de Serviços:</strong> {{ order.services.length }}
+            </div>
+          </div>
+
+          <h6 class="mb-3">Serviços:</h6>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Funcionalidade</th>
+                  <th>Assistente</th>
+                  <th class="text-end">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let service of order.services">
+                  <td>{{ service.functionalityName }}</td>
+                  <td>
+                    <span *ngIf="service.responsibleUserName" class="badge bg-info">
+                      {{ service.responsibleUserName }}
+                    </span>
+                    <span *ngIf="!service.responsibleUserName" class="text-muted">
+                      Não atribuído
+                    </span>
+                  </td>
+                  <td class="text-end">{{ formatCurrency(service.assistantAmount || 0) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Assignments View (Assistants and Managers) -->
+    <div *ngIf="currentView === 'assignments' && canViewAssignments()">
+      <div *ngIf="filteredAssignments.length === 0" class="text-center py-5">
+        <i class="bi bi-clipboard2-check fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Nenhuma atribuição encontrada</h5>
+        <p class="text-muted">
+          {{ myAssignments.length === 0 ? 'Você ainda não possui atribuições.' : 'Tente ajustar os filtros de busca.' }}
+        </p>
+      </div>
+
+      <div class="row">
+        <div *ngFor="let assignment of filteredAssignments" class="col-md-6 col-lg-4 mb-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">{{ assignment.clientName }}</h6>
+                <span [class]="getStatusBadgeClass(assignment.status)">
+                  {{ getStatusText(assignment.status) }}
+                </span>
+              </div>
+
+              <p class="card-text">
+                <strong>Serviço:</strong> {{ assignment.serviceName }}
+              </p>
+
+              <div class="row text-sm mb-2">
+                <div class="col-6">
+                  <strong>Valor:</strong><br>
+                  <span class="text-primary">{{ formatCurrency(assignment.yourAmount) }}</span>
+                </div>
+                <div class="col-6">
+                  <strong>Prazo:</strong><br>
+                  <span class="text-muted">
+                    {{ formatDate(assignment.yourDeadline) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer bg-transparent">
+              <button class="btn btn-sm btn-outline-primary w-100">
+                <i class="bi bi-eye me-1"></i>
+                Ver Detalhes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

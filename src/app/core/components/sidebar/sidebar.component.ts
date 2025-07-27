@@ -28,15 +28,19 @@ export class SidebarComponent implements OnInit {
     {
       role: [Role.MANAGER_REVIEWERS, Role.CLIENT, Role.ASSISTANT_REVIEWERS],
       menu: 'Ordens',
-      route: '/orders',
-      icon: 'bi bi-building',
+      route: '/order/list',
+      icon: 'bi bi-clipboard-check',
       subRoutes: [
         {
           label: 'Nova Ordem',
-          route: '/orders/create',
+          route: '/order/create',
           icon: 'bi bi-plus-circle',
         },
-        { label: 'Listar', route: '/orders', icon: 'bi bi-list' },
+        {
+          label: 'Listar Ordens',
+          route: '/order/list',
+          icon: 'bi bi-list-check',
+        },
       ],
     },
     {
