@@ -1,76 +1,214 @@
 <div class="container my-4">
-  <h2 class="text-primary mb-4"><i class="bi bi-person-circle me-2 fs-2 text-warning"></i> Detalhes do Usuário</h2>
-  <div *ngIf="loading">Carregando...</div>
-  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  <div *ngIf="!loading && user" class="card shadow-lg rounded-4 border-0 p-5 mb-4 animate__animated animate__fadeIn" style="max-width: 1100px; margin: 0 auto;">
-    <div class="row g-4">
-      <div class="col-12">
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-person-fill text-primary fs-3 me-2"></i>
-          <span class="fw-bold">Nome:</span>
-          <span class="ms-2">{{ user.name }}</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-envelope-fill text-info fs-3 me-2"></i>
-          <span class="fw-bold">Email:</span>
-          <span class="ms-2">{{ user.email }}</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-telephone-fill text-success fs-3 me-2"></i>
-          <span class="fw-bold">Telefone:</span>
-          <span class="ms-2">{{ user.phone }}</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-person-badge-fill text-primary fs-3 me-2"></i>
-          <span class="fw-bold">Função:</span>
-          <span class="ms-2">{{ translateRole(user.role) }}</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-geo-alt-fill text-danger fs-3 me-2"></i>
-          <span class="fw-bold">Endereço:</span>
-          <span class="ms-2">{{ user.address }}</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-          <i class="bi bi-check-circle-fill fs-3 me-2" [ngClass]="user.isActive ? 'text-success' : 'text-danger'"></i>
-          <span class="fw-bold">Status:</span>
-          <span class="ms-2" [class]="user.isActive ? 'text-success' : 'text-danger'">{{ user.isActive ? 'Ativo' : 'Inativo' }}</span>
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando dados do usuário...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- User Details -->
+  <div *ngIf="!loading && !error && user" class="row">
+    <!-- Header -->
+    <div class="col-12 mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <div>
+            <h1 class="mb-1 text-primary">
+              <i class="fas fa-user me-2"></i>
+              {{ user.name }}
+            </h1>
+            <p class="text-muted mb-0">
+              <i class="fas fa-envelope me-1"></i>
+              {{ user.email }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="row mt-4">
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
-          <h5 class="text-secondary mb-3"><i class="bi bi-building me-2"></i> Dados da Empresa</h5>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-building text-secondary fs-4 me-2"></i>
-            <span class="fw-bold">Empresa:</span>
-            <span class="ms-2">{{ user.tenant?.companyName || 'N/A' }}</span>
+
+    <!-- Main Content -->
+    <div class="col-12">
+      <div class="row g-4">
+        <!-- Informações Pessoais -->
+        <div class="col-lg-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-user-circle me-2"></i>
+                Informações Pessoais
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-user text-primary fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Nome Completo:</label>
+                      <p class="mb-0 fs-5">{{ user.name }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-envelope text-info fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Email:</label>
+                      <p class="mb-0">{{ user.email }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-phone text-success fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Telefone:</label>
+                      <p class="mb-0">{{ user.phone }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-user-tag text-warning fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Função:</label>
+                      <p class="mb-0">{{ translateRole(user.role) }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12" *ngIf="user.address">
+                  <div class="info-item">
+                    <i class="fas fa-map-marker-alt text-danger fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Endereço:</label>
+                      <p class="mb-0">{{ user.address }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
-            <span class="fw-bold">Código:</span>
-            <span class="ms-2">{{ user.tenant?.code || 'N/A' }}</span>
+        </div>
+
+        <!-- Informações da Empresa -->
+        <div class="col-lg-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-building me-2"></i>
+                Informações da Empresa
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-building text-primary fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Nome da Empresa:</label>
+                      <p class="mb-0">{{ user.tenant?.companyName || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-code text-info fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Código:</label>
+                      <p class="mb-0">{{ user.tenant?.code || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-credit-card text-warning fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Status do Pagamento:</label>
+                      <p class="mb-0">{{ user.tenant?.paymentStatus || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-money-bill-wave text-success fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Método de Pagamento:</label>
+                      <p class="mb-0">{{ user.tenant?.paymentMethod || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="info-item">
+                    <i class="fas fa-calendar-alt text-info fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Frequência de Pagamento:</label>
+                      <p class="mb-0">{{ user.tenant?.paymentFrequency || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
-            <span class="fw-bold">Pagamento:</span>
-            <span class="ms-2">{{ user.tenant?.paymentStatus || 'N/A' }} - {{ user.tenant?.paymentMethod || 'N/A' }}</span>
-          </div>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
-            <span class="fw-bold">Frequência:</span>
-            <span class="ms-2">{{ user.tenant?.paymentFrequency || 'N/A' }}</span>
-          </div>
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
-            <span class="fw-bold">Vencimento:</span>
-            <span class="ms-2">{{ user.tenant?.paymentDueDate || 'N/A' }}</span>
+        </div>
+
+        <!-- Status e Datas -->
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                Status e Informações do Sistema
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="info-item">
+                    <i class="fas fa-toggle-on text-success fs-4 me-3" *ngIf="user.isActive"></i>
+                    <i class="fas fa-toggle-off text-danger fs-4 me-3" *ngIf="!user.isActive"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Status:</label>
+                      <p class="mb-0">
+                        <span class="badge" [class]="user.isActive ? 'bg-success' : 'bg-danger'">
+                          {{ user.isActive ? 'Ativo' : 'Inativo' }}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="info-item">
+                    <i class="fas fa-user-tag text-primary fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Função do Usuário:</label>
+                      <p class="mb-0">{{ translateRole(user.role) }}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="info-item">
+                    <i class="fas fa-calendar-check text-warning fs-4 me-3"></i>
+                    <div>
+                      <label class="fw-bold text-muted">Vencimento do Pagamento:</label>
+                      <p class="mb-0">{{ user.tenant?.paymentDueDate || 'N/A' }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="d-flex justify-content-end mt-4">
-      <button class="btn btn-secondary" (click)="back()">
+      <button class="btn btn-secondary" (click)="goBack()">
         <i class="bi bi-arrow-left-circle"></i> Voltar
       </button>
     </div>

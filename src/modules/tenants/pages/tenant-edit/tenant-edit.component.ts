@@ -18,6 +18,8 @@ import {
   PaymentFrequencyLabels,
 } from '../../interfaces/tenant.enums';
 
+declare var bootstrap: any;
+
 @Component({
   selector: 'app-tenant-edit',
   templateUrl: './tenant-edit.component.html',
@@ -37,15 +39,27 @@ export class TenantEditComponent implements OnInit {
   PaymentMethod = PaymentMethod;
   PaymentFrequency = PaymentFrequency;
 
-  // Arrays para iteração no template
-  paymentStatusOptions = Object.keys(PaymentStatus);
-  paymentMethodOptions = Object.keys(PaymentMethod);
-  paymentFrequencyOptions = Object.keys(PaymentFrequency);
+  // Labels para exibição
+  paymentStatusOptions = Object.entries(PaymentStatusLabels).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
-  // Labels
-  paymentStatusLabels = PaymentStatusLabels;
-  paymentMethodLabels = PaymentMethodLabels;
-  paymentFrequencyLabels = PaymentFrequencyLabels;
+  paymentMethodOptions = Object.entries(PaymentMethodLabels).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
+
+  paymentFrequencyOptions = Object.entries(PaymentFrequencyLabels).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
   constructor(
     private fb: FormBuilder,
@@ -121,7 +135,25 @@ export class TenantEditComponent implements OnInit {
 
   onSubmit(): void {
     if (this.tenantForm.valid && this.tenant) {
+      // Mostrar modal de confirmação
+      const confirmModal = new bootstrap.Modal(
+        document.getElementById('confirmEditModal')
+      );
+      confirmModal.show();
+    } else {
+      this.markFormGroupTouched();
+    }
+  }
+
+  confirmSave(): void {
+    if (this.tenantForm.valid && this.tenant) {
       this.saving = true;
+
+      // Fechar modal de confirmação
+      const confirmModal = bootstrap.Modal.getInstance(
+        document.getElementById('confirmEditModal')
+      );
+      confirmModal.hide();
 
       const formData: Partial<CreateTenantDto> = {
         ...this.tenantForm.value,
@@ -130,18 +162,31 @@ export class TenantEditComponent implements OnInit {
 
       this.tenantsService.updateTenant(this.tenant.id, formData).subscribe({
         next: () => {
-          alert('Empresa atualizada com sucesso!');
-          this.router.navigate(['/tenants', this.tenant!.id]);
+          this.saving = false;
+          // Mostrar modal de sucesso
+          const successModal = new bootstrap.Modal(
+            document.getElementById('successModal')
+          );
+          successModal.show();
         },
         error: (err) => {
           console.error('Erro ao atualizar empresa:', err);
-          alert('Erro ao atualizar empresa. Tente novamente.');
+          this.error = 'Erro ao atualizar empresa. Tente novamente.';
           this.saving = false;
         },
       });
-    } else {
-      this.markFormGroupTouched();
     }
+  }
+
+  redirectToList(): void {
+    // Fechar modal de sucesso
+    const successModal = bootstrap.Modal.getInstance(
+      document.getElementById('successModal')
+    );
+    successModal.hide();
+
+    // Navegar para a listagem
+    this.router.navigate(['/tenants']);
   }
 
   markFormGroupTouched(): void {
@@ -151,7 +196,7 @@ export class TenantEditComponent implements OnInit {
     });
   }
 
-  getFieldError(fieldName: string): string {
+  getFieldError(fieldName: string): string | null {
     const field = this.tenantForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required'])
@@ -160,9 +205,14 @@ export class TenantEditComponent implements OnInit {
         return `${this.getFieldLabel(fieldName)} deve ter pelo menos ${
           field.errors['minlength'].requiredLength
         } caracteres`;
-      if (field.errors['email']) return 'Email deve ter um formato válido';
+      if (field.errors['maxlength'])
+        return `${this.getFieldLabel(fieldName)} deve ter no máximo ${
+          field.errors['maxlength'].requiredLength
+        } caracteres`;
+      if (field.errors['pattern'])
+        return `${this.getFieldLabel(fieldName)} tem formato inválido`;
     }
-    return '';
+    return null;
   }
 
   getFieldLabel(fieldName: string): string {
@@ -180,15 +230,12 @@ export class TenantEditComponent implements OnInit {
     return labels[fieldName] || fieldName;
   }
 
-  goBack(): void {
-    if (this.tenant) {
-      this.router.navigate(['/tenants', this.tenant.id]);
-    } else {
-      this.router.navigate(['/tenants']);
-    }
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.tenantForm.get(fieldName);
+    return !!(field?.errors && field.touched);
   }
 
   cancel(): void {
-    this.goBack();
+    this.router.navigate(['/tenants']);
   }
 }
