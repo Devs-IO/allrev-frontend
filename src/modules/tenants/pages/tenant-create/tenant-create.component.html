@@ -1,50 +1,271 @@
 <div class="container my-4">
-  <h2>Cadastrar Empresa</h2>
+  <div class="form-header">
+    <h2 class="text-primary">
+      <i class="fas fa-building"></i>
+      Cadastrar Nova Empresa
+    </h2>
+    <p class="form-subtitle">Preencha os dados da empresa para criar um novo tenant</p>
+  </div>
+
+  <!-- Error Alert -->
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  <form (ngSubmit)="submit()">
-    <div class="mb-3">
-      <label>Código</label>
-      <input class="form-control" [(ngModel)]="formData.code" name="code" required />
+  <div *ngIf="success" class="alert alert-success">Usuário criado com sucesso!</div>
+  <div *ngIf="loading" class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Carregando...</span>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="tenantForm" (ngSubmit)="onSubmit()" class="tenant-form">
+    <div class="form-grid">
+
+      <!-- Código -->
+      <div class="form-group">
+        <label for="code" class="form-label">
+          <i class="fas fa-tag"></i>
+          Código *
+        </label>
+        <input
+          id="code"
+          type="text"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('code')"
+          formControlName="code"
+          placeholder="Ex: ACME001"
+          maxlength="20"
+        />
+        <div *ngIf="getFieldError('code')" class="invalid-feedback">
+          {{ getFieldError('code') }}
+        </div>
+      </div>
+
+      <!-- Nome da Empresa -->
+      <div class="form-group">
+        <label for="companyName" class="form-label">
+          <i class="fas fa-building"></i>
+          Nome da Empresa *
+        </label>
+        <input
+          id="companyName"
+          type="text"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('companyName')"
+          formControlName="companyName"
+          placeholder="Ex: ACME Corporation"
+          maxlength="100"
+        />
+        <div *ngIf="getFieldError('companyName')" class="invalid-feedback">
+          {{ getFieldError('companyName') }}
+        </div>
+      </div>
+
+      <!-- Telefone -->
+      <div class="form-group">
+        <label for="phone" class="form-label">
+          <i class="fas fa-phone"></i>
+          Telefone *
+        </label>
+        <input
+          id="phone"
+          type="text"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('phone')"
+          formControlName="phone"
+          placeholder="(11) 99999-9999"
+          mask="(00) 00000-0000"
+        />
+        <div *ngIf="getFieldError('phone')" class="invalid-feedback">
+          {{ getFieldError('phone') }}
+        </div>
+      </div>
+
+      <!-- Status de Pagamento -->
+      <div class="form-group">
+        <label for="paymentStatus" class="form-label">
+          <i class="fas fa-credit-card"></i>
+          Status de Pagamento *
+        </label>
+        <select
+          id="paymentStatus"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('paymentStatus')"
+          formControlName="paymentStatus"
+        >
+          <option value="" disabled>Selecione o status</option>
+          <option *ngFor="let option of paymentStatusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div *ngIf="getFieldError('paymentStatus')" class="invalid-feedback">
+          {{ getFieldError('paymentStatus') }}
+        </div>
+      </div>
+
+      <!-- Método de Pagamento -->
+      <div class="form-group">
+        <label for="paymentMethod" class="form-label">
+          <i class="fas fa-money-bill-wave"></i>
+          Método de Pagamento *
+        </label>
+        <select
+          id="paymentMethod"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('paymentMethod')"
+          formControlName="paymentMethod"
+        >
+          <option value="" disabled>Selecione o método</option>
+          <option *ngFor="let option of paymentMethodOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div *ngIf="getFieldError('paymentMethod')" class="invalid-feedback">
+          {{ getFieldError('paymentMethod') }}
+        </div>
+      </div>
+
+      <!-- Frequência de Pagamento -->
+      <div class="form-group">
+        <label for="paymentFrequency" class="form-label">
+          <i class="fas fa-calendar-alt"></i>
+          Frequência de Pagamento *
+        </label>
+        <select
+          id="paymentFrequency"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('paymentFrequency')"
+          formControlName="paymentFrequency"
+        >
+          <option *ngFor="let option of paymentFrequencyOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <div *ngIf="getFieldError('paymentFrequency')" class="invalid-feedback">
+          {{ getFieldError('paymentFrequency') }}
+        </div>
+      </div>
+
+      <!-- Data de Vencimento -->
+      <div class="form-group">
+        <label for="paymentDueDate" class="form-label">
+          <i class="fas fa-calendar"></i>
+          Data de Vencimento *
+        </label>
+        <input
+          id="paymentDueDate"
+          type="date"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('paymentDueDate')"
+          formControlName="paymentDueDate"
+        />
+        <div *ngIf="getFieldError('paymentDueDate')" class="invalid-feedback">
+          {{ getFieldError('paymentDueDate') }}
+        </div>
+      </div>
+
+      <!-- Logo URL -->
+      <div class="form-group">
+        <label for="logo" class="form-label">
+          <i class="fas fa-image"></i>
+          URL do Logo
+        </label>
+        <input
+          id="logo"
+          type="url"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('logo')"
+          formControlName="logo"
+          placeholder="https://exemplo.com/logo.png"
+        />
+        <div *ngIf="getFieldError('logo')" class="invalid-feedback">
+          {{ getFieldError('logo') }}
+        </div>
+      </div>
+
+      <!-- Status Ativo -->
+      <div class="form-group toggle-group">
+        <label class="form-label">
+          <i class="fas fa-toggle-on"></i>
+          Status da Empresa
+        </label>
+        <div class="toggle-container">
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              formControlName="isActive"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">
+            {{ tenantForm.get('isActive')?.value ? 'Ativa' : 'Inativa' }}
+          </span>
+        </div>
+      </div>
+
     </div>
-    <div class="mb-3">
-      <label>Nome da Empresa</label>
-      <input class="form-control" [(ngModel)]="formData.companyName" name="companyName" required />
+
+    <!-- Endereço (full width) -->
+    <div class="form-group full-width">
+      <label for="address" class="form-label">
+        <i class="fas fa-map-marker-alt"></i>
+        Endereço Completo *
+      </label>
+      <input
+        id="address"
+        type="text"
+        class="form-control"
+        [class.is-invalid]="isFieldInvalid('address')"
+        formControlName="address"
+        placeholder="Rua, Número, Bairro, Cidade - Estado, CEP"
+        maxlength="200"
+      />
+      <div *ngIf="getFieldError('address')" class="invalid-feedback">
+        {{ getFieldError('address') }}
+      </div>
     </div>
-    <div class="mb-3">
-      <label>Endereço</label>
-      <input class="form-control" [(ngModel)]="formData.address" name="address" />
+
+    <!-- Descrição (full width) -->
+    <div class="form-group full-width">
+      <label for="description" class="form-label">
+        <i class="fas fa-align-left"></i>
+        Descrição da Empresa
+      </label>
+      <textarea
+        id="description"
+        class="form-control"
+        [class.is-invalid]="isFieldInvalid('description')"
+        formControlName="description"
+        placeholder="Descreva brevemente a empresa, seus serviços e atividades..."
+        rows="4"
+        maxlength="500"
+      ></textarea>
+      <small class="form-text text-muted">
+        {{ tenantForm.get('description')?.value?.length || 0 }}/500 caracteres
+      </small>
+      <div *ngIf="getFieldError('description')" class="invalid-feedback">
+        {{ getFieldError('description') }}
+      </div>
     </div>
-    <div class="mb-3">
-      <label>Status do Pagamento</label>
-      <input class="form-control" [(ngModel)]="formData.paymentStatus" name="paymentStatus" />
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        routerLink="/tenants"
+        [disabled]="loading"
+      >
+        <i class="fas fa-times"></i>
+        Cancelar
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="!tenantForm.valid || loading"
+      >
+        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+        <i class="fas fa-save" *ngIf="!loading"></i>
+        {{ loading ? 'Salvando...' : 'Cadastrar Empresa' }}
+      </button>
     </div>
-    <div class="mb-3">
-      <label>Método de Pagamento</label>
-      <input class="form-control" [(ngModel)]="formData.paymentMethod" name="paymentMethod" />
-    </div>
-    <div class="mb-3">
-      <label>Ativo?</label>
-      <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
-        <option [ngValue]="true">Sim</option>
-        <option [ngValue]="false">Não</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label>Frequência de Pagamento</label>
-      <select class="form-control" [(ngModel)]="formData.paymentFrequency" name="paymentFrequency">
-        <option value="monthly">Mensal</option>
-        <option value="annual">Anual</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label>Data de Vencimento</label>
-      <input type="date" class="form-control" [(ngModel)]="formData.paymentDueDate" name="paymentDueDate" />
-    </div>
-    <div class="mb-3">
-      <label>Logo</label>
-      <input class="form-control" [(ngModel)]="formData.logo" name="logo" />
-    </div>
-    <button type="submit" class="btn btn-success">Cadastrar</button>
-    <a routerLink="/tenants" class="btn btn-secondary ms-2">Cancelar</a>
   </form>
 </div>

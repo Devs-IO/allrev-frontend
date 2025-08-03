@@ -88,7 +88,10 @@ export class UsersComponent {
 
   openEditForm(user: ResponseUserDto) {
     this.isEditMode = true;
-    this.formData = { ...user };
+    this.formData = {
+      ...user,
+      role: user.role as any, // Converte string para Role enum
+    };
     this.selectedUser = user;
     this.showForm = true;
   }

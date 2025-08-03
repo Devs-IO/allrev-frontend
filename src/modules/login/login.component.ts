@@ -7,17 +7,20 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../app/core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true, // Marcando como standalone
-  imports: [ReactiveFormsModule, FormsModule], // Importando os módulos necessários
+  imports: [CommonModule, ReactiveFormsModule, FormsModule], // Importando os módulos necessários
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
+  isLoading = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -33,9 +36,40 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {}
 
   login() {
-    const { email, password } = this.loginForm.value;
-    this.authService.login(email!, password!).subscribe(() => {
-      this.router.navigate(['/home']);
-    });
+    if (this.loginForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      const { email, password } = this.loginForm.value;
+      this.authService.login(email!, password!).subscribe({
+        next: (response) => {
+          console.log('Login successful:', response);
+          this.isLoading = false;
+          this.router.navigate(['/home']);
+        },
+        error: (error) => {
+          console.error('Login error:', error);
+          this.isLoading = false;
+
+          // Tratamento de diferentes tipos de erro
+          if (error.status === 0) {
+            this.errorMessage =
+              'Erro de conexão. Verifique sua internet e tente novamente.';
+          } else if (error.status === 401) {
+            this.errorMessage = 'Email ou senha incorretos.';
+          } else if (error.status === 500) {
+            this.errorMessage =
+              'Erro interno do servidor. Tente novamente mais tarde.';
+          } else {
+            this.errorMessage =
+              error.error?.message || 'Erro inesperado. Tente novamente.';
+          }
+        },
+      });
+    }
+  }
+
+  clearError() {
+    this.errorMessage = '';
   }
 }

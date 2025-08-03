@@ -1,8 +1,10 @@
+import { Role } from '../interfaces/user.enums';
+
 export interface CreateUserDto {
   email: string;
   photo?: string;
   password: string;
-  role: string;
+  role: Role;
   name: string;
   phone: string;
   address: string;
@@ -19,7 +21,7 @@ export interface ResponseUserDto {
   phone: string;
   address: string;
   photo?: string;
-  role: string;
+  role: Role | string; // Permite tanto enum quanto string para compatibilidade
   isActive: boolean;
   tenantId: string;
 
