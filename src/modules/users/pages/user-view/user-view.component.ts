@@ -25,16 +25,34 @@ export class UserViewComponent implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.usersService.getUserById(id).subscribe({
-        next: (user) => {
-          this.user = user;
-          this.loading = false;
-        },
-        error: (err) => {
-          this.error = 'Erro ao carregar usuário';
-          this.loading = false;
-        },
-      });
+      this.loadUser(id);
+    } else {
+      this.error = 'ID do usuário não fornecido';
+      this.loading = false;
+    }
+  }
+
+  loadUser(id: string): void {
+    this.usersService.getUserById(id).subscribe({
+      next: (data: ResponseUserDto) => {
+        this.user = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar usuário:', err);
+        this.error = 'Erro ao carregar dados do usuário';
+        this.loading = false;
+      },
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/users']);
+  }
+
+  editUser(): void {
+    if (this.user) {
+      this.router.navigate(['/users', this.user.id, 'edit']);
     }
   }
 
@@ -55,9 +73,5 @@ export class UserViewComponent implements OnInit {
       default:
         return 'Desconhecido';
     }
-  }
-
-  back() {
-    this.router.navigate(['/users']);
   }
 }

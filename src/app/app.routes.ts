@@ -134,7 +134,7 @@ export const routes: Routes = [
         path: 'users',
         loadComponent: () =>
           import('../modules/users/pages/users-list/users-list.component').then(
-            (m) => m.UsersComponent
+            (m) => m.UsersListComponent
           ),
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },

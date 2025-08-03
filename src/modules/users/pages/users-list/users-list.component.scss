@@ -1,26 +1,136 @@
 
-.modal {
-  background: rgba(0,0,0,0.3);
-  .modal-dialog {
-    margin-top: 10vh;
-  }
-}
+.container { max-width: 1200px; }
 
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  opacity: 0.7;
-}
-
+// Card and table styles
 .card {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: none;
 }
 
 .table th, .table td {
   vertical-align: middle;
 }
 
-.btn + .btn {
+// Action buttons with border effects
+.action-btn {
+  border-width: 2px !important;
+  transition: all 0.3s ease;
+  padding: 0.375rem 0.5rem;
+  margin-right: 0.25rem;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+// Primary button (View)
+.btn-outline-primary.action-btn {
+  color: #0d6efd;
+  border-color: #0d6efd;
+  background: transparent;
+
+  &:hover, &:focus {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+  }
+}
+
+// Warning button (Edit)
+.btn-outline-warning.action-btn {
+  color: #ffc107;
+  border-color: #ffc107;
+  background: transparent;
+
+  &:hover, &:focus {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+  }
+}
+
+// Danger button (Delete)
+.btn-outline-danger.action-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+  background: transparent;
+
+  &:hover, &:focus {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+  }
+}
+
+// Table enhancements
+.table-hover tbody tr:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.table-dark th {
+  border-color: #495057;
+  background-color: #343a40;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background-color: #23272b;
+  }
+}
+
+// Badge styles
+.badge {
+  font-size: 0.75em;
+  padding: 0.5em 0.75em;
+}
+
+// Loading spinner
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Empty state
+.fa-3x {
+  font-size: 3em !important;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .action-btn {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+// Sort icons
+.fas.fa-arrow-up,
+.fas.fa-arrow-down {
   margin-left: 0.5rem;
+  font-size: 0.75rem;
+}
+
+// Status icons
+.fas.fa-check-circle {
+  color: #198754;
+}
+
+.fas.fa-times-circle {
+  color: #dc3545;
 }

@@ -1,30 +1,30 @@
-import { Component, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit, signal, WritableSignal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
-import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ResponseUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../app/core/services/auth.service';
+import { ConfirmationModalComponent } from '../../../../app/core/components/confirmation-modal/confirmation-modal.component';
 
 @Component({
-  selector: 'app-users',
+  selector: 'app-users-list',
   templateUrl: './users-list.component.html',
-  styleUrl: './users-list.component.scss',
+  styleUrls: ['./users-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, ConfirmationModalComponent],
 })
-export class UsersComponent {
+export class UsersListComponent implements OnInit {
   users: WritableSignal<ResponseUserDto[]> = signal<ResponseUserDto[]>([]);
+  loading = true;
+  error: string | null = null;
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
-
-  // Estado para formulário/modal
-  showForm = false;
-  isEditMode = false;
-  selectedUser: ResponseUserDto | null = null;
-  formData: Partial<CreateUserDto> = {};
-  showDetails = false;
   loggedUserId: string = '';
+
+  // Estado para modais de confirmação
+  showEditModal = false;
+  showDeleteModal = false;
+  selectedUser: ResponseUserDto | null = null;
 
   constructor(
     private usersService: UsersService,
@@ -32,7 +32,7 @@ export class UsersComponent {
     private authService: AuthService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.authService.getUserProfile().subscribe({
       next: (user: any) => {
         this.loggedUserId = user.id || '';
@@ -47,8 +47,15 @@ export class UsersComponent {
 
   loadUsers(): void {
     this.usersService.getUsers().subscribe({
-      next: (data: ResponseUserDto[]) => this.users.set(data),
-      error: (err) => console.error('Erro ao carregar usuários:', err),
+      next: (data: ResponseUserDto[]) => {
+        this.users.set(data);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar usuários:', err);
+        this.error = 'Erro ao carregar usuários';
+        this.loading = false;
+      },
     });
   }
 
@@ -59,16 +66,20 @@ export class UsersComponent {
       this.sortColumn = column;
       this.sortDirection = 'asc';
     }
+
     const sorted = [...this.users()].sort((a, b) => {
       const key = column as keyof ResponseUserDto;
       let aValue = a[key];
       let bValue = b[key];
+
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
+
       if (aValue == null) return 1;
       if (bValue == null) return -1;
+
       if (aValue < bValue) {
         return this.sortDirection === 'asc' ? -1 : 1;
       } else if (aValue > bValue) {
@@ -76,77 +87,70 @@ export class UsersComponent {
       }
       return 0;
     });
+
     this.users.set(sorted);
   }
 
-  // CRUD
-  openCreateForm() {
-    this.isEditMode = false;
-    this.formData = {};
-    this.showForm = true;
-  }
-
-  openEditForm(user: ResponseUserDto) {
-    this.isEditMode = true;
-    this.formData = {
-      ...user,
-      role: user.role as any, // Converte string para Role enum
-    };
-    this.selectedUser = user;
-    this.showForm = true;
-  }
-
-  submitForm() {
-    if (this.isEditMode && this.selectedUser) {
-      this.usersService
-        .updateUser(
-          this.selectedUser.id,
-          this.formData as Partial<CreateUserDto>
-        )
-        .subscribe({
-          next: () => {
-            this.loadUsers();
-            this.cancelForm();
-          },
-          error: (err) => alert('Erro ao atualizar usuário: ' + err),
-        });
-    } else {
-      this.usersService.createUser(this.formData as CreateUserDto).subscribe({
-        next: () => {
-          this.loadUsers();
-          this.cancelForm();
-        },
-        error: (err) => alert('Erro ao criar usuário: ' + err),
-      });
-    }
-  }
-
-  editUser(id: string) {
-    this.router.navigate(['/users', id, 'edit']);
-  }
-
-  cancelForm() {
-    this.showForm = false;
-    this.isEditMode = false;
-    this.selectedUser = null;
-    this.formData = {};
-  }
-
-  deleteUser(id: string) {
-    if (confirm('Tem certeza que deseja deletar este usuário?')) {
-      this.usersService.deleteUser(id).subscribe({
-        next: () => this.loadUsers(),
-        error: (err) => alert('Erro ao deletar usuário: ' + err),
-      });
-    }
-  }
-
-  viewUser(id: string) {
+  viewUser(id: string): void {
     this.router.navigate(['/users', id]);
   }
 
-  closeDetails() {
-    this.showDetails = false;
+  editUser(id: string): void {
+    this.selectedUser = this.users().find((u) => u.id === id) || null;
+    this.showEditModal = true;
+  }
+
+  confirmEdit(): void {
+    if (this.selectedUser) {
+      this.showEditModal = false;
+      this.router.navigate(['/users', this.selectedUser.id, 'edit']);
+    }
+  }
+
+  deleteUser(id: string): void {
+    this.selectedUser = this.users().find((u) => u.id === id) || null;
+    this.showDeleteModal = true;
+  }
+
+  confirmDelete(): void {
+    if (this.selectedUser) {
+      this.usersService.deleteUser(this.selectedUser.id).subscribe({
+        next: () => {
+          this.loadUsers();
+          this.showDeleteModal = false;
+          this.selectedUser = null;
+          alert('Usuário deletado com sucesso!');
+        },
+        error: (err) => {
+          console.error('Erro ao deletar usuário:', err);
+          alert('Erro ao deletar usuário. Tente novamente.');
+        },
+      });
+    }
+  }
+
+  closeModals(): void {
+    this.showEditModal = false;
+    this.showDeleteModal = false;
     this.selectedUser = null;
+  }
+
+  translateRole(role: string): string {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'user':
+        return 'Usuário';
+      case 'manager_reviewers':
+        return 'Gestor de Revisores';
+      case 'client':
+        return 'Cliente';
+      case 'assistant_reviewers':
+        return 'Assistente de Revisores';
+      case 'none':
+        return 'Nenhum';
+      default:
+        return 'Desconhecido';
+    }
   }
 }
