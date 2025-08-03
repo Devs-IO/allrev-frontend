@@ -1,0 +1,300 @@
+<div class="container my-4">
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando dados da empresa...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button class="btn btn-secondary ms-3" (click)="goBack()">
+      <i class="fas fa-arrow-left me-1"></i>
+      Voltar
+    </button>
+  </div>
+
+  <!-- Edit Form -->
+  <div *ngIf="!loading && !error && tenant">
+    <!-- Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary me-3" (click)="goBack()">
+              <i class="fas fa-arrow-left me-1"></i>
+              Voltar
+            </button>
+            <div>
+              <h1 class="mb-1 text-primary">
+                <i class="fas fa-edit me-2"></i>
+                Editar Empresa
+              </h1>
+              <p class="text-muted mb-0">{{ tenant.companyName }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="tenantForm" (ngSubmit)="onSubmit()">
+      <div class="row g-4">
+        <!-- Informações Básicas -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Informações Básicas
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <!-- Código -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="code"
+                      formControlName="code"
+                      placeholder="Código da empresa"
+                      [class.is-invalid]="getFieldError('code')"
+                    />
+                    <label for="code">
+                      <i class="fas fa-code me-1"></i>
+                      Código *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('code') }}</div>
+                  </div>
+                </div>
+
+                <!-- Nome da Empresa -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="companyName"
+                      formControlName="companyName"
+                      placeholder="Nome da empresa"
+                      [class.is-invalid]="getFieldError('companyName')"
+                    />
+                    <label for="companyName">
+                      <i class="fas fa-building me-1"></i>
+                      Nome da Empresa *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('companyName') }}</div>
+                  </div>
+                </div>
+
+                <!-- Endereço -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <textarea
+                      class="form-control"
+                      id="address"
+                      formControlName="address"
+                      placeholder="Endereço completo"
+                      style="height: 100px"
+                      [class.is-invalid]="getFieldError('address')"
+                    ></textarea>
+                    <label for="address">
+                      <i class="fas fa-map-marker-alt me-1"></i>
+                      Endereço *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('address') }}</div>
+                  </div>
+                </div>
+
+                <!-- Telefone -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <input
+                      type="tel"
+                      class="form-control"
+                      id="phone"
+                      formControlName="phone"
+                      placeholder="Telefone"
+                      [class.is-invalid]="getFieldError('phone')"
+                    />
+                    <label for="phone">
+                      <i class="fas fa-phone me-1"></i>
+                      Telefone *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('phone') }}</div>
+                  </div>
+                </div>
+
+                <!-- Descrição -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <textarea
+                      class="form-control"
+                      id="description"
+                      formControlName="description"
+                      placeholder="Descrição da empresa"
+                      style="height: 80px"
+                    ></textarea>
+                    <label for="description">
+                      <i class="fas fa-file-alt me-1"></i>
+                      Descrição
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informações de Pagamento -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-credit-card me-2"></i>
+                Informações de Pagamento
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <!-- Status do Pagamento -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <select
+                      class="form-select"
+                      id="paymentStatus"
+                      formControlName="paymentStatus"
+                      [class.is-invalid]="getFieldError('paymentStatus')"
+                    >
+                      <option value="paid">{{ paymentStatusLabels['paid'] }}</option>
+                      <option value="unpaid">{{ paymentStatusLabels['unpaid'] }}</option>
+                      <option value="overdue">{{ paymentStatusLabels['overdue'] }}</option>
+                      <option value="pending">{{ paymentStatusLabels['pending'] }}</option>
+                      <option value="cancelled">{{ paymentStatusLabels['cancelled'] }}</option>
+                    </select>
+                    <label for="paymentStatus">
+                      <i class="fas fa-credit-card me-1"></i>
+                      Status do Pagamento *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('paymentStatus') }}</div>
+                  </div>
+                </div>
+
+                <!-- Método de Pagamento -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <select
+                      class="form-select"
+                      id="paymentMethod"
+                      formControlName="paymentMethod"
+                      [class.is-invalid]="getFieldError('paymentMethod')"
+                    >
+                      <option value="credit_card">{{ paymentMethodLabels['credit_card'] }}</option>
+                      <option value="debit_card">{{ paymentMethodLabels['debit_card'] }}</option>
+                      <option value="bank_transfer">{{ paymentMethodLabels['bank_transfer'] }}</option>
+                      <option value="pix">{{ paymentMethodLabels['pix'] }}</option>
+                      <option value="boleto">{{ paymentMethodLabels['boleto'] }}</option>
+                      <option value="cash">{{ paymentMethodLabels['cash'] }}</option>
+                    </select>
+                    <label for="paymentMethod">
+                      <i class="fas fa-money-bill-wave me-1"></i>
+                      Método de Pagamento *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('paymentMethod') }}</div>
+                  </div>
+                </div>
+
+                <!-- Frequência de Pagamento -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <select
+                      class="form-select"
+                      id="paymentFrequency"
+                      formControlName="paymentFrequency"
+                      [class.is-invalid]="getFieldError('paymentFrequency')"
+                    >
+                      <option value="monthly">{{ paymentFrequencyLabels['monthly'] }}</option>
+                      <option value="annual">{{ paymentFrequencyLabels['annual'] }}</option>
+                    </select>
+                    <label for="paymentFrequency">
+                      <i class="fas fa-calendar-alt me-1"></i>
+                      Frequência de Pagamento *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('paymentFrequency') }}</div>
+                  </div>
+                </div>
+
+                <!-- Data de Vencimento -->
+                <div class="col-12">
+                  <div class="form-floating">
+                    <input
+                      type="date"
+                      class="form-control"
+                      id="paymentDueDate"
+                      formControlName="paymentDueDate"
+                      [class.is-invalid]="getFieldError('paymentDueDate')"
+                    />
+                    <label for="paymentDueDate">
+                      <i class="fas fa-calendar-check me-1"></i>
+                      Data de Vencimento *
+                    </label>
+                    <div class="invalid-feedback">{{ getFieldError('paymentDueDate') }}</div>
+                  </div>
+                </div>
+
+                <!-- Status Ativo -->
+                <div class="col-12">
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="isActive"
+                      formControlName="isActive"
+                    />
+                    <label class="form-check-label" for="isActive">
+                      <i class="fas fa-toggle-on me-1"></i>
+                      Empresa Ativa
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-end gap-3">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="cancel()"
+                  [disabled]="saving"
+                >
+                  <i class="fas fa-times me-1"></i>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="tenantForm.invalid || saving"
+                >
+                  <span *ngIf="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  <i *ngIf="!saving" class="fas fa-save me-1"></i>
+                  {{ saving ? 'Salvando...' : 'Salvar Alterações' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

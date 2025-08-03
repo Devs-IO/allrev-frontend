@@ -15,32 +15,79 @@
       <div class="col-lg-6 mb-5 mb-lg-0 position-relative">
         <div id="radius-shape-1" class="position-absolute rounded-circle shadow-5-strong"></div>
         <div id="radius-shape-2" class="position-absolute shadow-5-strong"></div>
- 
+
         <div class="card bg-glass" style="max-width: 700px;">
           <div class="card-body px-4 py-5 px-md-5">
+
+            <!-- Alerta de erro -->
+            <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>{{ errorMessage }}
+              <button type="button" class="btn-close" aria-label="Close" (click)="clearError()"></button>
+            </div>
+
             <form [formGroup]="loginForm" (ngSubmit)="login()">
 
               <h5 class="mb-4">Faça seu Login</h5>
 
               <!-- Email input -->
               <div data-mdb-input-init class="form-outline mb-4">
-                <input type="email" id="email" class="form-control" formControlName="email" required />
+                <input
+                  type="email"
+                  id="email"
+                  class="form-control"
+                  formControlName="email"
+                  [disabled]="isLoading"
+                  (input)="clearError()"
+                  required
+                />
                 <label class="form-label" for="email">Endereço de Email</label>
+                <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-danger mt-1">
+                  <small *ngIf="loginForm.get('email')?.errors?.['required']">
+                    Email é obrigatório
+                  </small>
+                  <small *ngIf="loginForm.get('email')?.errors?.['email']">
+                    Digite um email válido
+                  </small>
+                </div>
               </div>
 
               <!-- Password input -->
               <div data-mdb-input-init class="form-outline mb-4">
-                <input type="password" id="password" class="form-control" formControlName="password" required />
+                <input
+                  type="password"
+                  id="password"
+                  class="form-control"
+                  formControlName="password"
+                  [disabled]="isLoading"
+                  (input)="clearError()"
+                  required
+                />
                 <label class="form-label" for="password">Senha</label>
+                <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-danger mt-1">
+                  <small *ngIf="loginForm.get('password')?.errors?.['required']">
+                    Senha é obrigatória
+                  </small>
+                  <small *ngIf="loginForm.get('password')?.errors?.['minlength']">
+                    Senha deve ter pelo menos 6 caracteres
+                  </small>
+                </div>
               </div>
 
               <!-- Submit button -->
-              <button type="submit" [disabled]="loginForm.invalid" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-block mb-4">
-                Login
+              <button
+                type="submit"
+                [disabled]="loginForm.invalid || isLoading"
+                data-mdb-button-init
+                data-mdb-ripple-init
+                class="btn btn-primary btn-block mb-4"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
+                {{ isLoading ? 'Conectando...' : 'Login' }}
               </button>
 
               <!-- em casos de dúvidas entre em contato -->
-              <p class="mb-0">Não possui uma conta? <a  href="https://wa.me/5531994298913" target=”_blank” class="text-primary">Entre em contato</a></p>
+              <p class="mb-0">Não possui uma conta? <a  href="https://wa.me/5531994298913" target="_blank" class="text-primary">Entre em contato</a></p>
 
             </form>
           </div>
@@ -51,4 +98,3 @@
 </section>
 <!-- Section: Design Block -->
 
-  

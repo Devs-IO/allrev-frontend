@@ -200,6 +200,24 @@ export const routes: Routes = [
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.ADMIN] },
       },
+      {
+        path: 'tenants/:id',
+        loadComponent: () =>
+          import(
+            '../modules/tenants/pages/tenant-view/tenant-view.component'
+          ).then((m) => m.TenantViewComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.ADMIN] },
+      },
+      {
+        path: 'tenants/:id/edit',
+        loadComponent: () =>
+          import(
+            '../modules/tenants/pages/tenant-edit/tenant-edit.component'
+          ).then((m) => m.TenantEditComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.ADMIN] },
+      },
     ],
   },
 ];

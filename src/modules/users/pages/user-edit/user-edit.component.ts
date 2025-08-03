@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
+import { Role } from '../../interfaces/user.enums';
 import { AuthService } from '../../../../app/core/services/auth.service';
 
 @Component({
@@ -42,7 +43,10 @@ export class UserEditComponent implements OnInit {
       this.usersService.getUserById(id).subscribe({
         next: (user) => {
           this.user = user;
-          this.formData = { ...user };
+          this.formData = {
+            ...user,
+            role: user.role as any, // Converte string para Role enum
+          };
           // Try to get company name from user.tenant or fallback to tenantId
           if ((user as any).tenant && (user as any).tenant.companyName) {
             this.tenantName = (user as any).tenant.companyName;
