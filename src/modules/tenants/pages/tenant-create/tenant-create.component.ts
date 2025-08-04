@@ -17,6 +17,7 @@ import {
   PaymentFrequencyLabels,
 } from '../../interfaces/tenant.enums';
 import { CreateTenantDto } from '../../interfaces/tenant.interface';
+import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 
 @Component({
   selector: 'app-tenant-create',
@@ -126,12 +127,10 @@ export class TenantCreateComponent implements OnInit {
             this.router.navigate(['/tenants']);
           }, 2000); // Mostra sucesso por 2 segundos antes de navegar
         },
-        error: (error) => {
+        error: (err) => {
           this.loading = false;
           this.success = false;
-          this.error =
-            error.error?.error?.message ||
-            'Erro ao criar empresa. Tente novamente.';
+          this.error = ErrorHelper.getErrorMessage(err);
         },
       });
     } else {

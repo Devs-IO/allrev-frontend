@@ -17,6 +17,7 @@ import {
   PaymentMethodLabels,
   PaymentFrequencyLabels,
 } from '../../interfaces/tenant.enums';
+import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 
 declare var bootstrap: any;
 
@@ -29,6 +30,7 @@ declare var bootstrap: any;
 })
 export class TenantEditComponent implements OnInit {
   tenantForm!: FormGroup;
+  originalFormValues: any = null;
   tenant: Tenant | null = null;
   loading = true;
   saving = false;
@@ -104,14 +106,14 @@ export class TenantEditComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao carregar empresa:', err);
-        this.error = 'Erro ao carregar dados da empresa';
+        this.error = ErrorHelper.getErrorMessage(err);
         this.loading = false;
       },
     });
   }
 
   populateForm(tenant: Tenant): void {
-    this.tenantForm.patchValue({
+    const formValues = {
       code: tenant.code,
       companyName: tenant.companyName,
       address: tenant.address,
@@ -122,7 +124,12 @@ export class TenantEditComponent implements OnInit {
       paymentDueDate: this.formatDateForInput(tenant.paymentDueDate),
       isActive: tenant.isActive,
       description: tenant.description || '',
-    });
+    };
+
+    this.tenantForm.patchValue(formValues);
+
+    // Salvar valores originais para comparação
+    this.originalFormValues = { ...formValues };
   }
 
   formatDateForInput(date: Date | string): string {
@@ -171,7 +178,7 @@ export class TenantEditComponent implements OnInit {
         },
         error: (err) => {
           console.error('Erro ao atualizar empresa:', err);
-          this.error = 'Erro ao atualizar empresa. Tente novamente.';
+          this.error = ErrorHelper.getErrorMessage(err);
           this.saving = false;
         },
       });
@@ -193,6 +200,19 @@ export class TenantEditComponent implements OnInit {
     Object.keys(this.tenantForm.controls).forEach((key) => {
       const control = this.tenantForm.get(key);
       control?.markAsTouched();
+    });
+  }
+
+  hasFormChanged(): boolean {
+    if (!this.originalFormValues) {
+      return false;
+    }
+
+    const currentValues = this.tenantForm.value;
+
+    // Comparar cada campo
+    return Object.keys(this.originalFormValues).some((key) => {
+      return this.originalFormValues[key] !== currentValues[key];
     });
   }
 

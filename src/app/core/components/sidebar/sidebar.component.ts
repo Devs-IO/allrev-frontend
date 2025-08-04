@@ -32,14 +32,14 @@ export class SidebarComponent implements OnInit {
       icon: 'bi bi-clipboard-check',
       subRoutes: [
         {
-          label: 'Nova Ordem',
-          route: '/order/create',
-          icon: 'bi bi-plus-circle',
-        },
-        {
           label: 'Listar Ordens',
           route: '/order/list',
           icon: 'bi bi-list-check',
+        },
+        {
+          label: 'Nova Ordem',
+          route: '/order/create',
+          icon: 'bi bi-plus-circle',
         },
       ],
     },
@@ -49,12 +49,12 @@ export class SidebarComponent implements OnInit {
       route: '/clients',
       icon: 'bi bi-people',
       subRoutes: [
+        { label: 'Listar', route: '/clients', icon: 'bi bi-list' },
         {
           label: 'Novo Cliente',
           route: '/clients/create',
           icon: 'bi bi-plus-circle',
         },
-        { label: 'Listar', route: '/clients', icon: 'bi bi-list' },
       ],
     },
     {
@@ -63,12 +63,12 @@ export class SidebarComponent implements OnInit {
       route: '/functionalities',
       icon: 'bi bi-box',
       subRoutes: [
+        { label: 'Listar', route: '/functionalities', icon: 'bi bi-list' },
         {
           label: 'Nova Funcionalidade',
           route: '/functionalities/create',
           icon: 'bi bi-plus-circle',
         },
-        { label: 'Listar', route: '/functionalities', icon: 'bi bi-list' },
       ],
     },
     {
@@ -77,12 +77,12 @@ export class SidebarComponent implements OnInit {
       route: '/users',
       icon: 'bi bi-person-fill',
       subRoutes: [
+        { label: 'Listar', route: '/users', icon: 'bi bi-list' },
         {
           label: 'Novo Usuário',
           route: '/users/create',
           icon: 'bi bi-person-plus',
         },
-        { label: 'Listar', route: '/users', icon: 'bi bi-list' },
       ],
     },
     {
@@ -91,12 +91,12 @@ export class SidebarComponent implements OnInit {
       route: '/tenants',
       icon: 'bi bi-building',
       subRoutes: [
+        { label: 'Listar', route: '/tenants', icon: 'bi bi-list' },
         {
           label: 'Nova Empresa',
           route: '/tenants/create',
           icon: 'bi bi-plus-circle',
         },
-        { label: 'Listar', route: '/tenants', icon: 'bi bi-list' },
       ],
     },
     {
