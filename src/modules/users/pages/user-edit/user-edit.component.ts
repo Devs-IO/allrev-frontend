@@ -11,6 +11,7 @@ import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
 import { Role } from '../../interfaces/user.enums';
 import { AuthService } from '../../../../app/core/services/auth.service';
+import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 
 declare var bootstrap: any;
 
@@ -23,6 +24,7 @@ declare var bootstrap: any;
 })
 export class UserEditComponent implements OnInit {
   userForm!: FormGroup;
+  originalFormValues: any = null;
   user: ResponseUserDto | null = null;
   loading = true;
   saving = false;
@@ -102,7 +104,7 @@ export class UserEditComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao carregar usuário:', err);
-        this.error = 'Erro ao carregar dados do usuário';
+        this.error = ErrorHelper.getErrorMessage(err);
         this.loading = false;
       },
     });
@@ -119,14 +121,19 @@ export class UserEditComponent implements OnInit {
     }
 
     // Preencher formulário
-    this.userForm.patchValue({
+    const formValues = {
       name: user.name,
       email: user.email,
       phone: user.phone,
       role: user.role,
       address: user.address,
       isActive: user.isActive,
-    });
+    };
+
+    this.userForm.patchValue(formValues);
+
+    // Salvar valores originais para comparação
+    this.originalFormValues = { ...formValues };
   }
 
   onSubmit(): void {
@@ -166,7 +173,7 @@ export class UserEditComponent implements OnInit {
         },
         error: (err) => {
           console.error('Erro ao atualizar usuário:', err);
-          this.error = 'Erro ao atualizar usuário. Tente novamente.';
+          this.error = ErrorHelper.getErrorMessage(err);
           this.saving = false;
         },
       });
@@ -188,6 +195,19 @@ export class UserEditComponent implements OnInit {
     Object.keys(this.userForm.controls).forEach((key) => {
       const control = this.userForm.get(key);
       control?.markAsTouched();
+    });
+  }
+
+  hasFormChanged(): boolean {
+    if (!this.originalFormValues) {
+      return false;
+    }
+
+    const currentValues = this.userForm.value;
+
+    // Comparar cada campo
+    return Object.keys(this.originalFormValues).some((key) => {
+      return this.originalFormValues[key] !== currentValues[key];
     });
   }
 

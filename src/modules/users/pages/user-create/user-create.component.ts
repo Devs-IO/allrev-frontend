@@ -12,6 +12,7 @@ import { UsersService } from '../../services/users.service';
 import { CreateUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import { Role, RoleLabels } from '../../interfaces/user.enums';
+import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 
 @Component({
   selector: 'app-user-create',
@@ -104,8 +105,8 @@ export class UserCreateComponent implements OnInit {
           this.userForm?.get('tenantId')?.setValue(user.tenant.id);
         }
       },
-      error: () => {
-        this.error = 'Erro ao carregar dados do usuário.';
+      error: (err) => {
+        this.error = ErrorHelper.getErrorMessage(err);
       },
     });
   }
@@ -113,8 +114,8 @@ export class UserCreateComponent implements OnInit {
   private loadTenants() {
     this.tenantsService.getTenants().subscribe({
       next: (tenants: any[]) => (this.tenants = tenants),
-      error: () => {
-        this.error = 'Erro ao carregar lista de empresas.';
+      error: (err) => {
+        this.error = ErrorHelper.getErrorMessage(err);
         this.tenants = [];
       },
     });
@@ -138,12 +139,10 @@ export class UserCreateComponent implements OnInit {
             this.router.navigate(['/users']);
           }, 2000);
         },
-        error: (error) => {
+        error: (err) => {
           this.loading = false;
           this.success = false;
-          this.error =
-            error.error?.error?.message ||
-            'Erro ao criar usuário. Tente novamente.';
+          this.error = ErrorHelper.getErrorMessage(err);
         },
       });
     } else {

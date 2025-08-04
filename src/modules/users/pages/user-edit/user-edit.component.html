@@ -176,7 +176,7 @@
         <button
           type="submit"
           class="btn btn-primary"
-          [disabled]="!userForm.valid || saving"
+          [disabled]="!userForm.valid || saving || !hasFormChanged()"
         >
           <i class="fas fa-spinner fa-spin" *ngIf="saving"></i>
           <i class="fas fa-save" *ngIf="!saving"></i>
