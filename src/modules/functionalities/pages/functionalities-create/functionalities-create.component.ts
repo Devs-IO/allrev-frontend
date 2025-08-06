@@ -16,19 +16,23 @@ import { ResponsibleUser } from '../../interfaces/functionalities.interface';
 function assistantPriceValidator(control: AbstractControl) {
   const formGroup = control.parent;
   if (!formGroup) return null;
-  
+
   const minimumPrice = formGroup.get('minimumPrice')?.value;
   const defaultAssistantPrice = control.value;
-  
-  if (defaultAssistantPrice && minimumPrice && defaultAssistantPrice > minimumPrice) {
+
+  if (
+    defaultAssistantPrice &&
+    minimumPrice &&
+    defaultAssistantPrice > minimumPrice
+  ) {
     return { max: true };
   }
-  
+
   return null;
 }
 
 @Component({
-  selector: 'app-functionalities-create',
+  selector: 'app-functionality-create',
   templateUrl: './functionalities-create.component.html',
   styleUrls: ['./functionalities-create.component.scss'],
   standalone: true,
@@ -36,12 +40,15 @@ function assistantPriceValidator(control: AbstractControl) {
 })
 export class FunctionalitiesCreateComponent implements OnInit {
   form = this.fb.group({
-    name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+    name: [
+      '',
+      [Validators.required, Validators.minLength(3), Validators.maxLength(100)],
+    ],
     description: [''],
     minimumPrice: [null, [Validators.required, Validators.min(0.01)]],
     defaultAssistantPrice: [null, [assistantPriceValidator]],
     responsibleUserId: ['', Validators.required],
-    status: [true], // true = ACTIVE, false = INACTIVE
+    isActive: [true], // true = ACTIVE, false = INACTIVE
   });
 
   loading = false;
@@ -57,7 +64,7 @@ export class FunctionalitiesCreateComponent implements OnInit {
 
   ngOnInit() {
     this.loadResponsibleUsers();
-    
+
     // Re-validate defaultAssistantPrice when minimumPrice changes
     this.form.get('minimumPrice')?.valueChanges.subscribe(() => {
       this.form.get('defaultAssistantPrice')?.updateValueAndValidity();
@@ -72,7 +79,7 @@ export class FunctionalitiesCreateComponent implements OnInit {
       error: (err) => {
         console.error('Erro ao carregar usuários responsáveis:', err);
         this.error = 'Erro ao carregar lista de responsáveis. Tente novamente.';
-      }
+      },
     });
   }
 
@@ -93,7 +100,9 @@ export class FunctionalitiesCreateComponent implements OnInit {
       minimumPrice: formValue.minimumPrice || 0,
       defaultAssistantPrice: formValue.defaultAssistantPrice || undefined,
       responsibleUserId: formValue.responsibleUserId || '',
-      status: formValue.status ? 'ACTIVE' : 'INACTIVE' as 'ACTIVE' | 'INACTIVE',
+      status: formValue.isActive
+        ? 'ACTIVE'
+        : ('INACTIVE' as 'ACTIVE' | 'INACTIVE'),
     };
 
     this.functionalitiesService.create(dto).subscribe({
@@ -105,14 +114,16 @@ export class FunctionalitiesCreateComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao criar funcionalidade:', err);
-        this.error = err.error?.message || 'Erro ao criar funcionalidade. Tente novamente.';
+        this.error =
+          err.error?.message ||
+          'Erro ao criar funcionalidade. Tente novamente.';
         this.loading = false;
       },
       complete: () => {
         if (!this.success) {
           this.loading = false;
         }
-      }
+      },
     });
   }
 }

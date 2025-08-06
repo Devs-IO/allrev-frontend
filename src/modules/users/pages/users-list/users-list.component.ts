@@ -20,6 +20,7 @@ export class UsersListComponent implements OnInit {
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   loggedUserId: string = '';
+  isAdmin: boolean = false;
 
   // Estado para modais de confirmação
   showEditModal = false;
@@ -36,10 +37,12 @@ export class UsersListComponent implements OnInit {
     this.authService.getUserProfile().subscribe({
       next: (user: any) => {
         this.loggedUserId = user.id || '';
+        this.isAdmin = user.role === 'admin' || user.role === 'ADMIN';
         this.loadUsers();
       },
       error: () => {
         this.loggedUserId = '';
+        this.isAdmin = false;
         this.loadUsers();
       },
     });

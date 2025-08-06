@@ -35,6 +35,7 @@ export class TenantEditComponent implements OnInit {
   loading = true;
   saving = false;
   error: string | null = null;
+  success: string | null = null;
 
   // Enums para os selects
   PaymentStatus = PaymentStatus;
@@ -125,9 +126,10 @@ export class TenantEditComponent implements OnInit {
       isActive: tenant.isActive,
       description: tenant.description || '',
     };
-
     this.tenantForm.patchValue(formValues);
-
+    // Desabilitar campos code e companyName
+    this.tenantForm.get('code')?.disable();
+    this.tenantForm.get('companyName')?.disable();
     // Salvar valores originais para comparação
     this.originalFormValues = { ...formValues };
   }
@@ -141,12 +143,16 @@ export class TenantEditComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.tenantForm.valid && this.tenant) {
+    if (this.tenantForm.valid && this.tenant && this.hasFormChanged()) {
       // Mostrar modal de confirmação
-      const confirmModal = new bootstrap.Modal(
-        document.getElementById('confirmEditModal')
-      );
-      confirmModal.show();
+      const modalEl = document.getElementById('confirmEditModal');
+      if (modalEl) {
+        const confirmModal = new bootstrap.Modal(modalEl);
+        confirmModal.show();
+      } else {
+        // fallback: submit direto se modal não existe
+        this.confirmSave();
+      }
     } else {
       this.markFormGroupTouched();
     }
@@ -157,24 +163,24 @@ export class TenantEditComponent implements OnInit {
       this.saving = true;
 
       // Fechar modal de confirmação
-      const confirmModal = bootstrap.Modal.getInstance(
-        document.getElementById('confirmEditModal')
-      );
-      confirmModal.hide();
+      const modalEl = document.getElementById('confirmEditModal');
+      if (modalEl) {
+        const confirmModal = bootstrap.Modal.getInstance(modalEl);
+        if (confirmModal) confirmModal.hide();
+      }
 
       const formData: Partial<CreateTenantDto> = {
-        ...this.tenantForm.value,
-        paymentDueDate: new Date(this.tenantForm.value.paymentDueDate),
+        ...this.tenantForm.getRawValue(),
+        paymentDueDate: new Date(this.tenantForm.getRawValue().paymentDueDate),
       };
 
       this.tenantsService.updateTenant(this.tenant.id, formData).subscribe({
         next: () => {
           this.saving = false;
-          // Mostrar modal de sucesso
-          const successModal = new bootstrap.Modal(
-            document.getElementById('successModal')
-          );
-          successModal.show();
+          this.success = 'Empresa atualizada com sucesso!';
+          setTimeout(() => {
+            this.router.navigate(['/tenants']);
+          }, 1500);
         },
         error: (err) => {
           console.error('Erro ao atualizar empresa:', err);
@@ -207,9 +213,7 @@ export class TenantEditComponent implements OnInit {
     if (!this.originalFormValues) {
       return false;
     }
-
-    const currentValues = this.tenantForm.value;
-
+    const currentValues = this.tenantForm.getRawValue();
     // Comparar cada campo
     return Object.keys(this.originalFormValues).some((key) => {
       return this.originalFormValues[key] !== currentValues[key];

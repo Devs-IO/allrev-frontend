@@ -9,9 +9,10 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
-import { Role } from '../../interfaces/user.enums';
+import { Role, RoleLabels } from '../../interfaces/user.enums';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
+import { TenantsService } from '../../../tenants/services/tenants.service';
 
 declare var bootstrap: any;
 
@@ -31,37 +32,34 @@ export class UserEditComponent implements OnInit {
   error: string | null = null;
   isAdmin = false;
   tenantName = '';
+  tenants: any[] = [];
+  currentUserRole = '';
 
-  // Role options
-  roleOptions = [
-    { value: 'admin', label: 'Administrador' },
-    { value: 'user', label: 'Usuário' },
-    { value: 'manager_reviewers', label: 'Gestor de Revisores' },
-    { value: 'client', label: 'Cliente' },
-    { value: 'assistant_reviewers', label: 'Assistente de Revisores' },
-    { value: 'none', label: 'Nenhum' },
-  ];
+  // Role options (carregado do backend)
+  roleOptions: { value: string; label: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private usersService: UsersService,
-    private authService: AuthService
+    private authService: AuthService,
+    private tenantsService: TenantsService
   ) {
     this.initializeForm();
   }
 
   ngOnInit(): void {
-    // Verificar se é admin
-    this.authService.getUser().subscribe({
+    // Verificar se é admin e obter roles disponíveis
+    this.authService.getUserProfile().subscribe({
       next: (user: any) => {
-        this.isAdmin = user.role === 'admin';
-        this.filterRoleOptions();
+        this.currentUserRole = user.role;
+        this.isAdmin = user.role === Role.ADMIN;
+        this.loadAvailableRoles();
       },
       error: () => {
         this.isAdmin = false;
-        this.filterRoleOptions();
+        this.loadAvailableRoles();
       },
     });
 
@@ -77,22 +75,31 @@ export class UserEditComponent implements OnInit {
   initializeForm(): void {
     this.userForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email]], // Será desabilitado depois
       phone: ['', [Validators.required]],
       role: ['', [Validators.required]],
       address: ['', [Validators.required]],
+      tenantId: [''], // Validators serão adicionados condicionalmente
       isActive: [true],
+      currentPassword: [''], // Senha atual para confirmar mudanças
+      password: [''], // Nova senha (opcional)
+      confirmPassword: [''], // Confirmação da nova senha
     });
   }
 
-  filterRoleOptions(): void {
-    if (!this.isAdmin) {
-      // Se não for admin, remover opções administrativas
-      this.roleOptions = this.roleOptions.filter(
-        (option) =>
-          !['admin', 'user', 'manager_reviewers'].includes(option.value)
-      );
-    }
+  loadAvailableRoles() {
+    this.usersService.getAvailableRoles().subscribe({
+      next: (roles: Role[]) => {
+        this.roleOptions = roles.map((role) => ({
+          value: role,
+          label: RoleLabels[role] || role,
+        }));
+      },
+      error: (err) => {
+        console.error('Erro ao carregar roles disponíveis:', err);
+        this.error = 'Erro ao carregar opções de funções';
+      },
+    });
   }
 
   loadUser(id: string): void {
@@ -111,13 +118,16 @@ export class UserEditComponent implements OnInit {
   }
 
   populateForm(user: ResponseUserDto): void {
-    // Configurar nome da empresa
-    if ((user as any).tenant && (user as any).tenant.companyName) {
-      this.tenantName = (user as any).tenant.companyName;
+    // Sempre priorize o tenant do objeto user.tenant
+    if (user.tenant && user.tenant.companyName) {
+      this.tenantName = user.tenant.companyName;
+      this.userForm.get('tenantId')?.setValue(user.tenant.id);
     } else if ((user as any).tenantCompanyName) {
       this.tenantName = (user as any).tenantCompanyName;
+      this.userForm.get('tenantId')?.setValue(user.tenantId);
     } else {
       this.tenantName = user.tenantId || 'Não informado';
+      this.userForm.get('tenantId')?.setValue(user.tenantId);
     }
 
     // Preencher formulário
@@ -127,10 +137,23 @@ export class UserEditComponent implements OnInit {
       phone: user.phone,
       role: user.role,
       address: user.address,
+      tenantId: this.userForm.get('tenantId')?.value,
       isActive: user.isActive,
+      currentPassword: '',
+      password: '',
+      confirmPassword: '',
     };
 
     this.userForm.patchValue(formValues);
+
+    // Desabilitar email sempre (não deve ser editável)
+    this.userForm.get('email')?.disable();
+
+    // Configurar tenantId baseado no tipo de usuário
+    const tenantIdControl = this.userForm.get('tenantId');
+    tenantIdControl?.clearValidators();
+    tenantIdControl?.disable();
+    tenantIdControl?.updateValueAndValidity();
 
     // Salvar valores originais para comparação
     this.originalFormValues = { ...formValues };
@@ -138,6 +161,15 @@ export class UserEditComponent implements OnInit {
 
   onSubmit(): void {
     if (this.userForm.valid && this.user) {
+      // Se está alterando senha, verificar se senha atual foi fornecida
+      const password = this.userForm.get('password')?.value;
+      const currentPassword = this.userForm.get('currentPassword')?.value;
+
+      if (password && !currentPassword) {
+        this.error = 'Para alterar a senha, você deve informar a senha atual';
+        return;
+      }
+
       // Mostrar modal de confirmação
       const confirmModal = new bootstrap.Modal(
         document.getElementById('confirmEditModal')
@@ -158,9 +190,22 @@ export class UserEditComponent implements OnInit {
       );
       confirmModal.hide();
 
+      // Preparar dados para envio (incluindo valores desabilitados)
+      const rawFormData = this.userForm.getRawValue();
       const formData: Partial<CreateUserDto> = {
-        ...this.userForm.value,
+        name: rawFormData.name,
+        phone: rawFormData.phone,
+        role: rawFormData.role,
+        address: rawFormData.address,
+        isActive: rawFormData.isActive,
+        tenantId: rawFormData.tenantId,
       };
+
+      // Adicionar senha apenas se foi informada
+      if (rawFormData.password) {
+        formData.password = rawFormData.password;
+        formData.currentPassword = rawFormData.currentPassword;
+      }
 
       this.usersService.updateUser(this.user.id, formData).subscribe({
         next: () => {

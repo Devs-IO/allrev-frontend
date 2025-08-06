@@ -19,12 +19,6 @@ export const routes: Routes = [
       ),
     canActivate: [AuthGuard],
     children: [
-      {
-        path: 'home',
-        loadComponent: () =>
-          import('../modules/home/home.component').then((m) => m.HomeComponent),
-        canActivate: [AuthGuard],
-      },
       { path: '', redirectTo: '/home', pathMatch: 'full' },
       {
         path: 'home',
@@ -46,7 +40,7 @@ export const routes: Routes = [
           import(
             '../modules/functionalities/pages/functionalities-list/functionalities-list.component'
           ).then((m) => m.FunctionalitiesListComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
@@ -55,7 +49,16 @@ export const routes: Routes = [
           import(
             '../modules/functionalities/pages/functionalities-create/functionalities-create.component'
           ).then((m) => m.FunctionalitiesCreateComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
+        path: 'functionalities/:id',
+        loadComponent: () =>
+          import(
+            '../modules/functionalities/pages/functionalities-view/functionalities-view.component'
+          ).then((m) => m.FunctionalitiesViewComponent),
+        canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
@@ -64,7 +67,7 @@ export const routes: Routes = [
           import(
             '../modules/functionalities/pages/order-create/order-create.component'
           ).then((m) => m.OrderCreateComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
@@ -82,7 +85,7 @@ export const routes: Routes = [
           import(
             '../modules/functionalities/pages/functionalities-view/functionalities-view.component'
           ).then((m) => m.FunctionalitiesViewComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       // {

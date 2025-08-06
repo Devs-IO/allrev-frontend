@@ -73,6 +73,7 @@
                 Status
                 <i *ngIf="sortColumn === 'isActive'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
               </th>
+              <th scope="col" *ngIf="isAdmin">Empresa</th>
               <th scope="col">Ações</th>
             </tr>
           </thead>
@@ -94,6 +95,9 @@
                 <span *ngIf="!user.isActive" class="text-danger">
                   <i class="fas fa-times-circle"></i> Inativo
                 </span>
+              </td>
+              <td *ngIf="isAdmin">
+                {{ user.tenant?.companyName || '-' }}
               </td>
               <td>
                 <div class="btn-group" role="group">

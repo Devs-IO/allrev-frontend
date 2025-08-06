@@ -1,47 +1,192 @@
 
-<div class="container my-4" style="max-width: 900px;">
-  <h2 class="text-primary mb-4"><i class="bi bi-pencil-square me-2"></i> Editar Cliente</h2>
-  <div *ngIf="loading">Carregando...</div>
-  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-  <form *ngIf="!loading && clients" (ngSubmit)="submit()" class="card shadow-lg rounded-4 border-0 p-4 mb-4">
-    <div class="mb-3">
-      <label><i class="bi bi-person-fill me-1"></i> Nome</label>
-      <input class="form-control" [(ngModel)]="formData.name" name="name" required />
+<div class="container my-4">
+  <h2 class="text-primary">
+    <i class="fas fa-edit"></i> Editar Cliente
+  </h2>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center my-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
     </div>
-    <div class="mb-3">
-      <label><i class="bi bi-envelope-fill me-1"></i> Email</label>
-      <input class="form-control" [(ngModel)]="formData.email" name="email" required />
+    <p class="mt-2">Carregando dados do cliente...</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading && clients" (ngSubmit)="submit()">
+
+    <!-- Dados Pessoais -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-user"></i> Dados Pessoais</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Nome -->
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">
+              <i class="fas fa-user"></i> Nome *
+            </label>
+            <input
+              id="name"
+              class="form-control"
+              [(ngModel)]="formData.name"
+              name="name"
+              placeholder="Nome completo do cliente"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">
+              <i class="fas fa-envelope"></i> Email *
+            </label>
+            <input
+              id="email"
+              type="email"
+              class="form-control"
+              [(ngModel)]="formData.email"
+              name="email"
+              placeholder="email@exemplo.com"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Telefone -->
+          <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">
+              <i class="fas fa-phone"></i> Telefone
+            </label>
+            <input
+              id="phone"
+              class="form-control"
+              [(ngModel)]="formData.phone"
+              name="phone"
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+
+          <!-- Status -->
+          <div class="col-md-6 mb-3">
+            <label for="isActive" class="form-label">
+              <i class="fas fa-toggle-on"></i> Status do Cliente
+            </label>
+            <select
+              id="isActive"
+              class="form-control"
+              [(ngModel)]="formData.isActive"
+              name="isActive"
+            >
+              <option [ngValue]="true">Ativo</option>
+              <option [ngValue]="false">Inativo</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label><i class="bi bi-telephone-fill me-1"></i> Telefone</label>
-      <input class="form-control" [(ngModel)]="formData.phone" name="phone" />
+
+    <!-- Informações Acadêmicas -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-graduation-cap"></i> Informações Acadêmicas</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Universidade -->
+          <div class="col-md-6 mb-3">
+            <label for="university" class="form-label">
+              <i class="fas fa-university"></i> Universidade
+            </label>
+            <input
+              id="university"
+              class="form-control"
+              [(ngModel)]="formData.university"
+              name="university"
+              placeholder="Nome da universidade"
+            />
+          </div>
+
+          <!-- Curso -->
+          <div class="col-md-6 mb-3">
+            <label for="course" class="form-label">
+              <i class="fas fa-book"></i> Curso
+            </label>
+            <input
+              id="course"
+              class="form-control"
+              [(ngModel)]="formData.course"
+              name="course"
+              placeholder="Nome do curso"
+            />
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label><i class="bi bi-building me-1"></i> Universidade</label>
-      <input class="form-control" [(ngModel)]="formData.university" name="university" />
+
+    <!-- Informações Adicionais -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-sticky-note"></i> Informações Adicionais</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Observação -->
+          <div class="col-md-6 mb-3">
+            <label for="observation" class="form-label">
+              <i class="fas fa-comment"></i> Observação
+            </label>
+            <textarea
+              id="observation"
+              class="form-control"
+              [(ngModel)]="formData.observation"
+              name="observation"
+              rows="3"
+              placeholder="Observações sobre o cliente"
+            ></textarea>
+          </div>
+
+          <!-- Nota -->
+          <div class="col-md-6 mb-3">
+            <label for="note" class="form-label">
+              <i class="fas fa-clipboard"></i> Nota
+            </label>
+            <textarea
+              id="note"
+              class="form-control"
+              [(ngModel)]="formData.note"
+              name="note"
+              rows="3"
+              placeholder="Notas internas sobre o cliente"
+            ></textarea>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-      <label><i class="bi bi-book me-1"></i> Curso</label>
-      <input class="form-control" [(ngModel)]="formData.course" name="course" />
-    </div>
-    <div class="mb-3">
-      <label><i class="bi bi-file-earmark-text me-1"></i> Observação</label>
-      <input class="form-control" [(ngModel)]="formData.observation" name="observation" />
-    </div>
-    <div class="mb-3">
-      <label><i class="bi bi-file-earmark-text me-1"></i> Nota</label>
-      <input class="form-control" [(ngModel)]="formData.note" name="note" />
-    </div>
-    <div class="mb-3">
-      <label><i class="bi bi-check-circle-fill me-1"></i> Status</label>
-      <select class="form-control" [(ngModel)]="formData.isActive" name="isActive">
-        <option [ngValue]="true">Ativo</option>
-        <option [ngValue]="false">Inativo</option>
-      </select>
-    </div>
-    <div class="d-flex justify-content-end mt-3">
-      <button type="submit" class="btn btn-primary me-2"><i class="bi bi-save me-1"></i> Salvar</button>
-      <a routerLink="/clients" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i> Cancelar</a>
+
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        routerLink="/clients"
+      >
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+      >
+        <i class="fas fa-save"></i> Salvar Alterações
+      </button>
     </div>
   </form>
 </div>

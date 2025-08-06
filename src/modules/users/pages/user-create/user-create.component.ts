@@ -5,6 +5,8 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TenantsService } from '../../../tenants/services/tenants.service';
@@ -13,6 +15,24 @@ import { CreateUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import { Role, RoleLabels } from '../../interfaces/user.enums';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
+
+// Custom validator for password confirmation
+function passwordMatchValidator(
+  control: AbstractControl
+): ValidationErrors | null {
+  const password = control.get('password');
+  const confirmPassword = control.get('confirmPassword');
+
+  if (!password || !confirmPassword) {
+    return null;
+  }
+
+  if (password.value !== confirmPassword.value) {
+    return { passwordsMismatch: true };
+  }
+
+  return null;
+}
 
 @Component({
   selector: 'app-user-create',
@@ -29,6 +49,7 @@ export class UserCreateComponent implements OnInit {
   tenants: any[] = [];
   isAdmin = false;
   tenantName = '';
+  currentUserRole = '';
 
   // Enums para o template
   Role = Role;
@@ -48,48 +69,65 @@ export class UserCreateComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.checkAdminAndTenant();
     this.initializeForm();
+    this.checkAdminAndTenant();
+    this.loadAvailableRoles();
   }
 
   private initializeForm() {
-    this.userForm = this.fb.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(2),
-          Validators.maxLength(100),
+    this.userForm = this.fb.group(
+      {
+        name: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.maxLength(100),
+          ],
         ],
-      ],
-      email: [
-        '',
-        [Validators.required, Validators.email, Validators.maxLength(100)],
-      ],
-      phone: [
-        '',
-        [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
-      ],
-      role: ['', Validators.required],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.maxLength(50),
+        email: [
+          '',
+          [Validators.required, Validators.email, Validators.maxLength(100)],
         ],
-      ],
-      address: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(10),
-          Validators.maxLength(200),
+        phone: [
+          '',
+          [
+            Validators.required,
+            Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/),
+          ],
         ],
-      ],
-      tenantId: ['', this.isAdmin ? Validators.required : []],
-      isActive: [true],
-      photo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+        role: ['', Validators.required],
+        password: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(8),
+            Validators.maxLength(50),
+          ],
+        ],
+        confirmPassword: ['', Validators.required],
+        address: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(10),
+            Validators.maxLength(200),
+          ],
+        ],
+        tenantId: [''], // Validators will be added conditionally
+        isActive: [true],
+        photo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      },
+      { validators: passwordMatchValidator }
+    );
+
+    // Set up value change listeners to trigger form validation when passwords change
+    this.userForm.get('password')?.valueChanges.subscribe(() => {
+      this.userForm.get('confirmPassword')?.updateValueAndValidity();
+    });
+
+    this.userForm.get('confirmPassword')?.valueChanges.subscribe(() => {
+      this.userForm.updateValueAndValidity();
     });
   }
 
@@ -97,13 +135,30 @@ export class UserCreateComponent implements OnInit {
     this.authService.getUserProfile().subscribe({
       next: (user: any) => {
         console.log(user);
-        this.isAdmin = user.role === 'Administrador';
+        this.currentUserRole = user.role;
+        this.isAdmin = user.role === Role.ADMIN;
+
+        // Configure tenantId validation based on user role
+        const tenantIdControl = this.userForm?.get('tenantId');
         if (this.isAdmin) {
+          // Admin users: field is required and enabled, show tenant selection
+          tenantIdControl?.setValidators([Validators.required]);
+          tenantIdControl?.enable();
           this.loadTenants();
         } else if (user.tenant?.id) {
+          // Non-admin users: field is not required and disabled, pre-filled with user's tenant
+          tenantIdControl?.clearValidators();
           this.tenantName = user.tenant.companyName || '';
-          this.userForm?.get('tenantId')?.setValue(user.tenant.id);
+          tenantIdControl?.setValue(user.tenant.id);
+          tenantIdControl?.disable();
+        } else {
+          // Non-admin users without tenant: show error
+          this.error =
+            'Usuário não possui empresa associada. Contate o administrador.';
+          tenantIdControl?.clearValidators();
+          tenantIdControl?.disable();
         }
+        tenantIdControl?.updateValueAndValidity();
       },
       error: (err) => {
         this.error = ErrorHelper.getErrorMessage(err);
@@ -127,9 +182,20 @@ export class UserCreateComponent implements OnInit {
       this.error = null;
       this.success = false;
 
+      // Get form value and handle disabled tenantId field
+      const formValue = this.userForm.value;
+
+      // Remove confirmPassword from the payload as it's only for frontend validation
+      const { confirmPassword, ...formDataWithoutConfirm } = formValue;
+
       const formData: CreateUserDto = {
-        ...this.userForm.value,
+        ...formDataWithoutConfirm,
       };
+
+      // Para usuários não-admin, o tenantId pode estar disabled, então pegamos do getRawValue()
+      if (!this.isAdmin && this.userForm.get('tenantId')?.disabled) {
+        formData.tenantId = this.userForm.getRawValue().tenantId;
+      }
 
       this.usersService.createUser(formData).subscribe({
         next: () => {
@@ -175,6 +241,16 @@ export class UserCreateComponent implements OnInit {
       if (field.errors['email'])
         return `${this.getFieldLabel(fieldName)} deve ser um email válido`;
     }
+
+    // Check for form-level password mismatch error
+    if (
+      fieldName === 'confirmPassword' &&
+      this.userForm.errors?.['passwordsMismatch'] &&
+      field?.touched
+    ) {
+      return 'As senhas não coincidem';
+    }
+
     return null;
   }
 
@@ -185,6 +261,7 @@ export class UserCreateComponent implements OnInit {
       phone: 'Telefone',
       role: 'Função',
       password: 'Senha',
+      confirmPassword: 'Confirmação da Senha',
       address: 'Endereço',
       tenantId: 'Empresa',
       photo: 'Foto',
@@ -194,21 +271,40 @@ export class UserCreateComponent implements OnInit {
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.userForm.get(fieldName);
-    return !!(field?.errors && field.touched);
+    const hasFieldError = !!(field?.errors && field.touched);
+
+    // Check for form-level password mismatch error for confirmPassword field
+    if (fieldName === 'confirmPassword') {
+      const hasFormError = !!(
+        this.userForm.errors?.['passwordsMismatch'] && field?.touched
+      );
+      return hasFieldError || hasFormError;
+    }
+
+    return hasFieldError;
   }
 
   openTenantForm() {
     this.router.navigate(['/tenants/create']);
   }
 
+  loadAvailableRoles() {
+    this.usersService.getAvailableRoles().subscribe({
+      next: (roles: Role[]) => {
+        this.roleOptions = roles.map((role) => ({
+          value: role,
+          label: RoleLabels[role] || role,
+        }));
+      },
+      error: (err) => {
+        console.error('Erro ao carregar roles disponíveis:', err);
+        this.error = 'Erro ao carregar opções de funções';
+      },
+    });
+  }
+
   getAvailableRoles() {
-    if (this.isAdmin) {
-      return this.roleOptions;
-    }
-    // Se não for admin, exibe apenas as roles que não são admin
-    return this.roleOptions.filter(
-      (role) =>
-        ![Role.ADMIN, Role.MANAGER_REVIEWERS].includes(role.value as Role)
-    );
+    // Método mantido por compatibilidade, mas agora apenas retorna as opções carregadas
+    return this.roleOptions;
   }
 }

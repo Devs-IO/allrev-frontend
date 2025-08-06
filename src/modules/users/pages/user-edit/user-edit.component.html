@@ -1,239 +1,297 @@
-
 <div class="container my-4">
-  <div class="form-header">
-    <h2 class="form-title">
-      <i class="fas fa-user-edit"></i>
-      Editar Usuário
-    </h2>
-    <p class="form-subtitle">Atualize os dados do usuário</p>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-    <p class="mt-2">Carregando dados do usuário...</p>
-  </div>
+  <h2 class="text-primary">
+    <i class="fas fa-user-edit"></i> Editar Usuário
+  </h2>
 
   <!-- Error Alert -->
   <div *ngIf="error" class="alert alert-danger">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    {{ error }}
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- Success Alert -->
+  <div *ngIf="false" class="alert alert-success">
+    <i class="fas fa-check-circle"></i> Usuário atualizado com sucesso!
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center my-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">{{ loading ? 'Carregando dados...' : 'Salvando alterações...' }}</p>
   </div>
 
   <!-- Form -->
-  <div *ngIf="!loading && !error && user">
-    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
-      <div class="form-grid">
+  <form *ngIf="!loading && userForm" [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
 
-        <!-- Nome -->
-        <div class="form-group">
-          <label for="name" class="form-label">
-            <i class="fas fa-user"></i>
-            Nome Completo *
-          </label>
-          <input
-            id="name"
-            type="text"
-            class="form-control"
-            [class.is-invalid]="isFieldInvalid('name')"
-            formControlName="name"
-            placeholder="Ex: João da Silva"
-            maxlength="100"
-          />
-          <div *ngIf="getFieldError('name')" class="invalid-feedback">
-            {{ getFieldError('name') }}
-          </div>
-        </div>
-
-        <!-- Email (readonly) -->
-        <div class="form-group">
-          <label for="email" class="form-label">
-            <i class="fas fa-envelope"></i>
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            class="form-control"
-            formControlName="email"
-            readonly
-            style="background-color: #f8f9fa; cursor: not-allowed;"
-          />
-          <small class="form-text text-muted">O email não pode ser alterado</small>
-        </div>
-
-        <!-- Telefone -->
-        <div class="form-group">
-          <label for="phone" class="form-label">
-            <i class="fas fa-phone"></i>
-            Telefone *
-          </label>
-          <input
-            id="phone"
-            type="text"
-            class="form-control"
-            [class.is-invalid]="isFieldInvalid('phone')"
-            formControlName="phone"
-            placeholder="(11) 99999-9999"
-          />
-          <div *ngIf="getFieldError('phone')" class="invalid-feedback">
-            {{ getFieldError('phone') }}
-          </div>
-        </div>
-
-        <!-- Função -->
-        <div class="form-group">
-          <label for="role" class="form-label">
-            <i class="fas fa-user-tag"></i>
-            Função *
-          </label>
-          <select
-            id="role"
-            class="form-control"
-            [class.is-invalid]="isFieldInvalid('role')"
-            formControlName="role"
-          >
-            <option value="" disabled>Selecione a função</option>
-            <option *ngFor="let option of roleOptions" [value]="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-          <div *ngIf="getFieldError('role')" class="invalid-feedback">
-            {{ getFieldError('role') }}
-          </div>
-        </div>
-
-        <!-- Tenant (readonly) -->
-        <div class="form-group">
-          <label for="tenant" class="form-label">
-            <i class="fas fa-building"></i>
-            Empresa
-          </label>
-          <input
-            id="tenant"
-            type="text"
-            class="form-control"
-            [value]="tenantName"
-            readonly
-            style="background-color: #f8f9fa; cursor: not-allowed;"
-          />
-          <small class="form-text text-muted">A empresa não pode ser alterada</small>
-        </div>
-
-        <!-- Status Ativo -->
-        <div class="form-group toggle-group">
-          <label class="form-label">
-            <i class="fas fa-toggle-on"></i>
-            Status do Usuário
-          </label>
-          <div class="toggle-container">
-            <label class="toggle-switch">
-              <input type="checkbox" formControlName="isActive">
-              <span class="toggle-slider"></span>
+    <!-- Dados Pessoais -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-user"></i> Dados Pessoais</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- ID (readonly) - HIDDEN -->
+          <!--
+          <div class="col-md-6 mb-3">
+            <label for="id" class="form-label">
+              <i class="fas fa-hashtag"></i> ID
             </label>
-            <span class="toggle-label">
-              {{ userForm.get('isActive')?.value ? 'Ativo' : 'Inativo' }}
-            </span>
+            <input
+              id="id"
+              type="text"
+              class="form-control"
+              [value]="user?.id"
+              readonly
+              disabled
+            />
+          </div>
+          -->
+
+          <!-- Data de Criação (readonly) -->
+          <div class="col-md-6 mb-3">
+            <label for="createdAt" class="form-label">
+              <i class="fas fa-calendar-plus"></i> Data de Criação
+            </label>
+            <input
+              id="createdAt"
+              type="text"
+              class="form-control"
+              [value]="user?.createdAt | date:'dd/MM/yyyy HH:mm'"
+              readonly
+              disabled
+            />
+          </div>
+
+          <!-- Nome -->
+          <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">
+              <i class="fas fa-signature"></i> Nome Completo *
+            </label>
+            <input
+              id="name"
+              type="text"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('name')"
+              formControlName="name"
+              placeholder="Ex: João Silva Santos"
+              maxlength="100"
+            />
+            <div *ngIf="getFieldError('name')" class="invalid-feedback">
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">
+              <i class="fas fa-envelope"></i> E-mail *
+            </label>
+            <input
+              id="email"
+              type="email"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('email')"
+              formControlName="email"
+              placeholder="joao@exemplo.com"
+              maxlength="150"
+              readonly
+            />
+            <div *ngIf="getFieldError('email')" class="invalid-feedback">
+              {{ getFieldError('email') }}
+            </div>
+          </div>
+
+          <!-- Telefone -->
+          <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">
+              <i class="fas fa-phone"></i> Telefone *
+            </label>
+            <input
+              id="phone"
+              type="text"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('phone')"
+              formControlName="phone"
+              placeholder="(11) 99999-9999"
+            />
+            <div *ngIf="getFieldError('phone')" class="invalid-feedback">
+              {{ getFieldError('phone') }}
+            </div>
+          </div>
+
+          <!-- Status Ativo -->
+          <div class="col-md-6 mb-3">
+            <label class="form-label">
+              <i class="fas fa-toggle-on"></i> Status do Usuário
+            </label>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                formControlName="isActive"
+                id="isActive"
+              />
+              <label class="form-check-label" for="isActive">
+                {{ userForm.get('isActive')?.value ? 'Ativo' : 'Inativo' }}
+              </label>
+            </div>
           </div>
         </div>
-
       </div>
+    </div>
 
-      <!-- Endereço (full width) -->
-      <div class="form-group full-width">
-        <label for="address" class="form-label">
-          <i class="fas fa-map-marker-alt"></i>
-          Endereço Completo *
-        </label>
-        <input
-          id="address"
-          type="text"
-          class="form-control"
-          [class.is-invalid]="isFieldInvalid('address')"
-          formControlName="address"
-          placeholder="Rua, Número, Bairro, Cidade - Estado, CEP"
-          maxlength="200"
-        />
-        <div *ngIf="getFieldError('address')" class="invalid-feedback">
-          {{ getFieldError('address') }}
+    <!-- Configuração do Sistema -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-cogs"></i> Configuração do Sistema</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Perfil/Role -->
+          <div class="col-md-6 mb-3">
+            <label for="role" class="form-label">
+              <i class="fas fa-user-tag"></i> Perfil de Acesso *
+            </label>
+            <select
+              id="role"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('role')"
+              formControlName="role"
+            >
+              <option value="" disabled>Selecione o perfil</option>
+              <option *ngFor="let role of roleOptions" [value]="role.value">
+                {{ role.label }}
+              </option>
+            </select>
+            <div *ngIf="getFieldError('role')" class="invalid-feedback">
+              {{ getFieldError('role') }}
+            </div>
+          </div>
+
+          <!-- Empresa -->
+          <div class="col-md-6 mb-3">
+            <label for="tenantId" class="form-label">
+              <i class="fas fa-building"></i> Empresa *
+            </label>
+            <ng-container>
+              <select
+                id="tenantId"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('tenantId')"
+                formControlName="tenantId"
+                [disabled]="true"
+              >
+                <option [value]="user?.tenantId || user?.tenant?.id || ''">
+                  {{ tenantName }}
+                </option>
+              </select>
+              <div *ngIf="getFieldError('tenantId')" class="invalid-feedback">
+                {{ getFieldError('tenantId') }}
+              </div>
+            </ng-container>
+            <ng-template #tenantReadonly>
+              <input
+                id="tenantId"
+                type="text"
+                class="form-control"
+                [value]="tenantName"
+                readonly
+                disabled
+              />
+            </ng-template>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Form Actions -->
-      <div class="form-actions">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="cancel()"
-          [disabled]="saving"
-        >
-          <i class="fas fa-times"></i>
-          Cancelar
-        </button>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          [disabled]="!userForm.valid || saving || !hasFormChanged()"
-        >
-          <i class="fas fa-spinner fa-spin" *ngIf="saving"></i>
-          <i class="fas fa-save" *ngIf="!saving"></i>
-          {{ saving ? 'Salvando...' : 'Salvar Alterações' }}
-        </button>
+    <!-- Alterar Senha (Opcional) -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-key"></i> Alterar Senha (Opcional)</h5>
       </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal de Confirmação de Edição -->
-<div class="modal fade" id="confirmEditModal" tabindex="-1" aria-labelledby="confirmEditModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmEditModalLabel">
-          <i class="fas fa-question-circle text-warning me-2"></i>
-          Confirmar Edição
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Tem certeza de que deseja salvar as alterações do usuário <strong>{{ user?.name }}</strong>?</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fas fa-times me-1"></i>
-          Cancelar
-        </button>
-        <button type="button" class="btn btn-primary" (click)="confirmSave()">
-          <i class="fas fa-check me-1"></i>
-          Confirmar
-        </button>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="currentPassword" class="form-label">
+              <i class="fas fa-shield-alt"></i> Senha Atual
+            </label>
+            <input
+              id="currentPassword"
+              type="password"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('currentPassword')"
+              formControlName="currentPassword"
+              placeholder="Digite sua senha atual"
+            />
+            <div *ngIf="getFieldError('currentPassword')" class="invalid-feedback">
+              {{ getFieldError('currentPassword') }}
+            </div>
+            <small class="form-text text-muted">
+              Obrigatório para alterar a senha
+            </small>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="password" class="form-label">
+              <i class="fas fa-lock"></i> Nova Senha
+            </label>
+            <div class="input-group">
+              <input
+                id="password"
+                type="password"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('password')"
+                formControlName="password"
+                placeholder="Digite a nova senha (opcional)"
+                minlength="6"
+              />
+            </div>
+            <div *ngIf="getFieldError('password')" class="invalid-feedback">
+              {{ getFieldError('password') }}
+            </div>
+            <small class="form-text text-muted">
+              Deixe em branco para manter a senha atual
+            </small>
+          </div>          <div class="col-md-6 mb-3">
+            <label for="confirmPassword" class="form-label">
+              <i class="fas fa-lock"></i> Confirmar Nova Senha
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              class="form-control"
+              [class.is-invalid]="isFieldInvalid('confirmPassword')"
+              formControlName="confirmPassword"
+              placeholder="Confirme a nova senha"
+            />
+            <div *ngIf="getFieldError('confirmPassword')" class="invalid-feedback">
+              {{ getFieldError('confirmPassword') }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Modal de Sucesso -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="successModalLabel">
-          <i class="fas fa-check-circle me-2"></i>
-          Sucesso
-        </h5>
-      </div>
-      <div class="modal-body">
-        <p class="mb-0">Usuário editado com sucesso!</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success" (click)="redirectToList()">
-          <i class="fas fa-list me-1"></i>
-          Ir para Listagem
-        </button>
-      </div>
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-end gap-2">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        routerLink="/users"
+        [disabled]="loading"
+      >
+        <i class="fas fa-times"></i> Cancelar
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="!userForm.valid || loading || !hasFormChanged()"
+      >
+        <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+        <i class="fas fa-save" *ngIf="!loading"></i>
+        {{ loading ? 'Salvando...' : 'Salvar Alterações' }}
+      </button>
     </div>
-  </div>
+  </form>
 </div>
