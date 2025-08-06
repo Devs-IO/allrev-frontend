@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { ActivatedRoute } from '@angular/router';
 import { FunctionalitiesService } from '../../services/functionalities.service';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 
@@ -13,20 +13,28 @@ import { FunctionalityDto } from '../../interfaces/functionalities.interface';
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
 })
 export class FunctionalitiesViewComponent implements OnInit {
-  functionalities: FunctionalityDto[] = [];
+  functionality: FunctionalityDto | null = null;
   loading = true;
 
-  constructor(private functionalitiesService: FunctionalitiesService) {}
+  constructor(
+    private functionalitiesService: FunctionalitiesService,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit() {
-    this.functionalitiesService.getAll().subscribe({
-      next: (data) => {
-        this.functionalities = data;
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-      },
-    });
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.functionalitiesService.getAll().subscribe({
+        next: (data) => {
+          this.functionality = data.find((f) => f.id === id) || null;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
+    } else {
+      this.loading = false;
+    }
   }
 }

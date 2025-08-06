@@ -18,12 +18,12 @@ export const jwtInterceptor: HttpInterceptorFn = (
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log('JWT Interceptor - Added Bearer token to request');
+    //console.log('JWT Interceptor - Added Bearer token to request');
     return next(clonedReq);
   }
 
-  console.log(
-    'JWT Interceptor - No token found, proceeding without auth header'
-  );
+  // console.log(
+  //   'JWT Interceptor - No token found, proceeding without auth header'
+  // );
   return next(req);
 };

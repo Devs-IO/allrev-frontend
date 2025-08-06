@@ -4,6 +4,7 @@ export interface CreateUserDto {
   email: string;
   photo?: string;
   password: string;
+  currentPassword?: string; // Para validação ao alterar senha
   role: Role;
   name: string;
   phone: string;
@@ -24,6 +25,7 @@ export interface ResponseUserDto {
   role: Role | string; // Permite tanto enum quanto string para compatibilidade
   isActive: boolean;
   tenantId: string;
+  createdAt: Date;
 
   // Dados do tenant agrupados
   tenant?: {

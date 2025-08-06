@@ -48,7 +48,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
+              "src/styles/styles.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "src/styles/variables.scss",
               "src/styles/main.scss",
@@ -117,7 +117,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
+              "src/styles/styles.scss",
               "src/styles/variables.scss",
               "src/styles/main.scss",
               "node_modules/bootstrap-icons/font/bootstrap-icons.css"

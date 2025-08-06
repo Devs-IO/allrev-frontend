@@ -1,167 +1,129 @@
-.container {
-  max-width: 1200px;
+
+.container { max-width: 1200px; }
+
+// Card and table styles
+.card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: none;
 }
 
-h2 {
-  font-weight: 600;
-  margin-bottom: 0;
+.table th, .table td {
+  vertical-align: middle;
 }
 
-.btn {
-  border-radius: 8px;
-  font-weight: 500;
-  
-  i {
-    margin-right: 0.5rem;
+// Action buttons with border effects
+.action-btn {
+  border-width: 2px !important;
+  transition: all 0.3s ease;
+  padding: 0.375rem 0.5rem;
+  margin-right: 0.25rem;
+
+  &:last-child {
+    margin-right: 0;
   }
-  
-  &.btn-success {
-    background-color: #198754;
-    border-color: #198754;
-    
-    &:hover {
-      background-color: #157347;
-      border-color: #146c43;
-    }
-  }
-  
-  &.btn-primary {
+}
+
+// Primary button (View)
+.btn-outline-primary.action-btn {
+  color: #0d6efd;
+  border-color: #0d6efd;
+  background: transparent;
+
+  &:hover, &:focus {
     background-color: #0d6efd;
     border-color: #0d6efd;
-    
-    &:hover {
-      background-color: #0b5ed7;
-      border-color: #0a58ca;
-    }
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
   }
 }
 
-.table {
-  background-color: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  
-  th {
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
-    
-    i {
-      margin-right: 0.5rem;
-      color: #6c757d;
-    }
-  }
-  
-  td {
-    vertical-align: middle;
-    border-bottom: 1px solid #dee2e6;
-    
-    strong {
-      color: #495057;
-    }
-  }
-  
-  tbody tr:hover {
-    background-color: #f8f9fa;
+// Warning button (Edit)
+.btn-outline-warning.action-btn {
+  color: #ffc107;
+  border-color: #ffc107;
+  background: transparent;
+
+  &:hover, &:focus {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
   }
 }
 
-.badge {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.375rem 0.75rem;
-  border-radius: 6px;
-  
-  &.bg-success {
-    background-color: #198754 !important;
-  }
-  
-  &.bg-secondary {
-    background-color: #6c757d !important;
-  }
-}
+// Danger button (Delete)
+.btn-outline-danger.action-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+  background: transparent;
 
-.btn-group-sm .btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border-radius: 4px;
-  
-  &.btn-outline-primary {
-    color: #0d6efd;
-    border-color: #0d6efd;
-    
-    &:hover {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-      color: white;
-    }
-  }
-  
-  &.btn-outline-warning {
-    color: #fd7e14;
-    border-color: #fd7e14;
-    
-    &:hover {
-      background-color: #fd7e14;
-      border-color: #fd7e14;
-      color: white;
-    }
-  }
-  
-  &.btn-outline-danger {
-    color: #dc3545;
+  &:hover, &:focus {
+    background-color: #dc3545;
     border-color: #dc3545;
-    
-    &:hover {
-      background-color: #dc3545;
-      border-color: #dc3545;
-      color: white;
-    }
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
   }
 }
 
+// Table enhancements
+.table-hover tbody tr:hover {
+  background-color: rgba(0,0,0,0.03);
+}
+
+.table-dark th {
+  border-color: #495057;
+  background-color: #343a40;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background-color: #23272b;
+  }
+}
+
+// Badge styles
+.badge {
+  font-size: 0.75em;
+  padding: 0.5em 0.75em;
+}
+
+// Loading spinner
 .spinner-border {
   width: 3rem;
   height: 3rem;
 }
 
-.display-1 {
-  font-size: 4rem;
+// Empty state
+.fa-3x {
+  font-size: 3em !important;
 }
 
-.text-muted {
-  color: #6c757d !important;
-}
-
+// Responsive adjustments
 @media (max-width: 768px) {
-  .container {
-    margin: 0.5rem;
-    padding: 0 1rem;
-  }
-  
-  .d-flex.justify-content-between {
+  .btn-group {
+    display: flex;
     flex-direction: column;
-    gap: 1rem;
-    align-items: stretch !important;
-    
-    .btn {
-      width: 100%;
-    }
+    gap: 0.25rem;
   }
-  
+
+  .action-btn {
+    margin-right: 0;
+    width: 100%;
+  }
+
   .table-responsive {
     font-size: 0.875rem;
   }
-  
-  .btn-group {
-    flex-direction: column;
-    width: 100%;
-    
-    .btn {
-      border-radius: 4px !important;
-      margin-bottom: 0.25rem;
-    }
-  }
+}
+
+// Status icons
+.fas.fa-check-circle {
+  color: #198754;
+}
+
+.fas.fa-times-circle {
+  color: #dc3545;
 }

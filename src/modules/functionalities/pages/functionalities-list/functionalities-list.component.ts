@@ -4,6 +4,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FunctionalitiesService } from '../../services/functionalities.service';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
+import { UsersService } from '../../../users/services/users.service';
+import { ResponseUserDto } from '../../../users/types/user.dto';
 
 @Component({
   selector: 'app-functionalities-list',
@@ -14,15 +16,40 @@ import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 })
 export class FunctionalitiesListComponent implements OnInit {
   functionalities: FunctionalityDto[] = [];
+  responsibleUsers: { [id: string]: string } = {};
   loading = true;
 
-  constructor(private functionalitiesService: FunctionalitiesService) {}
+  constructor(
+    private functionalitiesService: FunctionalitiesService,
+    private usersService: UsersService
+  ) {}
 
   ngOnInit() {
     this.functionalitiesService.getAll().subscribe({
       next: (data) => {
         this.functionalities = data;
-        this.loading = false;
+        // Coletar todos os responsibleUserId únicos
+        const ids = Array.from(
+          new Set(data.map((f) => f.responsibleUserId).filter(Boolean))
+        );
+        if (ids.length > 0) {
+          this.usersService.getUsers().subscribe({
+            next: (users: ResponseUserDto[]) => {
+              this.responsibleUsers = {};
+              users.forEach((u) => {
+                if (ids.includes(u.id)) {
+                  this.responsibleUsers[u.id] = u.name;
+                }
+              });
+              this.loading = false;
+            },
+            error: () => {
+              this.loading = false;
+            },
+          });
+        } else {
+          this.loading = false;
+        }
       },
       error: () => {
         this.loading = false;

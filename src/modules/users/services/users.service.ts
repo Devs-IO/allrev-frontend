@@ -53,4 +53,8 @@ export class UsersService {
   deleteUser(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/user/${id}`);
   }
+
+  getAvailableRoles(): Observable<Role[]> {
+    return this.http.get<Role[]>(`${this.apiUrl}/user/available-roles`);
+  }
 }

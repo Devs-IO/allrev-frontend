@@ -1,12 +1,19 @@
-<header class="app-header d-flex align-items-center justify-content-between px-3 py-2">
+<header class="app-header d-flex align-items-center justify-content-between">
   <div class="d-flex align-items-center">
     <a routerLink="/home" class="logo me-2">
       <img src="assets/logo_.png" alt="Logo" class="logo me-2" />
     </a>
   </div>
 
+  <div class="admin-banner" *ngIf="UserRole === 'admin'">
+    <strong>
+      <i class="bi bi-shield-check me-2"></i>
+      Administrador do sistema Allrev
+    </strong>
+  </div>
+
   <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" 
+    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
       [attr.data-bs-toggle]="'dropdown'" aria-expanded="false">
       <i class="bi bi-person-circle me-2"></i> {{ userName }}
     </button>
@@ -15,6 +22,4 @@
       <li><button class="dropdown-item" (click)="logout()">Sair</button></li>
     </ul>
   </div>
-  
-  
 </header>
