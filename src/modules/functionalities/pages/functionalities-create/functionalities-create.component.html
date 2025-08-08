@@ -153,10 +153,16 @@
               class="form-control"
               formControlName="defaultAssistantPrice"
               placeholder="0.00 (opcional)"
+              [class.is-invalid]="form.get('defaultAssistantPrice')?.invalid && form.get('defaultAssistantPrice')?.touched"
             />
             <small class="form-text text-muted">
               Valor sugerido para pagamento aos assistentes
             </small>
+            <div *ngIf="form.get('defaultAssistantPrice')?.invalid && form.get('defaultAssistantPrice')?.touched" class="invalid-feedback">
+              <div *ngIf="form.get('defaultAssistantPrice')?.errors?.['max']">
+                O Preço Padrão do Assistente deve ser menor que o Preço Mínimo.
+              </div>
+            </div>
           </div>
         </div>
       </div>
