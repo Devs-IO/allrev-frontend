@@ -77,12 +77,12 @@ export class OrderListComponent implements OnInit {
 
     const isManager = this.userRole === 'manager_reviewers';
     const hasAssistantLinks =
-      Array.isArray(this.user?.tenants) && this.user.tenants.length > 0;
+      Array.isArray(this.user?.tenants) &&
+      this.user.tenants.some((t: any) => t.role === 'assistant_reviewers');
 
     const loaders: Promise<void>[] = [];
     if (isManager) loaders.push(this.loadServiceOrdersPromise());
-    if (hasAssistantLinks || isManager)
-      loaders.push(this.loadMyAssignmentsPromise());
+    if (hasAssistantLinks) loaders.push(this.loadMyAssignmentsPromise());
 
     if (loaders.length === 0) {
       this.error = 'Você não tem permissão para visualizar ordens de serviço.';
