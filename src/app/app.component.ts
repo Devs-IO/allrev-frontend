@@ -17,8 +17,9 @@ export class AppComponent implements OnInit {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']); // Redireciona para login se não autenticado
     } else {
-      // carrega perfil uma única vez após confirmar autenticação
+      // carrega perfil e usuário completos uma única vez após confirmar autenticação
       this.authService.loadUserProfile().subscribe();
+      this.authService.getCurrentUser$().subscribe();
     }
   }
 

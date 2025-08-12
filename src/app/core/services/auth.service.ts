@@ -20,6 +20,8 @@ export class AuthService {
   private profileSubject = new BehaviorSubject<UserProfile | null>(null);
   public userProfile$ = this.profileSubject.asObservable();
 
+  private currentUserCached$ = new BehaviorSubject<User | null>(null);
+
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -121,6 +123,17 @@ export class AuthService {
         }
       })
     );
+  }
+
+  getCurrentUser$(): Observable<User | null> {
+    const cached = this.currentUserCached$.getValue();
+    if (cached) return this.currentUserCached$.asObservable();
+    // dispara carregamento único
+    this.http.get<User>(`${this.apiUrl}/user/me`).subscribe({
+      next: (u) => this.currentUserCached$.next(u),
+      error: () => this.currentUserCached$.next(null),
+    });
+    return this.currentUserCached$.asObservable();
   }
 
   // Configura a renovação automática do token

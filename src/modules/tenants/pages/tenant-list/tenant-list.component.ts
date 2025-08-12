@@ -102,28 +102,6 @@ export class TenantListComponent implements OnInit {
     }
   }
 
-  deleteTenant(id: string): void {
-    this.selectedTenant = this.tenants().find((t) => t.id === id) || null;
-    this.showDeleteModal = true;
-  }
-
-  confirmDelete(): void {
-    if (this.selectedTenant) {
-      this.tenantsService.deleteTenant(this.selectedTenant.id).subscribe({
-        next: () => {
-          this.loadTenants();
-          this.showDeleteModal = false;
-          this.selectedTenant = null;
-          alert('Empresa deletada com sucesso!');
-        },
-        error: (err) => {
-          console.error('Erro ao deletar empresa:', err);
-          alert('Erro ao deletar empresa. Tente novamente.');
-        },
-      });
-    }
-  }
-
   closeModals(): void {
     this.showEditModal = false;
     this.showDeleteModal = false;

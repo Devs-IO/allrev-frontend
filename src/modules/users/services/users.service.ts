@@ -54,4 +54,8 @@ export class UsersService {
   getAvailableRoles(): Observable<Role[]> {
     return this.http.get<Role[]>(`${this.apiUrl}/user/available-roles`);
   }
+
+  getAssistantById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/user/assistants/${id}`);
+  }
 }

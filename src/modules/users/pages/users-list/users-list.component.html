@@ -116,12 +116,20 @@
                       title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button
+                    <!-- Botão de excluir habilitado apenas se não for gestor -->
+                    <button *ngIf="user.role !== 'admin'"
                       type="button"
                       class="btn btn-outline-danger action-btn"
                       (click)="deleteUser(user.id)"
                       title="Excluir">
                       <i class="fas fa-trash"></i>
+                    </button>
+                    <button *ngIf="user.role === 'admin'"
+                      type="button"
+                      class="btn btn-outline-danger action-btn"
+                      title="Exclusão desabilitada para gestores"
+                      disabled>
+                      <i class="fas fa-ban"></i>
                     </button>
                   </ng-container>
                 </div>

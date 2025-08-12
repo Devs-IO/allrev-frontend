@@ -33,171 +33,174 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="col-12">
-      <div class="row g-4">
-        <!-- Informações Pessoais -->
-        <div class="col-lg-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">
-                <i class="fas fa-user-circle me-2"></i>
-                Informações Pessoais
-              </h5>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-user text-primary fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Nome Completo:</label>
-                      <p class="mb-0 fs-5">{{ user.name }}</p>
+    <ng-container *ngIf="!viewingAsManager; else managerView">
+      <!-- layout completo admin -->
+      <!-- Main Content -->
+      <div class="col-12">
+        <div class="row g-4">
+          <!-- Informações Pessoais -->
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-user-circle me-2"></i>
+                  Informações Pessoais
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-user text-primary fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Nome Completo:</label>
+                        <p class="mb-0 fs-5">{{ user.name }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-envelope text-info fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Email:</label>
-                      <p class="mb-0">{{ user.email }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-envelope text-info fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Email:</label>
+                        <p class="mb-0">{{ user.email }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-phone text-success fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Telefone:</label>
-                      <p class="mb-0">{{ user.phone }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-phone text-success fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Telefone:</label>
+                        <p class="mb-0">{{ user.phone }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-user-tag text-warning fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Função:</label>
-                      <p class="mb-0">{{ translateRole(user.role) }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-user-tag text-warning fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Função:</label>
+                        <p class="mb-0">{{ translateRole(user.role) }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12" *ngIf="user.address">
-                  <div class="info-item">
-                    <i class="fas fa-map-marker-alt text-danger fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Endereço:</label>
-                      <p class="mb-0">{{ user.address }}</p>
+                  <div class="col-12" *ngIf="user.address">
+                    <div class="info-item">
+                      <i class="fas fa-map-marker-alt text-danger fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Endereço:</label>
+                        <p class="mb-0">{{ user.address }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Informações da Empresa -->
-        <div class="col-lg-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-header bg-success text-white">
-              <h5 class="mb-0">
-                <i class="fas fa-building me-2"></i>
-                Informações da Empresa
-              </h5>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-building text-primary fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Nome da Empresa:</label>
-                      <p class="mb-0">{{ user.tenant?.companyName || 'N/A' }}</p>
+          <!-- Informações da Empresa -->
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-building me-2"></i>
+                  Informações da Empresa
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-building text-primary fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Nome da Empresa:</label>
+                        <p class="mb-0">{{ user.tenant?.companyName || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-code text-info fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Código:</label>
-                      <p class="mb-0">{{ user.tenant?.code || 'N/A' }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-code text-info fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Código:</label>
+                        <p class="mb-0">{{ user.tenant?.code || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-credit-card text-warning fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Status do Pagamento:</label>
-                      <p class="mb-0">{{ user.tenant?.paymentStatus || 'N/A' }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-credit-card text-warning fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Status do Pagamento:</label>
+                        <p class="mb-0">{{ user.tenant?.paymentStatus || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-money-bill-wave text-success fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Método de Pagamento:</label>
-                      <p class="mb-0">{{ user.tenant?.paymentMethod || 'N/A' }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-money-bill-wave text-success fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Método de Pagamento:</label>
+                        <p class="mb-0">{{ user.tenant?.paymentMethod || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-12">
-                  <div class="info-item">
-                    <i class="fas fa-calendar-alt text-info fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Frequência de Pagamento:</label>
-                      <p class="mb-0">{{ user.tenant?.paymentFrequency || 'N/A' }}</p>
+                  <div class="col-12">
+                    <div class="info-item">
+                      <i class="fas fa-calendar-alt text-info fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Frequência de Pagamento:</label>
+                        <p class="mb-0">{{ user.tenant?.paymentFrequency || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Status e Datas -->
-        <div class="col-12">
-          <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
-              <h5 class="mb-0">
-                <i class="fas fa-chart-line me-2"></i>
-                Status e Informações do Sistema
-              </h5>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <div class="info-item">
-                    <i class="fas fa-toggle-on text-success fs-4 me-3" *ngIf="user.isActive"></i>
-                    <i class="fas fa-toggle-off text-danger fs-4 me-3" *ngIf="!user.isActive"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Status:</label>
-                      <p class="mb-0">
-                        <span class="badge" [class]="user.isActive ? 'bg-success' : 'bg-danger'">
-                          {{ user.isActive ? 'Ativo' : 'Inativo' }}
-                        </span>
-                      </p>
+          <!-- Status e Datas -->
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-chart-line me-2"></i>
+                  Status e Informações do Sistema
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="fas fa-toggle-on text-success fs-4 me-3" *ngIf="user.isActive"></i>
+                      <i class="fas fa-toggle-off text-danger fs-4 me-3" *ngIf="!user.isActive"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Status:</label>
+                        <p class="mb-0">
+                          <span class="badge" [class]="user.isActive ? 'bg-success' : 'bg-danger'">
+                            {{ user.isActive ? 'Ativo' : 'Inativo' }}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="info-item">
-                    <i class="fas fa-user-tag text-primary fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Função do Usuário:</label>
-                      <p class="mb-0">{{ translateRole(user.role) }}</p>
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="fas fa-user-tag text-primary fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Função do Usuário:</label>
+                        <p class="mb-0">{{ translateRole(user.role) }}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="info-item">
-                    <i class="fas fa-calendar-check text-warning fs-4 me-3"></i>
-                    <div>
-                      <label class="fw-bold text-muted">Vencimento do Pagamento:</label>
-                      <p class="mb-0">{{ user.tenant?.paymentDueDate || 'N/A' }}</p>
+                  <div class="col-md-4">
+                    <div class="info-item">
+                      <i class="fas fa-calendar-check text-warning fs-4 me-3"></i>
+                      <div>
+                        <label class="fw-bold text-muted">Vencimento do Pagamento:</label>
+                        <p class="mb-0">{{ user.tenant?.paymentDueDate || 'N/A' }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -206,7 +209,65 @@
           </div>
         </div>
       </div>
-    </div>
+    </ng-container>
+
+    <ng-template #managerView>
+      <!-- Layout reduzido para gerente visualizando assistente -->
+      <div class="col-12">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-user-circle me-2"></i>
+                  Dados do Assistente
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3"><strong>Email:</strong> {{ user.email }}</div>
+                <div class="mb-3"><strong>Telefone:</strong> {{ user.phone || '-' }}</div>
+                <div class="mb-3"><strong>Status:</strong>
+                  <span class="badge" [class]="user.isActive ? 'bg-success' : 'bg-danger'">
+                    {{ user.isActive ? 'Ativo' : 'Inativo' }}
+                  </span>
+                </div>
+                <div class="mb-3"><strong>Função:</strong> Assistente de Revisores</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                  <i class="fas fa-tasks me-2"></i>
+                  Funcionalidades Atribuídas
+                </h5>
+              </div>
+              <div class="card-body" *ngIf="functionalities.length; else noFunc">
+                <div class="list-group small">
+                  <div *ngFor="let f of functionalities" class="list-group-item d-flex flex-column">
+                    <div class="d-flex justify-content-between">
+                      <strong>{{ f.functionalityName }}</strong>
+                      <span class="badge" [class]="f.delivered ? 'bg-success' : 'bg-warning text-dark'">
+                        {{ f.delivered ? 'Entregue' : 'Pendente' }}
+                      </span>
+                    </div>
+                    <div class="text-muted">{{ f.functionalityDescription || f.description || '-' }}</div>
+                    <div class="mt-1">
+                      <small><i class="fas fa-calendar me-1"></i> Prazo: {{ f.assistantDeadline || '-' }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <ng-template #noFunc>
+                <p class="text-muted mb-0">Nenhuma funcionalidade atribuída.</p>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
     <div class="d-flex justify-content-end mt-4">
       <button class="btn btn-secondary" (click)="goBack()">
         <i class="bi bi-arrow-left-circle"></i> Voltar
