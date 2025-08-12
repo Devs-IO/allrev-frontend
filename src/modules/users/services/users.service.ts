@@ -37,10 +37,7 @@ export class UsersService {
   }
 
   createUser(data: CreateUserDto): Observable<ResponseUserDto> {
-    return this.http.post<ResponseUserDto>(
-      `${this.apiUrl}/auth/register`,
-      data
-    );
+    return this.http.post<ResponseUserDto>(`${this.apiUrl}/user`, data);
   }
 
   updateUser(

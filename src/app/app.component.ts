@@ -16,6 +16,9 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login']); // Redireciona para login se não autenticado
+    } else {
+      // carrega perfil uma única vez após confirmar autenticação
+      this.authService.loadUserProfile().subscribe();
     }
   }
 

@@ -34,10 +34,16 @@ export class UsersListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.getUserProfile().subscribe({
+    this.authService.userProfile$.subscribe({
       next: (user: any) => {
-        this.loggedUserId = user.id || '';
-        this.isAdmin = user.role === 'admin' || user.role === 'ADMIN';
+        if (user) {
+          this.loggedUserId = user.id || '';
+          this.isAdmin =
+            !!user.isAdmin || user.role === 'admin' || user.role === 'ADMIN';
+        } else {
+          this.loggedUserId = '';
+          this.isAdmin = false;
+        }
         this.loadUsers();
       },
       error: () => {
@@ -51,7 +57,13 @@ export class UsersListComponent implements OnInit {
   loadUsers(): void {
     this.usersService.getUsers().subscribe({
       next: (data: ResponseUserDto[]) => {
-        this.users.set(data);
+        // Se não for admin, garantir que não apareça um gerente (apenas assistentes) removendo qualquer item cujo role contenha 'manager'
+        const filtered = this.isAdmin
+          ? data
+          : data.filter(
+              (u) => String(u.role).toLowerCase() !== 'manager_reviewers'
+            );
+        this.users.set(filtered);
         this.loading = false;
       },
       error: (err) => {

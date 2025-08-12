@@ -20,14 +20,17 @@ export class OrderListComponent implements OnInit {
   // Data
   serviceOrders: ServiceOrderResponse[] = [];
   myAssignments: AssignmentResponse[] = [];
+  allOrders: any[] = [];
   filteredOrders: ServiceOrderResponse[] = [];
   filteredAssignments: AssignmentResponse[] = [];
+  filteredAllOrders: any[] = [];
 
   // State
   isLoading = false;
   error: string | null = null;
   userRole: string | null = null;
-  currentView: 'orders' | 'assignments' = 'orders';
+  currentView: 'orders' | 'assignments' = 'orders'; // legacy (not used for display now)
+  user: any | null = null;
 
   // Filters
   searchTerm = '';
@@ -46,15 +49,13 @@ export class OrderListComponent implements OnInit {
 
   private loadUserProfile() {
     this.isLoading = true;
-    this.authService.getUser().subscribe({
+    this.authService.loadUserIfNeeded().subscribe({
       next: (user) => {
-        this.userRole = user.role;
-
-        // Para assistants, mostrar suas atribuições por padrão
+        this.user = user;
+        this.userRole = user?.role;
         if (this.userRole === 'assistant_reviewers') {
           this.currentView = 'assignments';
         }
-
         this.loadData();
       },
       error: (error) => {
@@ -67,102 +68,159 @@ export class OrderListComponent implements OnInit {
   }
 
   loadData() {
-    console.log('User role:', this.userRole);
+    this.serviceOrders = [];
+    this.myAssignments = [];
+    this.allOrders = [];
+    this.filteredOrders = [];
+    this.filteredAssignments = [];
+    this.filteredAllOrders = [];
 
-    if (this.userRole === 'manager_reviewers') {
-      this.loadServiceOrders();
-    } else if (this.userRole === 'assistant_reviewers') {
-      this.loadMyAssignments();
-    } else {
-      this.error =
-        'Acesso negado. Você não tem permissão para visualizar ordens de serviço.';
+    const isManager = this.userRole === 'manager_reviewers';
+    const hasAssistantLinks =
+      Array.isArray(this.user?.tenants) && this.user.tenants.length > 0;
+
+    const loaders: Promise<void>[] = [];
+    if (isManager) loaders.push(this.loadServiceOrdersPromise());
+    if (hasAssistantLinks || isManager)
+      loaders.push(this.loadMyAssignmentsPromise());
+
+    if (loaders.length === 0) {
+      this.error = 'Você não tem permissão para visualizar ordens de serviço.';
+      return;
+    }
+    this.isLoading = true;
+    Promise.all(loaders).finally(() => {
+      this.buildAllOrders();
+      this.applyFilters();
       this.isLoading = false;
-    }
+    });
   }
 
+  private loadServiceOrdersPromise(): Promise<void> {
+    return new Promise((resolve) => {
+      this.functionalitiesService.getAllServiceOrdersList().subscribe({
+        next: (orders) => {
+          this.serviceOrders = orders.map((o) => ({
+            ...o,
+            isAssistant: false,
+          }));
+          this.filteredOrders = this.serviceOrders;
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading service orders:', error);
+          if (!this.error) this.error = 'Erro ao carregar ordens de serviço.';
+          resolve();
+        },
+      });
+    });
+  }
+
+  private loadMyAssignmentsPromise(): Promise<void> {
+    return new Promise((resolve) => {
+      this.functionalitiesService.getMyAssignments().subscribe({
+        next: (assignments) => {
+          this.myAssignments = assignments.map((a) => ({
+            ...a,
+            isAssistant: true,
+          }));
+          this.filteredAssignments = this.myAssignments;
+          resolve();
+        },
+        error: (error) => {
+          console.error('Error loading assignments:', error);
+          if (!this.error) this.error = 'Erro ao carregar atribuições.';
+          resolve();
+        },
+      });
+    });
+  }
+
+  private buildAllOrders() {
+    // Map assignments to order-like objects
+    const assignmentOrders = this.myAssignments.map((a) => ({
+      orderId: 'ASSIGN-' + a.assignmentId,
+      clientId: undefined,
+      clientName: a.clientName,
+      clientEmail: undefined,
+      clientInstitution: undefined,
+      deadline: a.yourDeadline,
+      total: a.yourAmount,
+      totalAssistantAmount: a.yourAmount,
+      serviceCount: 1,
+      status:
+        a.status === 'IN_PROGRESS'
+          ? 'IN_PROGRESS'
+          : a.status === 'FINISHED'
+          ? 'FINISHED'
+          : 'PENDING',
+      createdAt: a.yourDeadline,
+      services: [
+        {
+          id: a.assignmentId,
+          orderNumber: 'ASSIGN-' + a.assignmentId,
+          orderDescription: a.serviceDescription || a.serviceName,
+          functionalityId: '',
+          functionalityName: a.serviceName,
+          totalPrice: a.yourAmount,
+          paymentMethod: '',
+          clientDeadline: a.yourDeadline,
+          status: 'PENDING',
+          paidAt: undefined,
+          responsibleUserId: '',
+          responsibleUserName: '',
+          assistantDeadline: a.yourDeadline,
+          assistantAmount: a.yourAmount,
+          delivered: a.status === 'FINISHED',
+          description: a.serviceDescription,
+          createdAt: a.yourDeadline,
+        } as any,
+      ],
+      isAssistant: true,
+    }));
+    this.allOrders = [
+      ...this.serviceOrders.map((o) => ({ ...o, isAssistant: false })),
+      ...assignmentOrders,
+    ];
+    // Sort by createdAt desc if present
+    this.allOrders.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    this.filteredAllOrders = this.allOrders;
+  }
+
+  // Legacy individual loaders kept for backward compatibility (unused externally)
   private loadServiceOrders() {
-    this.isLoading = true;
-    this.error = null;
-
-    this.functionalitiesService.getAllServiceOrdersList().subscribe({
-      next: (orders) => {
-        console.log('Loaded service orders:', orders);
-        this.serviceOrders = orders;
-        this.filteredOrders = orders;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading service orders:', error);
-        this.error = 'Erro ao carregar ordens de serviço. Tente novamente.';
-        this.isLoading = false;
-      },
-    });
+    /* no-op replaced by Promise version */
   }
-
   private loadMyAssignments() {
-    this.isLoading = true;
-    this.error = null;
+    /* no-op replaced by Promise version */
+  }
 
-    this.functionalitiesService.getMyAssignments().subscribe({
-      next: (assignments) => {
-        console.log('Loaded assignments:', assignments);
-        this.myAssignments = assignments;
-        this.filteredAssignments = assignments;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading assignments:', error);
-        this.error = 'Erro ao carregar suas atribuições. Tente novamente.';
-        this.isLoading = false;
-      },
+  applyFilters() {
+    const term = this.searchTerm.toLowerCase();
+    const status = this.statusFilter;
+
+    this.filteredAssignments = this.myAssignments.filter((a) => {
+      const matchesSearch =
+        !term ||
+        a.clientName.toLowerCase().includes(term) ||
+        a.serviceName.toLowerCase().includes(term);
+      const matchesStatus = !status || a.status === status;
+      return matchesSearch && matchesStatus;
     });
-  }
 
-  // Filters and search
-  onSearchChange() {
-    this.applyFilters();
-  }
-
-  onStatusFilterChange() {
-    this.applyFilters();
-  }
-
-  private applyFilters() {
-    if (this.currentView === 'orders') {
-      this.filteredOrders = this.serviceOrders.filter((order) => {
-        const matchesSearch =
-          !this.searchTerm ||
-          order.clientName
-            .toLowerCase()
-            .includes(this.searchTerm.toLowerCase()) ||
-          order.services.some((s) =>
-            s.functionalityName
-              .toLowerCase()
-              .includes(this.searchTerm.toLowerCase())
-          );
-
-        const matchesStatus =
-          !this.statusFilter || order.status === this.statusFilter;
-
-        return matchesSearch && matchesStatus;
-      });
-    } else {
-      this.filteredAssignments = this.myAssignments.filter((assignment) => {
-        const matchesSearch =
-          !this.searchTerm ||
-          assignment.clientName
-            .toLowerCase()
-            .includes(this.searchTerm.toLowerCase()) ||
-          assignment.serviceName
-            .toLowerCase()
-            .includes(this.searchTerm.toLowerCase());
-
-        const matchesStatus =
-          !this.statusFilter || assignment.status === this.statusFilter;
-
-        return matchesSearch && matchesStatus;
-      });
-    }
+    this.filteredAllOrders = this.allOrders.filter((o) => {
+      const matchesSearch =
+        !term ||
+        (o.clientName && o.clientName.toLowerCase().includes(term)) ||
+        o.services?.some((s: any) =>
+          s.functionalityName?.toLowerCase().includes(term)
+        );
+      const matchesStatus = !status || o.status === status;
+      return matchesSearch && matchesStatus;
+    });
   }
 
   // View management
