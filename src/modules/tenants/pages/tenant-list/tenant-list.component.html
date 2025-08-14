@@ -41,30 +41,22 @@
         <div class="modal-header bg-danger text-white">
           <h5 class="modal-title">
             <i class="fas fa-trash me-2"></i>
-            Confirmar Exclusão
+            Exclusão Desabilitada
           </h5>
           <button type="button" class="btn-close btn-close-white" (click)="closeModals()"></button>
         </div>
         <div class="modal-body text-center py-4">
-          <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
-          <h6 class="mb-3">Tem certeza que deseja excluir esta empresa?</h6>
-          <div class="alert alert-warning" role="alert">
-            <i class="fas fa-warning me-2"></i>
-            <strong>Atenção:</strong> Esta ação não pode ser desfeita!
+          <i class="fas fa-ban text-danger fa-3x mb-3"></i>
+          <h6 class="mb-3">A exclusão de empresas não é permitida.</h6>
+          <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            Caso precise desativar uma empresa, use os controles administrativos apropriados.
           </div>
-          <p class="text-muted mb-0" *ngIf="selectedTenant">
-            <strong>{{ selectedTenant.companyName }}</strong><br>
-            <small>Código: {{ selectedTenant.code }}</small>
-          </p>
         </div>
         <div class="modal-footer border-0 justify-content-center">
           <button type="button" class="btn btn-outline-secondary px-4" (click)="closeModals()">
             <i class="fas fa-times me-1"></i>
-            Cancelar
-          </button>
-          <button type="button" class="btn btn-danger px-4" (click)="confirmDelete()">
-            <i class="fas fa-trash me-1"></i>
-            Sim, Excluir
+            Fechar
           </button>
         </div>
       </div>
@@ -161,9 +153,9 @@
                   </button>
                   <button
                     class="btn btn-outline-danger btn-sm action-btn"
-                    (click)="deleteTenant(tenant.id)"
-                    title="Excluir">
-                    <i class="fas fa-trash"></i>
+                    title="Exclusão desabilitada"
+                    disabled>
+                    <i class="fas fa-ban"></i>
                   </button>
                 </div>
               </td>

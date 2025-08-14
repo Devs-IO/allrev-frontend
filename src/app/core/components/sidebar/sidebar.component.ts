@@ -2,9 +2,7 @@ import { Component, signal, OnInit, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { UserProfile } from '../../../../modules/users/interfaces/user-profile.interface';
 import { Role } from '../../enum/roles.enum';
-import { RoleGuard } from '../../guard/role.guard';
 import { User } from '../../../../modules/users/interfaces/user.interface';
 
 @Component({
@@ -15,13 +13,14 @@ import { User } from '../../../../modules/users/interfaces/user.interface';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit {
-  @Output() toggle = new EventEmitter<void>(); // Emite evento ao alternar
+  @Output() toggle = new EventEmitter<void>();
   collapsed = signal<boolean>(false);
   activeSubmenu = signal<string | null>(null);
   userEmail = signal<string | null>(null);
   currentDate = signal(new Date());
   intervalId: any;
   userRole: Role | null = null;
+  isAdmin = false;
   filteredMenuItems: any[] = [];
 
   menuItems = [
@@ -30,16 +29,23 @@ export class SidebarComponent implements OnInit {
       menu: 'Ordens',
       route: '/order/list',
       icon: 'bi bi-clipboard-check',
+      // subRoutes serão filtradas conforme role (assistente não pode criar)
       subRoutes: [
         {
           label: 'Listar Ordens',
           route: '/order/list',
           icon: 'bi bi-list-check',
+          allowed: [
+            Role.MANAGER_REVIEWERS,
+            Role.CLIENT,
+            Role.ASSISTANT_REVIEWERS,
+          ],
         },
         {
           label: 'Nova Ordem',
           route: '/order/create',
           icon: 'bi bi-plus-circle',
+          allowed: [Role.MANAGER_REVIEWERS, Role.CLIENT],
         },
       ],
     },
@@ -116,8 +122,7 @@ export class SidebarComponent implements OnInit {
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this.loadUserProfile();
-    this.loadUserRoles();
+    this.bindCurrentUser();
 
     this.intervalId = setInterval(() => {
       this.currentDate.set(new Date());
@@ -128,34 +133,32 @@ export class SidebarComponent implements OnInit {
     clearInterval(this.intervalId);
   }
 
-  loadUserProfile() {
-    this.authService.getUserProfile().subscribe({
-      next: (user: UserProfile) => {
-        this.userEmail.set(user.email);
-      },
-      error: (err) => {
-        console.error('Erro ao buscar perfil do usuário:', err);
-      },
-    });
-  }
-
-  loadUserRoles() {
-    this.authService.getUser().subscribe({
-      next: (user: User) => {
-        this.userRole = user.role;
-        this.filteredMenuItems = this.menuItems.filter((item) =>
-          this.isAuthorized(item.role)
-        );
-      },
-      error: (err) => {
-        console.error('Erro ao buscar roles do usuário:', err);
-      },
+  private bindCurrentUser() {
+    this.authService.userProfile$.subscribe((profile) => {
+      if (!profile) return;
+      this.userEmail.set(profile.email);
+      this.userRole = (profile.role as Role) || null;
+      this.isAdmin = !!profile.isAdmin;
+      this.filteredMenuItems = this.menuItems
+        .filter((item) => this.isAuthorized(item.role))
+        .map((item) => {
+          if (item.subRoutes) {
+            const subFiltered = item.subRoutes.filter(
+              (sr: any) =>
+                !this.userRole ||
+                !sr.allowed ||
+                sr.allowed.includes(this.userRole)
+            );
+            return { ...item, subRoutes: subFiltered };
+          }
+          return item;
+        });
     });
   }
 
   toggleSidebar() {
     this.collapsed.set(!this.collapsed());
-    this.toggle.emit(); // Dispara evento para atualizar layout
+    this.toggle.emit();
   }
 
   toggleSubmenu(menu: string) {
@@ -171,12 +174,12 @@ export class SidebarComponent implements OnInit {
   }
 
   isAuthorized(roles: Role[]): boolean {
-    let isAuthorized = false;
-    if (roles.length === 0) {
-      isAuthorized = true;
-    } else if (this.userRole && roles.includes(this.userRole)) {
-      isAuthorized = true;
+    if (this.isAdmin) {
+      return roles.includes(Role.ADMIN); // não exibe menus sem ADMIN explicitamente
     }
-    return isAuthorized;
+    return (
+      roles.length === 0 ||
+      (this.userRole != null && roles.includes(this.userRole))
+    );
   }
 }

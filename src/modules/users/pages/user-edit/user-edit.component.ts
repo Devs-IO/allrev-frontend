@@ -118,44 +118,43 @@ export class UserEditComponent implements OnInit {
   }
 
   populateForm(user: ResponseUserDto): void {
-    // Sempre priorize o tenant do objeto user.tenant
-    if (user.tenant && user.tenant.companyName) {
-      this.tenantName = user.tenant.companyName;
-      this.userForm.get('tenantId')?.setValue(user.tenant.id);
-    } else if ((user as any).tenantCompanyName) {
-      this.tenantName = (user as any).tenantCompanyName;
-      this.userForm.get('tenantId')?.setValue(user.tenantId);
+    // Ajuste simplificado: usamos tenantId direto se existir
+    if ((user as any).tenant?.id) {
+      this.tenantName = (user as any).tenant.companyName || 'Não informado';
+      this.userForm.get('tenantId')?.setValue((user as any).tenant.id);
+    } else if ((user as any).tenantId) {
+      this.tenantName = (user as any).tenantCompanyName || 'Não informado';
+      this.userForm.get('tenantId')?.setValue((user as any).tenantId);
     } else {
-      this.tenantName = user.tenantId || 'Não informado';
-      this.userForm.get('tenantId')?.setValue(user.tenantId);
+      this.tenantName = 'Não informado';
     }
 
-    // Preencher formulário
     const formValues = {
       name: user.name,
       email: user.email,
-      phone: user.phone,
+      phone: (user as any).phone || '',
       role: user.role,
-      address: user.address,
+      address: (user as any).address || '',
       tenantId: this.userForm.get('tenantId')?.value,
-      isActive: user.isActive,
+      isActive:
+        (user as any).isActive !== undefined ? (user as any).isActive : true,
       currentPassword: '',
       password: '',
       confirmPassword: '',
     };
 
     this.userForm.patchValue(formValues);
-
-    // Desabilitar email sempre (não deve ser editável)
     this.userForm.get('email')?.disable();
 
-    // Configurar tenantId baseado no tipo de usuário
+    // Sempre desabilitar tenant (não editável após criação)
     const tenantIdControl = this.userForm.get('tenantId');
-    tenantIdControl?.clearValidators();
     tenantIdControl?.disable();
-    tenantIdControl?.updateValueAndValidity();
 
-    // Salvar valores originais para comparação
+    // Se não for admin, bloquear mudança de role
+    if (!this.isAdmin) {
+      this.userForm.get('role')?.disable();
+    }
+
     this.originalFormValues = { ...formValues };
   }
 
@@ -183,25 +182,25 @@ export class UserEditComponent implements OnInit {
   confirmSave(): void {
     if (this.userForm.valid && this.user) {
       this.saving = true;
-
-      // Fechar modal de confirmação
       const confirmModal = bootstrap.Modal.getInstance(
         document.getElementById('confirmEditModal')
       );
       confirmModal.hide();
 
-      // Preparar dados para envio (incluindo valores desabilitados)
       const rawFormData = this.userForm.getRawValue();
       const formData: Partial<CreateUserDto> = {
         name: rawFormData.name,
         phone: rawFormData.phone,
-        role: rawFormData.role,
         address: rawFormData.address,
         isActive: rawFormData.isActive,
-        tenantId: rawFormData.tenantId,
       };
-
-      // Adicionar senha apenas se foi informada
+      // Apenas Admin pode enviar alteração de role
+      if (this.isAdmin) {
+        formData.role = rawFormData.role;
+      }
+      if (this.isAdmin) {
+        formData.tenantId = rawFormData.tenantId; // já desabilitado mas mantém consistência
+      }
       if (rawFormData.password) {
         formData.password = rawFormData.password;
         formData.currentPassword = rawFormData.currentPassword;
@@ -210,7 +209,6 @@ export class UserEditComponent implements OnInit {
       this.usersService.updateUser(this.user.id, formData).subscribe({
         next: () => {
           this.saving = false;
-          // Mostrar modal de sucesso
           const successModal = new bootstrap.Modal(
             document.getElementById('successModal')
           );

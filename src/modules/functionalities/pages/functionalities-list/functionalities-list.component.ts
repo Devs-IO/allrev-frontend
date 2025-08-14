@@ -6,6 +6,7 @@ import { FunctionalitiesService } from '../../services/functionalities.service';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 import { UsersService } from '../../../users/services/users.service';
 import { ResponseUserDto } from '../../../users/types/user.dto';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-functionalities-list',
@@ -21,7 +22,8 @@ export class FunctionalitiesListComponent implements OnInit {
 
   constructor(
     private functionalitiesService: FunctionalitiesService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -53,6 +55,26 @@ export class FunctionalitiesListComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
+      },
+    });
+  }
+
+  edit(id: string) {
+    this.router.navigate(['/functionalities', id, 'edit']);
+  }
+
+  confirmDelete(id: string) {
+    const ok = window.confirm(
+      'Tem certeza que deseja desativar esta funcionalidade?'
+    );
+    if (!ok) return;
+    this.functionalitiesService.softDelete(id).subscribe({
+      next: () => {
+        alert('Funcionalidade desativada com sucesso');
+        this.ngOnInit();
+      },
+      error: () => {
+        alert('Erro ao desativar funcionalidade');
       },
     });
   }

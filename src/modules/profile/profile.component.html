@@ -1,23 +1,22 @@
-
 <div class="container my-4" style="max-width: 1100px;">
   <h2 class="text-primary mb-4"><i class="bi bi-person-circle me-2 fs-2 text-warning"></i> Perfil</h2>
-  <div class="row d-flex justify-content-center align-items-center h-100">
+  <div class="row d-flex justify-content-center align-items-center h-100" *ngIf="user as u">
     <div class="col-12 col-lg-10 mb-4 mb-lg-0">
       <div class="card profile-card shadow-lg rounded-4 border-0 p-5 mb-4 animate__animated animate__fadeIn">
         <div class="row g-4">
           <div class="col-md-4 gradient-custom text-center text-white profile-header">
             <div class="profile-img-container">
-              <img *ngIf="user?.photo; else defaultIcon" [src]="user?.photo" alt="Foto de {{ user?.name }}"
+              <img *ngIf="u.photo; else defaultIcon" [src]="u.photo" alt="Foto de {{ u.name }}"
                 class="img-fluid my-5 profile-img" />
               <ng-template #defaultIcon>
                 <i class="bi bi-person-circle profile-icon fs-1"></i>
               </ng-template>
             </div>
-            <h5>{{ user?.name }}</h5>
-            <p><i class="bi bi-person-badge-fill me-1"></i> {{ user?.role }}</p>
+            <h5>{{ u.name }}</h5>
+            <p><i class="bi bi-person-badge-fill me-1"></i> {{ roleLabel(u.role) }}</p>
             <p>
-              <i class="bi" [ngClass]="user?.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
-              {{ user?.isActive ? 'Ativo' : 'Inativo' }}
+              <i class="bi" [ngClass]="u.isActive ? 'bi-check-circle text-success' : 'bi-x-circle text-danger'"></i>
+              {{ u.isActive ? 'Ativo' : 'Inativo' }}
             </p>
             <button class="edit-btn" (click)="editProfile()">
               <i class="bi bi-pencil-fill"></i>
@@ -28,22 +27,22 @@
               <div class="d-flex align-items-center mb-3">
                 <i class="bi bi-envelope-fill text-info fs-3 me-2"></i>
                 <span class="fw-bold">Email:</span>
-                <span class="ms-2">{{ user?.email }}</span>
+                <span class="ms-2">{{ u.email }}</span>
               </div>
               <div class="d-flex align-items-center mb-3">
                 <i class="bi bi-telephone-fill text-success fs-3 me-2"></i>
                 <span class="fw-bold">Telefone:</span>
-                <span class="ms-2">{{ user?.phone || 'Não informado' }}</span>
+                <span class="ms-2">{{ u.phone || 'Não informado' }}</span>
               </div>
               <div class="d-flex align-items-center mb-3">
                 <i class="bi bi-geo-alt-fill text-danger fs-3 me-2"></i>
                 <span class="fw-bold">Endereço:</span>
-                <span class="ms-2">{{ user?.address || 'Não informado' }}</span>
+                <span class="ms-2">{{ u.address || 'Não informado' }}</span>
               </div>
               <div class="d-flex align-items-center mb-3">
-                <i class="bi bi-check-circle-fill fs-3 me-2" [ngClass]="user?.isActive ? 'text-success' : 'text-danger'"></i>
+                <i class="bi bi-check-circle-fill fs-3 me-2" [ngClass]="u.isActive ? 'text-success' : 'text-danger'"></i>
                 <span class="fw-bold">Status:</span>
-                <span class="ms-2" [class]="user?.isActive ? 'text-success' : 'text-danger'">{{ user?.isActive ? 'Ativo' : 'Inativo' }}</span>
+                <span class="ms-2" [class]="u.isActive ? 'text-success' : 'text-danger'">{{ u.isActive ? 'Ativo' : 'Inativo' }}</span>
               </div>
             </div>
           </div>
@@ -51,32 +50,56 @@
         <div class="row mt-4">
           <div class="col-12">
             <div class="card company-card border-0 shadow-sm rounded-4 p-4 bg-light">
-              <h5 class="text-secondary mb-3"><i class="bi bi-building me-2"></i> Dados da Empresa</h5>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-building text-secondary fs-4 me-2"></i>
-                <span class="fw-bold">Empresa:</span>
-                <span class="ms-2">{{ user?.tenant?.companyName || 'N/A' }}</span>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
-                <span class="fw-bold">Código:</span>
-                <span class="ms-2">{{ user?.tenant?.code || 'N/A' }}</span>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
-                <span class="fw-bold">Pagamento:</span>
-                <span class="ms-2">{{ user?.tenant?.paymentStatus || 'N/A' }} - {{ user?.tenant?.paymentMethod || 'N/A' }}</span>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
-                <span class="fw-bold">Frequência:</span>
-                <span class="ms-2">{{ user?.tenant?.paymentFrequency || 'N/A' }}</span>
-              </div>
-              <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
-                <span class="fw-bold">Vencimento:</span>
-                <span class="ms-2">{{ user?.tenant?.paymentDueDate ? (user?.tenant?.paymentDueDate | date:'dd/MM/yyyy') : 'N/A' }}</span>
-              </div>
+              <h5 class="text-secondary mb-3"><i class="bi bi-building me-2"></i> Contexto</h5>
+
+              <!-- Admin -->
+              <ng-container *ngIf="u.isAdmin; else notAdmin">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-lock text-warning fs-4 me-2"></i>
+                  <span class="fw-bold">Administrador:</span>
+                  <span class="ms-2">Administrador AllRev</span>
+                </div>
+              </ng-container>
+
+              <ng-template #notAdmin>
+                <!-- Manager -->
+                <ng-container *ngIf="u.tenant; else assistantBlock">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-building text-secondary fs-4 me-2"></i>
+                    <span class="fw-bold">Empresa que Gerencia:</span>
+                    <span class="ms-2">{{ u.tenant.companyName }}</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-credit-card-2-front-fill text-warning fs-4 me-2"></i>
+                    <span class="fw-bold">Código:</span>
+                    <span class="ms-2">{{ u.tenant.code || 'N/A' }}</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-cash-coin text-success fs-4 me-2"></i>
+                    <span class="fw-bold">Pagamento:</span>
+                    <span class="ms-2">{{ u.tenant.paymentStatus || 'N/A' }} - {{ u.tenant.paymentMethod || 'N/A' }}</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-calendar-event-fill text-info fs-4 me-2"></i>
+                    <span class="fw-bold">Frequência:</span>
+                    <span class="ms-2">{{ u.tenant.paymentFrequency || 'N/A' }}</span>
+                  </div>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-clock-history text-danger fs-4 me-2"></i>
+                    <span class="fw-bold">Vencimento:</span>
+                    <span class="ms-2">{{ u.tenant.paymentDueDate ? (u.tenant.paymentDueDate | date:'dd/MM/yyyy') : 'N/A' }}</span>
+                  </div>
+                </ng-container>
+
+                <!-- Assistant -->
+                <ng-template #assistantBlock>
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-people text-secondary fs-4 me-2"></i>
+                    <span class="fw-bold">Empresas onde é Assistente:</span>
+                    <span class="ms-2">{{ assistantTenantNames() }}</span>
+                  </div>
+                </ng-template>
+              </ng-template>
             </div>
           </div>
         </div>

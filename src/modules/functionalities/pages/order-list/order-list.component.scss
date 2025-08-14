@@ -131,3 +131,18 @@
     transform: none;
   }
 }
+
+.assistant-highlight {
+  border-left: 4px solid #0d6efd;
+  background: linear-gradient(90deg, rgba(13,110,253,0.08), transparent);
+}
+
+.badge.bg-primary-soft {
+  background-color: rgba(13,110,253,0.15);
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.border-assignment {
+  border-left: 4px solid #0d6efd !important;
+}

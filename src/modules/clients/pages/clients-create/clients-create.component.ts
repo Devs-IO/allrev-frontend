@@ -25,14 +25,17 @@ export class ClientsCreateComponent {
   submit() {
     this.authService.getUserProfile().subscribe({
       next: (user) => {
-        console.log(user);
-        this.formData.tenantId = user.tenant?.id;
+        const tenant = (user as any).tenant;
+        if (tenant?.id) {
+          (this as any).formData.tenantId = tenant.id;
+        }
+
         this.clientsService.createClients(this.formData).subscribe({
           next: () => this.router.navigate(['/clients']),
           error: (err) => (this.error = 'Erro ao criar cliente'),
         });
       },
-      error: () => (this.error = 'Erro ao obter tenant do usuário'),
+      error: () => {},
     });
   }
 }

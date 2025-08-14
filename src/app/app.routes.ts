@@ -62,6 +62,15 @@ export const routes: Routes = [
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
+        path: 'functionalities/:id/edit',
+        loadComponent: () =>
+          import(
+            '../modules/functionalities/pages/functionalities-edit/functionalities-edit.component'
+          ).then((m) => m.FunctionalitiesEditComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
         path: 'order/create',
         loadComponent: () =>
           import(
@@ -88,15 +97,6 @@ export const routes: Routes = [
         canActivate: [AuthGuard, RoleGuard],
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
-      // {
-      //   path: 'functionalities/:id/edit',
-      //   loadComponent: () =>
-      //     import(
-      //       '../modules/functionalities/pages/functionalities-edit/functionalities-edit.component'
-      //     ).then((m) => m.FunctionalitiesEditComponent),
-      //   canActivate: [AuthGuard],
-      //   data: { roles: [Role.MANAGER_REVIEWERS] },
-      // },
       {
         path: 'clients',
         loadComponent: () =>
@@ -158,7 +158,7 @@ export const routes: Routes = [
             (m) => m.UserEditComponent
           ),
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.ADMIN] },
       },
       {
         path: 'users/:id',

@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-settings',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './settings.component.html',
-  styleUrl: './settings.component.scss'
+  styleUrls: ['./settings.component.scss'],
 })
-export class SettingsComponent {
-
-}
+export class SettingsComponent {}
