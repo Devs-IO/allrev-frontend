@@ -73,13 +73,15 @@
                   <button
                     type="button"
                     class="btn btn-outline-warning action-btn"
-                    title="Editar">
+                    title="Editar"
+                    (click)="edit(functionality.id)">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-danger action-btn"
-                    title="Excluir">
+                    title="Excluir"
+                    (click)="confirmDelete(functionality.id)">
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>

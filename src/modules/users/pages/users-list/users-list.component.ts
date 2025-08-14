@@ -129,22 +129,16 @@ export class UsersListComponent implements OnInit {
 
   confirmDelete(): void {
     if (this.selectedUser) {
-      if (this.selectedUser.role === 'manager_reviewers') {
-        alert('Não é possível deletar um usuário gestor.');
-        this.showDeleteModal = false;
-        this.selectedUser = null;
-        return;
-      }
       this.usersService.deleteUser(this.selectedUser.id).subscribe({
         next: () => {
           this.loadUsers();
           this.showDeleteModal = false;
           this.selectedUser = null;
-          alert('Usuário deletado com sucesso!');
+          alert('Usuário desativado com sucesso!');
         },
         error: (err) => {
           console.error('Erro ao deletar usuário:', err);
-          alert('Erro ao deletar usuário. Tente novamente.');
+          alert('Erro ao desativar usuário. Tente novamente.');
         },
       });
     }

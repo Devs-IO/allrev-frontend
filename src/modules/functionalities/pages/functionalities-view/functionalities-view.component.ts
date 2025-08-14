@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FunctionalitiesService } from '../../services/functionalities.service';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 
@@ -10,7 +10,7 @@ import { FunctionalityDto } from '../../interfaces/functionalities.interface';
   templateUrl: './functionalities-view.component.html',
   styleUrls: ['./functionalities-view.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
 })
 export class FunctionalitiesViewComponent implements OnInit {
   functionality: FunctionalityDto | null = null;

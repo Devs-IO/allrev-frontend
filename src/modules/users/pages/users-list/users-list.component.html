@@ -113,21 +113,23 @@
                       type="button"
                       class="btn btn-outline-warning action-btn"
                       (click)="editUser(user.id)"
+                      [disabled]="!isAdmin"
                       title="Editar">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <!-- Botão de excluir habilitado apenas se não for gestor -->
+                    <!-- Botão de excluir habilitado apenas para admin e não-admin fica desabilitado -->
                     <button *ngIf="user.role !== 'admin'"
                       type="button"
                       class="btn btn-outline-danger action-btn"
                       (click)="deleteUser(user.id)"
+                      [disabled]="!isAdmin"
                       title="Excluir">
                       <i class="fas fa-trash"></i>
                     </button>
                     <button *ngIf="user.role === 'admin'"
                       type="button"
                       class="btn btn-outline-danger action-btn"
-                      title="Exclusão desabilitada para gestores"
+                      title="Exclusão desabilitada para administradores"
                       disabled>
                       <i class="fas fa-ban"></i>
                     </button>

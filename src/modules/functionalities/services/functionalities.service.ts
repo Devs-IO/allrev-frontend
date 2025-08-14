@@ -87,4 +87,23 @@ export class FunctionalitiesService {
   getAssistantUsers(): Observable<AssistantUser[]> {
     return this.http.get<AssistantUser[]>(`${this.apiUrl}/user/children`);
   }
+
+  update(
+    id: string,
+    dto: Partial<CreateFunctionalityDto>
+  ): Observable<FunctionalityDto> {
+    const body: any = { ...dto };
+    if (body.minimumPrice !== undefined)
+      body.minimumPrice = Number(body.minimumPrice);
+    if (body.defaultAssistantPrice !== undefined)
+      body.defaultAssistantPrice = Number(body.defaultAssistantPrice);
+    return this.http.put<FunctionalityDto>(
+      `${this.apiUrl}${this.baseUrl}/${id}`,
+      body
+    );
+  }
+
+  softDelete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}${this.baseUrl}/${id}`);
+  }
 }

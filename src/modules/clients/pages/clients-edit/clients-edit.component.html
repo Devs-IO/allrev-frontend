@@ -42,6 +42,25 @@
             />
           </div>
 
+          <!-- Ativo -->
+          <div class="col-md-3 mb-3 d-flex align-items-end">
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="isActive"
+                name="isActive"
+                [(ngModel)]="formData.isActive"
+              />
+              <label class="form-check-label" for="isActive">
+                <i class="fas" [ngClass]="formData.isActive ? 'fa-toggle-on text-success' : 'fa-toggle-off text-muted'"></i>
+                {{ formData.isActive ? 'Ativo' : 'Inativo' }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
           <!-- Email -->
           <div class="col-md-6 mb-3">
             <label for="email" class="form-label">
@@ -57,9 +76,6 @@
               required
             />
           </div>
-        </div>
-
-        <div class="row">
           <!-- Telefone -->
           <div class="col-md-6 mb-3">
             <label for="phone" class="form-label">
@@ -73,23 +89,8 @@
               placeholder="(11) 99999-9999"
             />
           </div>
-
-          <!-- Status -->
-          <div class="col-md-6 mb-3">
-            <label for="isActive" class="form-label">
-              <i class="fas fa-toggle-on"></i> Status do Cliente
-            </label>
-            <select
-              id="isActive"
-              class="form-control"
-              [(ngModel)]="formData.isActive"
-              name="isActive"
-            >
-              <option [ngValue]="true">Ativo</option>
-              <option [ngValue]="false">Inativo</option>
-            </select>
-          </div>
         </div>
+
       </div>
     </div>
 
@@ -178,12 +179,13 @@
         class="btn btn-secondary"
         routerLink="/clients"
       >
-        <i class="fas fa-times"></i> Cancelar
+        <i class="fas fa-times"></i> Voltar
       </button>
 
       <button
         type="submit"
         class="btn btn-primary"
+  [disabled]="!isDirty()"
       >
         <i class="fas fa-save"></i> Salvar Alterações
       </button>
