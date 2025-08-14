@@ -26,7 +26,7 @@
             {{ functionality.name }}
           </h1>
         </div>
-        <span class="badge" [class]="functionality.status === 'ACTIVE' ? 'bg-success' : 'bg-secondary'">
+  <span class="badge" [class]="functionality.status === 'ACTIVE' ? 'bg-primary' : 'bg-secondary'">
           <i class="fas" [ngClass]="functionality.status === 'ACTIVE' ? 'fa-check-circle' : 'fa-times-circle'"></i>
           {{ functionality.status === 'ACTIVE' ? 'Ativo' : 'Inativo' }}
         </span>
@@ -53,14 +53,14 @@
                 </div>
               </div>
               <div class="info-item">
-                <i class="fas fa-align-left text-info fs-4 me-3"></i>
+        <i class="fas fa-align-left text-primary fs-4 me-3"></i>
                 <div>
                   <label class="fw-bold text-muted">Descrição:</label>
                   <p class="mb-0">{{ functionality.description || '-' }}</p>
                 </div>
               </div>
               <div class="info-item">
-                <i class="fas fa-user text-success fs-4 me-3"></i>
+        <i class="fas fa-user text-primary fs-4 me-3"></i>
                 <div>
                   <label class="fw-bold text-muted">Responsável:</label>
                   <p class="mb-0">{{ functionality.responsibleUserId || '-' }}</p>
@@ -73,7 +73,7 @@
         <!-- Valores -->
         <div class="col-lg-6">
           <div class="card h-100 shadow-sm">
-            <div class="card-header bg-success text-white">
+      <div class="card-header bg-primary text-white">
               <h5 class="mb-0">
                 <i class="fas fa-coins me-2"></i>
                 Valores
@@ -88,7 +88,7 @@
                 </div>
               </div>
               <div class="info-item">
-                <i class="fas fa-coins text-info fs-4 me-3"></i>
+        <i class="fas fa-coins text-primary fs-4 me-3"></i>
                 <div>
                   <label class="fw-bold text-muted">Preço Assistente:</label>
                   <p class="mb-0">{{ functionality.defaultAssistantPrice ? (functionality.defaultAssistantPrice | currency:'BRL':'symbol':'1.2-2') : '-' }}</p>
@@ -101,7 +101,7 @@
         <!-- Status e Datas -->
         <div class="col-12">
           <div class="card shadow-sm mt-4">
-            <div class="card-header bg-info text-white">
+      <div class="card-header bg-primary text-white">
               <h5 class="mb-0">
                 <i class="fas fa-chart-line me-2"></i>
                 Status e Datas
@@ -111,7 +111,7 @@
               <div class="row gap-2">
                 <div class="col-md-4">
                   <div class="info-item">
-                    <i class="fas fa-calendar-plus text-success fs-4 me-3"></i>
+        <i class="fas fa-calendar-plus text-primary fs-4 me-3"></i>
                     <div>
                       <label class="fw-bold text-muted">Criado em:</label>
                       <p class="mb-0">{{ functionality.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>

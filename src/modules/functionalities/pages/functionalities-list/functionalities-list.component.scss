@@ -120,10 +120,6 @@
 }
 
 // Status icons
-.fas.fa-check-circle {
-  color: #198754;
-}
-
-.fas.fa-times-circle {
-  color: #dc3545;
-}
+/* Use system palette */
+.fas.fa-check-circle { color: var(--primary-color); }
+.fas.fa-times-circle { color: #dc3545; }
