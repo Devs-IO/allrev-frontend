@@ -6,7 +6,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { CreateUserDto, ResponseUserDto } from '../../types/user.dto';
 import { Role, RoleLabels } from '../../interfaces/user.enums';
@@ -21,7 +21,7 @@ declare var bootstrap: any;
   templateUrl: './user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
 })
 export class UserEditComponent implements OnInit {
   userForm!: FormGroup;
@@ -34,6 +34,7 @@ export class UserEditComponent implements OnInit {
   tenantName = '';
   tenants: any[] = [];
   currentUserRole = '';
+  isEditingAdminUser = false;
 
   // Role options (carregado do backend)
   roleOptions: { value: string; label: string }[] = [];
@@ -155,6 +156,12 @@ export class UserEditComponent implements OnInit {
       this.userForm.get('role')?.disable();
     }
 
+    // Admin user cannot be deactivated: disable isActive toggle when editing ADMIN user
+    this.isEditingAdminUser = user.role === Role.ADMIN;
+    if (this.isEditingAdminUser) {
+      this.userForm.get('isActive')?.disable();
+    }
+
     this.originalFormValues = { ...formValues };
   }
 
@@ -192,8 +199,11 @@ export class UserEditComponent implements OnInit {
         name: rawFormData.name,
         phone: rawFormData.phone,
         address: rawFormData.address,
-        isActive: rawFormData.isActive,
       };
+      // Only allow changing isActive if not editing an ADMIN user
+      if (!this.isEditingAdminUser) {
+        formData.isActive = rawFormData.isActive;
+      }
       // Apenas Admin pode enviar alteração de role
       if (this.isAdmin) {
         formData.role = rawFormData.role;
@@ -246,7 +256,8 @@ export class UserEditComponent implements OnInit {
       return false;
     }
 
-    const currentValues = this.userForm.value;
+    // Include disabled controls for accurate comparison (e.g., isActive when disabled)
+    const currentValues = this.userForm.getRawValue();
 
     // Comparar cada campo
     return Object.keys(this.originalFormValues).some((key) => {

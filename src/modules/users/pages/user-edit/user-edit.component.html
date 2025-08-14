@@ -131,6 +131,7 @@
                 type="checkbox"
                 formControlName="isActive"
                 id="isActive"
+                [disabled]="isEditingAdminUser"
               />
               <label class="form-check-label" for="isActive">
                 {{ userForm.get('isActive')?.value ? 'Ativo' : 'Inativo' }}

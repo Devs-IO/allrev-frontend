@@ -6,7 +6,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TenantsService } from '../../services/tenants.service';
 import { Tenant, CreateTenantDto } from '../../interfaces/tenant.interface';
 import {
@@ -26,7 +26,7 @@ declare var bootstrap: any;
   templateUrl: './tenant-edit.component.html',
   styleUrls: ['./tenant-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
 })
 export class TenantEditComponent implements OnInit {
   tenantForm!: FormGroup;
