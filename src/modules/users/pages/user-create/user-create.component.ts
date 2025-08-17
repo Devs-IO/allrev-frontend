@@ -5,8 +5,6 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
-  AbstractControl,
-  ValidationErrors,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TenantsService } from '../../../tenants/services/tenants.service';
@@ -16,23 +14,7 @@ import { AuthService } from '../../../../app/core/services/auth.service';
 import { Role, RoleLabels } from '../../interfaces/user.enums';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 
-// Custom validator for password confirmation
-function passwordMatchValidator(
-  control: AbstractControl
-): ValidationErrors | null {
-  const password = control.get('password');
-  const confirmPassword = control.get('confirmPassword');
-
-  if (!password || !confirmPassword) {
-    return null;
-  }
-
-  if (password.value !== confirmPassword.value) {
-    return { passwordsMismatch: true };
-  }
-
-  return null;
-}
+// No password fields anymore; backend generates a temporary password.
 
 @Component({
   selector: 'app-user-create',
@@ -75,59 +57,35 @@ export class UserCreateComponent implements OnInit {
   }
 
   private initializeForm() {
-    this.userForm = this.fb.group(
-      {
-        name: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(2),
-            Validators.maxLength(100),
-          ],
+    this.userForm = this.fb.group({
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(100),
         ],
-        email: [
-          '',
-          [Validators.required, Validators.email, Validators.maxLength(100)],
+      ],
+      email: [
+        '',
+        [Validators.required, Validators.email, Validators.maxLength(100)],
+      ],
+      phone: [
+        '',
+        [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
+      ],
+      role: ['', Validators.required],
+      address: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(10),
+          Validators.maxLength(200),
         ],
-        phone: [
-          '',
-          [
-            Validators.required,
-            Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/),
-          ],
-        ],
-        role: ['', Validators.required],
-        password: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(8),
-            Validators.maxLength(50),
-          ],
-        ],
-        confirmPassword: ['', Validators.required],
-        address: [
-          '',
-          [
-            Validators.required,
-            Validators.minLength(10),
-            Validators.maxLength(200),
-          ],
-        ],
-        tenantId: [''], // Validators will be added conditionally
-        isActive: [true],
-        photo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
-      },
-      { validators: passwordMatchValidator }
-    );
-
-    // Set up value change listeners to trigger form validation when passwords change
-    this.userForm.get('password')?.valueChanges.subscribe(() => {
-      this.userForm.get('confirmPassword')?.updateValueAndValidity();
-    });
-
-    this.userForm.get('confirmPassword')?.valueChanges.subscribe(() => {
-      this.userForm.updateValueAndValidity();
+      ],
+      tenantId: [''], // Validators will be added conditionally
+      isActive: [true],
+      photo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
     });
   }
 
@@ -185,12 +143,9 @@ export class UserCreateComponent implements OnInit {
       // Get form value and handle disabled tenantId field
       const formValue = this.userForm.value;
 
-      // Remove confirmPassword from the payload as it's only for frontend validation
-      const { confirmPassword, ...formDataWithoutConfirm } = formValue;
-
-      const formData: CreateUserDto = {
-        ...formDataWithoutConfirm,
-      };
+      // Build payload without password fields (backend generates password)
+      const { password, confirmPassword, ...rest } = formValue as any;
+      const formData: CreateUserDto = { ...rest } as CreateUserDto;
 
       // Para usuários não-admin, o tenantId pode estar disabled, então pegamos do getRawValue()
       if (!this.isAdmin && this.userForm.get('tenantId')?.disabled) {
@@ -242,14 +197,7 @@ export class UserCreateComponent implements OnInit {
         return `${this.getFieldLabel(fieldName)} deve ser um email válido`;
     }
 
-    // Check for form-level password mismatch error
-    if (
-      fieldName === 'confirmPassword' &&
-      this.userForm.errors?.['passwordsMismatch'] &&
-      field?.touched
-    ) {
-      return 'As senhas não coincidem';
-    }
+    // No password confirmation validation anymore
 
     return null;
   }
@@ -260,8 +208,7 @@ export class UserCreateComponent implements OnInit {
       email: 'Email',
       phone: 'Telefone',
       role: 'Função',
-      password: 'Senha',
-      confirmPassword: 'Confirmação da Senha',
+      // password fields removed
       address: 'Endereço',
       tenantId: 'Empresa',
       photo: 'Foto',
@@ -273,13 +220,7 @@ export class UserCreateComponent implements OnInit {
     const field = this.userForm.get(fieldName);
     const hasFieldError = !!(field?.errors && field.touched);
 
-    // Check for form-level password mismatch error for confirmPassword field
-    if (fieldName === 'confirmPassword') {
-      const hasFormError = !!(
-        this.userForm.errors?.['passwordsMismatch'] && field?.touched
-      );
-      return hasFieldError || hasFormError;
-    }
+    // No confirmPassword checks
 
     return hasFieldError;
   }

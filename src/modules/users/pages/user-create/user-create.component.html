@@ -195,50 +195,7 @@
           </div>
         </div>
 
-        <!-- Senha -->
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="password" class="form-label">
-              <i class="fas fa-lock"></i> Senha *
-            </label>
-            <div class="input-group">
-              <input
-                id="password"
-                type="password"
-                class="form-control"
-                [class.is-invalid]="isFieldInvalid('password')"
-                formControlName="password"
-                placeholder="Digite a senha"
-                minlength="6"
-              />
-            </div>
-            <div *ngIf="getFieldError('password')" class="invalid-feedback">
-              {{ getFieldError('password') }}
-            </div>
-            <small class="form-text text-muted">
-              Mínimo de 6 caracteres
-            </small>
-          </div>
-
-          <!-- Confirmar Senha -->
-          <div class="col-md-6 mb-3">
-            <label for="confirmPassword" class="form-label">
-              <i class="fas fa-lock"></i> Confirmar Senha *
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              class="form-control"
-              [class.is-invalid]="isFieldInvalid('confirmPassword')"
-              formControlName="confirmPassword"
-              placeholder="Confirme a senha"
-            />
-            <div *ngIf="getFieldError('confirmPassword')" class="invalid-feedback">
-              {{ getFieldError('confirmPassword') }}
-            </div>
-          </div>
-
-        </div>
+  <!-- Senha removida: backend gera automaticamente uma senha temporária e envia por e-mail -->
       </div>
     </div>
 

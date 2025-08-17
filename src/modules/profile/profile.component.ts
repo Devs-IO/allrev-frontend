@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { AuthService } from '../../app/core/services/auth.service';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { UserProfile } from '../users/interfaces/user-profile.interface';
 import { Role } from '../../app/core/enum/roles.enum';
@@ -15,8 +15,10 @@ import { Role } from '../../app/core/enum/roles.enum';
 })
 export class ProfileComponent implements OnInit {
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   user: UserProfile | null = null;
+  private currentUserId: string | null = null;
 
   readonly isAdmin = computed(() => this.user?.isAdmin || false);
   readonly isManager = computed(
@@ -29,6 +31,11 @@ export class ProfileComponent implements OnInit {
   ngOnInit() {
     this.authService.userProfile$.subscribe((userData) => {
       if (userData) this.user = { ...userData } as UserProfile;
+    });
+
+    // track logged-in user id for conditional actions (own profile only)
+    this.authService.getCurrentUser$().subscribe((u) => {
+      this.currentUserId = u?.id ?? null;
     });
   }
 
@@ -64,5 +71,18 @@ export class ProfileComponent implements OnInit {
     const today = new Date();
     const due = new Date(dueDate);
     return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  goToChangePassword() {
+    this.router.navigate(['/change-password']);
+  }
+
+  // Only allow change password for own profile
+  get isOwnProfile(): boolean {
+    return (
+      !!this.user?.id &&
+      !!this.currentUserId &&
+      this.user.id === this.currentUserId
+    );
   }
 }
