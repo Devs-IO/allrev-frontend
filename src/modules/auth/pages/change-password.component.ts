@@ -18,6 +18,7 @@ import { ToastService } from '../../../app/core/services/toast.service';
   styleUrls: ['./change-password.component.scss'],
 })
 export class ChangePasswordComponent {
+  private readonly SUCCESS_REDIRECT_DELAY_MS = 800;
   form = this.fb.group(
     {
       password: ['', [Validators.required, Validators.minLength(8)]],
@@ -56,7 +57,10 @@ export class ChangePasswordComponent {
           this.loading = false;
           this.success = true;
           this.toast.success('Senha alterada com sucesso');
-          setTimeout(() => this.router.navigate(['/']), 800);
+          setTimeout(
+            () => this.router.navigate(['/']),
+            this.SUCCESS_REDIRECT_DELAY_MS
+          );
         },
         error: (err) => {
           this.loading = false;
