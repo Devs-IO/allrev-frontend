@@ -45,7 +45,15 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           console.log('Login successful:', response);
           this.isLoading = false;
-          this.router.navigate(['/home']);
+          const mustChange =
+            response?.payload?.mustChangePassword === true ||
+            response?.user?.mustChangePassword === true;
+          if (mustChange) {
+            this.router.navigate(['/change-password']);
+          } else {
+            // prefer dashboard if present, fallback to home
+            this.router.navigate(['/home']);
+          }
         },
         error: (error) => {
           console.error('Login error:', error);

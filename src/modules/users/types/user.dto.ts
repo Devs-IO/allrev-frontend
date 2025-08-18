@@ -3,7 +3,7 @@ import { Role } from '../interfaces/user.enums';
 export interface CreateUserDto {
   email: string;
   photo?: string;
-  password: string;
+  password?: string;
   currentPassword?: string; // Para validação ao alterar senha
   role: Role;
   name: string;

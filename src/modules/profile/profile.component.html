@@ -21,6 +21,11 @@
             <button class="edit-btn" (click)="editProfile()">
               <i class="bi bi-pencil-fill"></i>
             </button>
+            <div class="mt-3" *ngIf="isOwnProfile">
+              <button (click)="goToChangePassword()" class="btn btn-outline-primary">
+                <i class="bi bi-key"></i> Alterar Senha
+              </button>
+            </div>
           </div>
           <div class="col-md-8">
             <div class="card-body p-4">

@@ -186,6 +186,14 @@ export const routes: Routes = [
         canActivate: [AuthGuard],
       },
       {
+        path: 'change-password',
+        loadComponent: () =>
+          import('../modules/auth/pages/change-password.component').then(
+            (m) => m.ChangePasswordComponent
+          ),
+        canActivate: [AuthGuard],
+      },
+      {
         path: 'tenants',
         loadComponent: () =>
           import(

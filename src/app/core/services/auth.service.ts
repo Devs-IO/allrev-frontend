@@ -178,4 +178,11 @@ export class AuthService {
         error: () => this.logout(),
       });
   }
+
+  // Change current user's password
+  changePassword(newPassword: string) {
+    return this.http.put(`${this.apiUrl}/auth/change-password`, {
+      newPassword,
+    });
+  }
 }

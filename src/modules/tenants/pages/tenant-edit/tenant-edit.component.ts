@@ -18,6 +18,7 @@ import {
   PaymentFrequencyLabels,
 } from '../../interfaces/tenant.enums';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 
 declare var bootstrap: any;
 
@@ -26,7 +27,12 @@ declare var bootstrap: any;
   templateUrl: './tenant-edit.component.html',
   styleUrls: ['./tenant-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
 })
 export class TenantEditComponent implements OnInit {
   tenantForm!: FormGroup;
