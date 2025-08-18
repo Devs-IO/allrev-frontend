@@ -18,13 +18,19 @@ import {
 } from '../../interfaces/tenant.enums';
 import { CreateTenantDto } from '../../interfaces/tenant.interface';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 
 @Component({
   selector: 'app-tenant-create',
   templateUrl: './tenant-create.component.html',
   styleUrls: ['./tenant-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
 })
 export class TenantCreateComponent implements OnInit {
   tenantForm!: FormGroup;
@@ -70,6 +76,7 @@ export class TenantCreateComponent implements OnInit {
   }
 
   private initializeForm() {
+    const oneYearFromToday = this.getOneYearFromTodayIsoDate();
     this.tenantForm = this.fb.group({
       code: [
         '',
@@ -100,13 +107,22 @@ export class TenantCreateComponent implements OnInit {
         [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
       ],
       paymentStatus: [PaymentStatus.UNPAID, Validators.required],
-      paymentMethod: ['', Validators.required],
+      paymentMethod: [PaymentMethod.PIX, Validators.required],
       isActive: [true],
       paymentFrequency: [PaymentFrequency.MONTHLY, Validators.required],
-      paymentDueDate: ['', Validators.required],
+      paymentDueDate: [oneYearFromToday, Validators.required],
       logo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
       description: ['', [Validators.minLength(10), Validators.maxLength(500)]],
     });
+  }
+
+  private getOneYearFromTodayIsoDate(): string {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   onSubmit() {

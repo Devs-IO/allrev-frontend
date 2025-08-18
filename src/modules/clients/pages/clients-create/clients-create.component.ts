@@ -5,12 +5,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Client } from '../../interfaces/client.interface';
 import { AuthService } from '../../../../app/core/services/auth.service';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 @Component({
   selector: 'app-clients-create',
   templateUrl: './clients-create.component.html',
   styleUrls: ['./clients-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PhoneMaskDirective],
 })
 export class ClientsCreateComponent {
   formData: Partial<Client> = {};

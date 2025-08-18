@@ -4,13 +4,20 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ClientsService } from '../../services/clients.service';
 import { Client } from '../../interfaces/client.interface';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 
 @Component({
   selector: 'app-clients-edit',
   templateUrl: './clients-edit.component.html',
   styleUrls: ['./clients-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
 })
 export class ClientsEditComponent implements OnInit {
   clients: Client | null = null;

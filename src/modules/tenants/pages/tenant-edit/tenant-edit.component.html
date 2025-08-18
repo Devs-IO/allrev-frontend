@@ -99,6 +99,8 @@
               class="form-control"
               [class.is-invalid]="isFieldInvalid('phone')"
               formControlName="phone"
+              appPhoneMask
+              inputmode="numeric"
               placeholder="(11) 99999-9999"
             />
             <div *ngIf="getFieldError('phone')" class="invalid-feedback">

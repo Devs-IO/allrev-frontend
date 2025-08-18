@@ -13,6 +13,7 @@ import { CreateUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import { Role, RoleLabels } from '../../interfaces/user.enums';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 
 // No password fields anymore; backend generates a temporary password.
 
@@ -21,7 +22,12 @@ import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
   templateUrl: './user-create.component.html',
   styleUrls: ['./user-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
 })
 export class UserCreateComponent implements OnInit {
   userForm!: FormGroup;

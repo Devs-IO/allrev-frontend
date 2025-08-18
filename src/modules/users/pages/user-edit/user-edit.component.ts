@@ -13,6 +13,7 @@ import { Role, RoleLabels } from '../../interfaces/user.enums';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import { ErrorHelper } from '../../../../app/core/helpers/error.helper';
 import { TenantsService } from '../../../tenants/services/tenants.service';
+import { PhoneMaskDirective } from '../../../../app/core/directives/phone-mask.directive';
 
 declare var bootstrap: any;
 
@@ -21,7 +22,12 @@ declare var bootstrap: any;
   templateUrl: './user-edit.component.html',
   styleUrls: ['./user-edit.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
 })
 export class UserEditComponent implements OnInit {
   userForm!: FormGroup;
