@@ -80,7 +80,8 @@ export class UserCreateComponent implements OnInit {
         '',
         [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
       ],
-      role: ['', Validators.required],
+      // Default role prefilled; will be kept if allowed in available roles
+      role: [Role.MANAGER_REVIEWERS, Validators.required],
       address: [
         '',
         [
@@ -132,7 +133,28 @@ export class UserCreateComponent implements OnInit {
 
   private loadTenants() {
     this.tenantsService.getTenants().subscribe({
-      next: (tenants: any[]) => (this.tenants = tenants),
+      next: (tenants: any[]) => {
+        this.tenants = tenants;
+        // Auto-select the most recently created tenant if admin
+        const tenantIdControl = this.userForm.get('tenantId');
+        if (
+          this.isAdmin &&
+          tenantIdControl &&
+          !tenantIdControl.value &&
+          Array.isArray(tenants) &&
+          tenants.length
+        ) {
+          const latest = tenants.reduce((acc: any, cur: any) => {
+            const accDate = new Date(acc?.createdAt || 0).getTime();
+            const curDate = new Date(cur?.createdAt || 0).getTime();
+            return curDate > accDate ? cur : acc;
+          }, tenants[0]);
+          if (latest?.id) {
+            tenantIdControl.setValue(latest.id);
+            this.tenantName = latest.companyName || '';
+          }
+        }
+      },
       error: (err) => {
         this.error = ErrorHelper.getErrorMessage(err);
         this.tenants = [];
@@ -242,6 +264,17 @@ export class UserCreateComponent implements OnInit {
           value: role,
           label: RoleLabels[role] || role,
         }));
+        // Ensure selected role is valid: prefer MANAGER_REVIEWERS if available, otherwise first available
+        const roleCtrl = this.userForm.get('role');
+        const hasManager = roles.includes(Role.MANAGER_REVIEWERS);
+        if (roleCtrl) {
+          const current = roleCtrl.value as Role | '';
+          if (!current || (current && !roles.includes(current))) {
+            roleCtrl.setValue(
+              hasManager ? Role.MANAGER_REVIEWERS : roles[0] ?? ''
+            );
+          }
+        }
       },
       error: (err) => {
         console.error('Erro ao carregar roles disponíveis:', err);
