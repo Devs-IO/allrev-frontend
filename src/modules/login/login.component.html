@@ -36,7 +36,7 @@
                   id="email"
                   class="form-control"
                   formControlName="email"
-                  [disabled]="isLoading"
+                  [disabled]="loading"
                   (input)="clearError()"
                   required
                 />
@@ -58,7 +58,7 @@
                   id="password"
                   class="form-control"
                   formControlName="password"
-                  [disabled]="isLoading"
+                  [disabled]="loading"
                   (input)="clearError()"
                   required
                 />
@@ -76,14 +76,19 @@
               <!-- Submit button -->
               <button
                 type="submit"
-                [disabled]="loginForm.invalid || isLoading"
+                [disabled]="loginForm.invalid || loading"
                 data-mdb-button-init
                 data-mdb-ripple-init
                 class="btn btn-primary btn-block mb-4"
               >
-                <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
-                {{ isLoading ? 'Conectando...' : 'Login' }}
+                <ng-container *ngIf="loading; else defaultIcon">
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Conectando...
+                </ng-container>
+                <ng-template #defaultIcon>
+                  <i class="fas fa-sign-in-alt me-2"></i>
+                  Login
+                </ng-template>
               </button>
 
               <!-- em casos de dúvidas entre em contato -->

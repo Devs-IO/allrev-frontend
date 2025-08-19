@@ -7,6 +7,7 @@ import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 import { UsersService } from '../../../users/services/users.service';
 import { ResponseUserDto } from '../../../users/types/user.dto';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../../app/core/services/auth.service';
 
 @Component({
   selector: 'app-functionalities-list',
@@ -19,14 +20,29 @@ export class FunctionalitiesListComponent implements OnInit {
   functionalities: FunctionalityDto[] = [];
   responsibleUsers: { [id: string]: string } = {};
   loading = true;
+  currentUserId: string | null = null;
+  currentUserName: string | null = null;
 
   constructor(
     private functionalitiesService: FunctionalitiesService,
     private usersService: UsersService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit() {
+    // Load current user name/id for responsibility highlighting
+    this.authService.getUserProfile().subscribe({
+      next: (u) => {
+        this.currentUserId = u?.id || null;
+        this.currentUserName = u?.name || null;
+      },
+      error: () => {
+        this.currentUserId = null;
+        this.currentUserName = null;
+      },
+    });
+
     this.functionalitiesService.getAll().subscribe({
       next: (data) => {
         this.functionalities = data;

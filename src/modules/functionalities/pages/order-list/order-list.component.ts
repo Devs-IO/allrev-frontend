@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { FunctionalitiesService } from '../../services/functionalities.service';
+import {
+  FunctionalitiesClientsStatus,
+  FunctionalitiesClientsStatusLabels,
+} from '../../interfaces/status.enums';
 import { AuthService } from '../../../../app/core/services/auth.service';
 import {
   ServiceOrderResponse,
@@ -35,6 +39,10 @@ export class OrderListComponent implements OnInit {
   // Filters
   searchTerm = '';
   statusFilter = '';
+  contractDateFrom = '';
+  contractDateTo = '';
+  onlyOverdueCollaborators = false;
+  collaboratorStatusFilter = '';
   expandedOrderId: string | null = null;
 
   constructor(
@@ -98,7 +106,15 @@ export class OrderListComponent implements OnInit {
 
   private loadServiceOrdersPromise(): Promise<void> {
     return new Promise((resolve) => {
-      this.functionalitiesService.getAllServiceOrdersList().subscribe({
+      // prepare query params
+      const params: any = {};
+      // statusFilter refers to aggregate UI status; keep client-side only
+      if (this.contractDateFrom)
+        params.contractDateFrom = this.contractDateFrom;
+      if (this.contractDateTo) params.contractDateTo = this.contractDateTo;
+      if (this.onlyOverdueCollaborators) params.hasOverdueCollaborators = true;
+
+      this.functionalitiesService.getAllServiceOrdersList(params).subscribe({
         next: (orders) => {
           this.serviceOrders = orders.map((o) => ({
             ...o,
@@ -171,6 +187,10 @@ export class OrderListComponent implements OnInit {
           responsibleUserName: '',
           assistantDeadline: a.yourDeadline,
           assistantAmount: a.yourAmount,
+          serviceStartDate: undefined,
+          serviceEndDate: a.yourDeadline,
+          userStatus: a.status,
+          price: a.yourAmount,
           delivered: a.status === 'FINISHED',
           description: a.serviceDescription,
           createdAt: a.yourDeadline,
@@ -201,6 +221,8 @@ export class OrderListComponent implements OnInit {
   applyFilters() {
     const term = this.searchTerm.toLowerCase();
     const status = this.statusFilter;
+    const collabStatus = this.collaboratorStatusFilter;
+    const overdueOnly = this.onlyOverdueCollaborators;
 
     this.filteredAssignments = this.myAssignments.filter((a) => {
       const matchesSearch =
@@ -219,7 +241,20 @@ export class OrderListComponent implements OnInit {
           s.functionalityName?.toLowerCase().includes(term)
         );
       const matchesStatus = !status || o.status === status;
-      return matchesSearch && matchesStatus;
+      const services = o.services || [];
+      const servicesMatch = services.some((s: any) => {
+        const statusOk = !collabStatus || s.userStatus === collabStatus;
+        const overdueOk =
+          !overdueOnly ||
+          s.userStatus === 'OVERDUE' ||
+          (s.serviceEndDate && new Date(s.serviceEndDate) < new Date());
+        return statusOk && overdueOk;
+      });
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        (collabStatus || overdueOnly ? servicesMatch : true)
+      );
     });
   }
 
@@ -233,6 +268,10 @@ export class OrderListComponent implements OnInit {
   clearFilters() {
     this.searchTerm = '';
     this.statusFilter = '';
+    this.contractDateFrom = '';
+    this.contractDateTo = '';
+    this.onlyOverdueCollaborators = false;
+    this.collaboratorStatusFilter = '';
     this.applyFilters();
   }
 
@@ -264,6 +303,25 @@ export class OrderListComponent implements OnInit {
     }
   }
 
+  getClientItemStatusBadge(status: FunctionalitiesClientsStatus): string {
+    switch (status) {
+      case 'PENDING_PAYMENT':
+        return 'badge bg-warning text-dark';
+      case 'PAID':
+        return 'badge bg-success text-white';
+      case 'OVERDUE':
+        return 'badge bg-danger text-white';
+      case 'CANCELED':
+        return 'badge bg-secondary text-white';
+      default:
+        return 'badge bg-light text-dark';
+    }
+  }
+
+  getClientItemStatusText(status: FunctionalitiesClientsStatus): string {
+    return (FunctionalitiesClientsStatusLabels as any)[status] || status;
+  }
+
   getStatusText(status: string): string {
     switch (status) {
       case 'PENDING':
@@ -290,6 +348,19 @@ export class OrderListComponent implements OnInit {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  }
+
+  // Template helpers
+  isServiceOverdue(service: any): boolean {
+    if (service?.userStatus === 'OVERDUE') return true;
+    if (!service?.serviceEndDate) return false;
+    try {
+      const end = new Date(service.serviceEndDate);
+      const now = new Date();
+      return end < now;
+    } catch {
+      return false;
+    }
   }
 
   // Check permissions

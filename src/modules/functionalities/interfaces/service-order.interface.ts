@@ -1,16 +1,32 @@
+import {
+  FunctionalitiesClientsStatus,
+  FunctionalitiesUsersStatus,
+} from './status.enums';
+
 export interface ServiceOrderItemDto {
   functionalityId: string;
   totalPrice: number;
   paymentMethod: string;
-  clientDeadline: string;
+  clientDeadline: string; // YYYY-MM-DD
+  // client item status (required by backend)
+  status: FunctionalitiesClientsStatus;
+  // optional fields when assigning a responsible
   responsibleUserId?: string;
-  assistantDeadline?: string;
+  assistantDeadline?: string; // YYYY-MM-DD
   assistantAmount?: number;
+  serviceStartDate?: string; // YYYY-MM-DD
+  serviceEndDate?: string; // YYYY-MM-DD
+  // optional assignment status and price (required when responsibleUserId present)
+  userStatus?: FunctionalitiesUsersStatus;
+  price?: number;
   description?: string;
+  userDescription?: string;
 }
 
 export interface CreateServiceOrderDto {
   clientId: string;
+  // contract date (required)
+  contractDate: string; // YYYY-MM-DD
   services: ServiceOrderItemDto[];
   description?: string;
 }
@@ -22,7 +38,8 @@ export interface ServiceOrderItemResponseDto {
   totalPrice: number;
   paymentMethod: string;
   clientDeadline: string;
-  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  contractDate: string;
+  status: FunctionalitiesClientsStatus;
   paidAt?: string;
   responsibleUserId?: string;
   responsibleUserName?: string;
@@ -31,6 +48,8 @@ export interface ServiceOrderItemResponseDto {
   assistantPaidAt?: string;
   delivered?: boolean;
   createdAt: Date;
+  serviceStartDate?: string; // YYYY-MM-DD
+  serviceEndDate?: string; // YYYY-MM-DD
 }
 
 export interface ServiceOrderResponseDto {
@@ -42,6 +61,7 @@ export interface ServiceOrderResponseDto {
   serviceCount: number;
   services: ServiceOrderItemResponseDto[];
   createdAt: Date;
+  hasOverdueCollaborators?: boolean;
 }
 
 export interface ServiceOrderSummaryDto {

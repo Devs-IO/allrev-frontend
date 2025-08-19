@@ -49,6 +49,34 @@
               <option value="OVERDUE">Atrasado</option>
             </select>
           </div>
+          <div class="col-md-3">
+            <label class="form-label">Data do Contrato (de)</label>
+            <input type="date" class="form-control" [(ngModel)]="contractDateFrom" (change)="loadData()" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Data do Contrato (até)</label>
+            <input type="date" class="form-control" [(ngModel)]="contractDateTo" (change)="loadData()" />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Status Colaborador</label>
+            <select class="form-select" [(ngModel)]="collaboratorStatusFilter" (change)="applyFilters()">
+              <option value="">Todos</option>
+              <option value="ASSIGNED">Atribuído</option>
+              <option value="IN_PROGRESS">Em andamento</option>
+              <option value="AWAITING_CLIENT">Aguardando cliente</option>
+              <option value="AWAITING_ADVISOR">Aguardando orientador</option>
+              <option value="COMPLETED">Concluído</option>
+              <option value="DELIVERED">Entregue</option>
+              <option value="CANCELED">Cancelado</option>
+              <option value="OVERDUE">Atrasado</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <div class="form-check">
+              <input id="onlyOverdue" class="form-check-input" type="checkbox" [(ngModel)]="onlyOverdueCollaborators" (change)="loadData()" />
+              <label for="onlyOverdue" class="form-check-label">Com Colab. em atraso</label>
+            </div>
+          </div>
           <div class="col-md-2 d-flex align-items-end">
             <button type="button" class="btn btn-outline-secondary w-100" (click)="clearFilters()">
               <i class="bi bi-funnel me-1"></i> Limpar
@@ -103,6 +131,7 @@
           </div>
           <div class="d-flex align-items-center gap-2">
             <span [class]="getStatusBadgeClass(order.status)">{{ getStatusText(order.status) }}</span>
+            <span *ngIf="order.hasOverdueCollaborators" class="badge bg-danger">Colab. em atraso</span>
             <span *ngIf="order.isAssistant" class="badge bg-primary-soft">Atribuído a você</span>
             <strong class="text-primary ms-2">{{ formatCurrency(order.total) }}</strong>
             <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleOrderDetails(order.orderId)">
@@ -113,6 +142,7 @@
         <div *ngIf="expandedOrderId === order.orderId" class="card-body">
           <div class="row mb-3">
             <div class="col-md-4"><strong>Prazo:</strong> {{ formatDate(order.deadline) }}</div>
+            <div class="col-md-4"><strong>Data do Contrato:</strong> {{ order.contractDate ? formatDate(order.contractDate) : '-' }}</div>
             <div class="col-md-4"><strong>Serviços:</strong> {{ order.serviceCount }}</div>
             <div class="col-md-4"><strong>Total Assistentes:</strong> {{ formatCurrency(order.totalAssistantAmount || 0) }}</div>
           </div>
@@ -122,18 +152,33 @@
               <thead>
                 <tr>
                   <th>Funcionalidade</th>
+                    <th>Status</th>
+                    <th>Data Contrato</th>
+                  <th>Início</th>
+                  <th>Término</th>
+                  <th>Status Colab.</th>
+                  <th>Atrasado?</th>
                   <th>Assistente</th>
-                  <th class="text-end">Valor</th>
+                  <th class="text-end">Valor Colab.</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let service of order.services">
                   <td>{{ service.functionalityName }}</td>
+                    <td><span [class]="getClientItemStatusBadge(service.status)">{{ getClientItemStatusText(service.status) }}</span></td>
+                    <td>{{ service.contractDate ? formatDate(service.contractDate) : '-' }}</td>
+                  <td>{{ service.serviceStartDate ? formatDate(service.serviceStartDate) : '-' }}</td>
+                  <td>{{ service.serviceEndDate ? formatDate(service.serviceEndDate) : '-' }}</td>
+                  <td><span class="badge bg-secondary">{{ service.userStatus || '-' }}</span></td>
+                  <td>
+                    <span *ngIf="isServiceOverdue(service)" class="badge bg-danger">Sim</span>
+                    <span *ngIf="!isServiceOverdue(service)" class="text-muted">Não</span>
+                  </td>
                   <td>
                     <span *ngIf="service.responsibleUserName" class="badge bg-info">{{ service.responsibleUserName }}</span>
                     <span *ngIf="!service.responsibleUserName" class="text-muted">Não atribuído</span>
                   </td>
-                  <td class="text-end">{{ formatCurrency(service.assistantAmount || 0) }}</td>
+                  <td class="text-end">{{ formatCurrency(service.price || service.assistantAmount || 0) }}</td>
                 </tr>
               </tbody>
             </table>

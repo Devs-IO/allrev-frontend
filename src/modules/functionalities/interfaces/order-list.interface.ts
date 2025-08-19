@@ -1,3 +1,4 @@
+import { FunctionalitiesClientsStatus } from './status.enums';
 // Interface para resposta de ordens de serviço (managers)
 export interface ServiceOrderResponse {
   orderId: string;
@@ -6,10 +7,12 @@ export interface ServiceOrderResponse {
   clientEmail: string;
   clientInstitution?: string;
   deadline: string;
+  contractDate?: string;
   total: number;
   totalAssistantAmount: number;
   serviceCount: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'FINISHED' | 'OVERDUE';
+  hasOverdueCollaborators?: boolean;
   services: ServiceOrderItem[];
   createdAt: string;
 }
@@ -21,12 +24,17 @@ export interface ServiceOrderItem {
   totalPrice: number;
   paymentMethod: string;
   clientDeadline: string;
-  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  contractDate?: string;
+  status: FunctionalitiesClientsStatus;
   paidAt?: string;
   responsibleUserId?: string;
   responsibleUserName?: string;
   assistantDeadline?: string;
   assistantAmount?: number;
+  serviceStartDate?: string;
+  serviceEndDate?: string;
+  userStatus?: string;
+  price?: number;
   delivered?: boolean;
   createdAt: string;
 }

@@ -22,8 +22,12 @@
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading" [formGroup]="tenantForm" (ngSubmit)="onSubmit()" class="tenant-form">
-
+  <form
+    *ngIf="!loading"
+    [formGroup]="tenantForm"
+    (ngSubmit)="onSubmit()"
+    class="tenant-form"
+  >
     <!-- Dados da Empresa -->
     <div class="card mb-4">
       <div class="card-header">
@@ -44,9 +48,10 @@
               formControlName="code"
               placeholder="Ex: ACME001"
               maxlength="20"
+              [disabled]="true"
             />
             <div *ngIf="getFieldError('code')" class="invalid-feedback">
-              {{ getFieldError('code') }}
+              {{ getFieldError("code") }}
             </div>
           </div>
 
@@ -65,7 +70,7 @@
               maxlength="100"
             />
             <div *ngIf="getFieldError('companyName')" class="invalid-feedback">
-              {{ getFieldError('companyName') }}
+              {{ getFieldError("companyName") }}
             </div>
           </div>
 
@@ -85,7 +90,7 @@
               placeholder="(11) 99999-9999"
             />
             <div *ngIf="getFieldError('phone')" class="invalid-feedback">
-              {{ getFieldError('phone') }}
+              {{ getFieldError("phone") }}
             </div>
           </div>
 
@@ -102,7 +107,7 @@
                 id="isActive"
               />
               <label class="form-check-label" for="isActive">
-                {{ tenantForm.get('isActive')?.value ? 'Ativa' : 'Inativa' }}
+                {{ tenantForm.get("isActive")?.value ? "Ativa" : "Inativa" }}
               </label>
             </div>
           </div>
@@ -123,7 +128,7 @@
             maxlength="200"
           />
           <div *ngIf="getFieldError('address')" class="invalid-feedback">
-            {{ getFieldError('address') }}
+            {{ getFieldError("address") }}
           </div>
         </div>
 
@@ -142,10 +147,11 @@
             maxlength="500"
           ></textarea>
           <small class="form-text text-muted">
-            {{ tenantForm.get('description')?.value?.length || 0 }}/500 caracteres
+            {{ tenantForm.get("description")?.value?.length || 0 }}/500
+            caracteres
           </small>
           <div *ngIf="getFieldError('description')" class="invalid-feedback">
-            {{ getFieldError('description') }}
+            {{ getFieldError("description") }}
           </div>
         </div>
       </div>
@@ -170,12 +176,18 @@
               formControlName="paymentStatus"
             >
               <option value="" disabled>Selecione o status</option>
-              <option *ngFor="let option of paymentStatusOptions" [value]="option.value">
+              <option
+                *ngFor="let option of paymentStatusOptions"
+                [value]="option.value"
+              >
                 {{ option.label }}
               </option>
             </select>
-            <div *ngIf="getFieldError('paymentStatus')" class="invalid-feedback">
-              {{ getFieldError('paymentStatus') }}
+            <div
+              *ngIf="getFieldError('paymentStatus')"
+              class="invalid-feedback"
+            >
+              {{ getFieldError("paymentStatus") }}
             </div>
           </div>
 
@@ -191,12 +203,18 @@
               formControlName="paymentMethod"
             >
               <option value="" disabled>Selecione o método</option>
-              <option *ngFor="let option of paymentMethodOptions" [value]="option.value">
+              <option
+                *ngFor="let option of paymentMethodOptions"
+                [value]="option.value"
+              >
                 {{ option.label }}
               </option>
             </select>
-            <div *ngIf="getFieldError('paymentMethod')" class="invalid-feedback">
-              {{ getFieldError('paymentMethod') }}
+            <div
+              *ngIf="getFieldError('paymentMethod')"
+              class="invalid-feedback"
+            >
+              {{ getFieldError("paymentMethod") }}
             </div>
           </div>
 
@@ -211,12 +229,18 @@
               [class.is-invalid]="isFieldInvalid('paymentFrequency')"
               formControlName="paymentFrequency"
             >
-              <option *ngFor="let option of paymentFrequencyOptions" [value]="option.value">
+              <option
+                *ngFor="let option of paymentFrequencyOptions"
+                [value]="option.value"
+              >
                 {{ option.label }}
               </option>
             </select>
-            <div *ngIf="getFieldError('paymentFrequency')" class="invalid-feedback">
-              {{ getFieldError('paymentFrequency') }}
+            <div
+              *ngIf="getFieldError('paymentFrequency')"
+              class="invalid-feedback"
+            >
+              {{ getFieldError("paymentFrequency") }}
             </div>
           </div>
 
@@ -232,8 +256,11 @@
               [class.is-invalid]="isFieldInvalid('paymentDueDate')"
               formControlName="paymentDueDate"
             />
-            <div *ngIf="getFieldError('paymentDueDate')" class="invalid-feedback">
-              {{ getFieldError('paymentDueDate') }}
+            <div
+              *ngIf="getFieldError('paymentDueDate')"
+              class="invalid-feedback"
+            >
+              {{ getFieldError("paymentDueDate") }}
             </div>
           </div>
         </div>
@@ -258,7 +285,7 @@
       >
         <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
         <i class="fas fa-save" *ngIf="!loading"></i>
-        {{ loading ? 'Salvando...' : 'Cadastrar Empresa' }}
+        {{ loading ? "Salvando..." : "Cadastrar Empresa" }}
       </button>
     </div>
   </form>
