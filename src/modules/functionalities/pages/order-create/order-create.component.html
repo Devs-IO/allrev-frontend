@@ -16,11 +16,14 @@
     <i class="bi bi-exclamation-triangle"></i> {{ error }}
     <div *ngIf="error.includes('autenticação')" class="mt-2">
       <small>
-        <strong>Possíveis causas:</strong><br>
-        • Você não está logado<br>
-        • Seu token expirou<br>
-        • Sua conta não possui as permissões necessárias (role: MANAGER_REVIEWERS)<br>
-        <a href="/login" class="btn btn-sm btn-primary mt-2">Fazer Login Novamente</a>
+        <strong>Possíveis causas:</strong><br />
+        • Você não está logado<br />
+        • Seu token expirou<br />
+        • Sua conta não possui as permissões necessárias (role:
+        MANAGER_REVIEWERS)<br />
+        <a href="/login" class="btn btn-sm btn-primary mt-2"
+          >Fazer Login Novamente</a
+        >
       </small>
     </div>
   </div>
@@ -29,13 +32,14 @@
   <div *ngIf="currentUser && !isLoading" class="alert alert-info">
     <small>
       <i class="bi bi-person-check"></i>
-      <strong>Usuário logado:</strong> {{ currentUser.name }} ({{ currentUser.email }}) - Role: {{ currentUser.role }}
+      <strong>Usuário logado:</strong> {{ currentUser.name }} ({{
+        currentUser.email
+      }}) - Role: {{ currentUser.role }}
     </small>
   </div>
 
   <!-- Main Form -->
   <form *ngIf="!isLoading" (ngSubmit)="submit()" #orderForm="ngForm">
-
     <!-- Client Selection -->
     <div class="card mb-4">
       <div class="card-header">
@@ -50,12 +54,33 @@
             class="form-control"
             [(ngModel)]="formData.clientId"
             name="clientId"
-            required>
+            required
+          >
             <option value="" disabled>Selecione o cliente</option>
             <option *ngFor="let client of clients" [value]="client.id">
               {{ client.name }} - {{ client.email }}
             </option>
           </select>
+        </div>
+
+        <!-- Contract Date -->
+        <div class="mb-3">
+          <label class="form-label">
+            <i class="bi bi-calendar2-event"></i> Data do Contrato *
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="formData.contractDate"
+            name="contractDate"
+            placeholder="dd/mm/aaaa"
+            appBrDatepicker
+            readonly
+            required
+          />
+          <div class="form-text">
+            <small>Data em que o serviço foi contratado.</small>
+          </div>
         </div>
 
         <!-- Descrição Geral da Ordem -->
@@ -68,7 +93,8 @@
             [(ngModel)]="formData.description"
             name="orderDescription"
             rows="3"
-            placeholder="Descreva informações gerais sobre esta ordem de serviço..."></textarea>
+            placeholder="Descreva informações gerais sobre esta ordem de serviço..."
+          ></textarea>
           <div class="form-text">
             <small>Esta descrição será aplicada à ordem como um todo.</small>
           </div>
@@ -78,33 +104,34 @@
 
     <!-- Services Section -->
     <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
         <h5><i class="bi bi-list-task"></i> Serviços Contratados</h5>
         <button
           type="button"
           class="btn btn-sm btn-outline-primary"
-          (click)="addService()">
+          (click)="addService()"
+        >
           <i class="bi bi-plus"></i> Adicionar Serviço
         </button>
       </div>
       <div class="card-body">
-
         <!-- Service Item Template -->
         <div
           *ngFor="let service of formData.services; let i = index"
           class="service-item border rounded p-3 mb-3"
-          [class.border-primary]="formData.services.length > 1">
-
+          [class.border-primary]="formData.services.length > 1"
+        >
           <!-- Service Header -->
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">
-              <i class="bi bi-gear"></i> Serviço {{ i + 1 }}
-            </h6>
+            <h6 class="mb-0"><i class="bi bi-gear"></i> Serviço {{ i + 1 }}</h6>
             <button
               *ngIf="formData.services.length > 1"
               type="button"
               class="btn btn-sm btn-outline-danger"
-              (click)="removeService(i)">
+              (click)="removeService(i)"
+            >
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -120,10 +147,15 @@
                 [(ngModel)]="service.functionalityId"
                 (ngModelChange)="onFunctionalityChange(i)"
                 [name]="'functionalityId_' + i"
-                required>
+                required
+              >
                 <option value="">Selecione o serviço</option>
-                <option *ngFor="let functionality of functionalities" [value]="functionality.id">
-                  {{ functionality.name }} (Min: R$ {{ functionality.minimumPrice }})
+                <option
+                  *ngFor="let functionality of functionalities"
+                  [value]="functionality.id"
+                >
+                  {{ functionality.name }} (Min: R$
+                  {{ functionality.minimumPrice }})
                 </option>
               </select>
             </div>
@@ -131,7 +163,8 @@
             <!-- Total Price -->
             <div class="col-md-6 mb-3">
               <label class="form-label">
-                <i class="bi bi-currency-dollar"></i> Valor Total *
+                <i class="bi bi-currency-dollar"></i> Valor Total
+                <span class="req">*</span>
               </label>
               <input
                 type="number"
@@ -141,8 +174,11 @@
                 step="0.01"
                 min="0.01"
                 placeholder="0,00"
-                (ngModelChange)="service.totalPrice = toNumber($event)"
-                required />
+                (ngModelChange)="
+                  service.totalPrice = toNumber($event); onTotalPriceChange(i)
+                "
+                required
+              />
             </div>
 
             <!-- Payment Method -->
@@ -154,7 +190,8 @@
                 class="form-control"
                 [(ngModel)]="service.paymentMethod"
                 [name]="'paymentMethod_' + i"
-                required>
+                required
+              >
                 <option *ngFor="let method of paymentMethods" [value]="method">
                   {{ method }}
                 </option>
@@ -167,12 +204,33 @@
                 <i class="bi bi-calendar-event"></i> Prazo de Entrega *
               </label>
               <input
-                type="date"
+                type="text"
                 class="form-control"
                 [(ngModel)]="service.clientDeadline"
                 [name]="'clientDeadline_' + i"
-                [min]="getTodayDate()"
-                required />
+                placeholder="dd/mm/aaaa"
+                appBrDatepicker
+                readonly
+                required
+              />
+            </div>
+
+            <!-- Client Status -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">
+                <i class="bi bi-flag"></i> Status *
+              </label>
+              <select
+                class="form-control"
+                [(ngModel)]="service.status"
+                [name]="'status_' + i"
+                required
+              >
+                <option [ngValue]="null" disabled>Selecione o status</option>
+                <option *ngFor="let opt of clientStatusOptions" [ngValue]="opt">
+                  {{ clientsStatusLabels[opt] || opt }}
+                </option>
+              </select>
             </div>
 
             <!-- Service Description -->
@@ -185,91 +243,134 @@
                 [(ngModel)]="service.description"
                 [name]="'serviceDescription_' + i"
                 rows="2"
-                placeholder="Descreva informações específicas sobre este serviço..."></textarea>
+                placeholder="Descreva informações específicas sobre este serviço..."
+              ></textarea>
               <div class="form-text">
-                <small>Informações adicionais sobre este serviço específico.</small>
+                <small
+                  >Informações adicionais sobre este serviço específico.</small
+                >
               </div>
             </div>
           </div>
 
-          <!-- Responsible Assignment -->
-          <div class="mt-3">
-            <div class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                [(ngModel)]="service.hasResponsible"
-                (ngModelChange)="onResponsibleToggle(i)"
-                [name]="'hasResponsible_' + i"
-                [id]="'hasResponsible_' + i">
-              <label class="form-check-label" [for]="'hasResponsible_' + i">
-                <i class="bi bi-person-gear"></i> Atribuir responsável específico
-              </label>
-            </div>
-
-            <!-- Info sobre atribuição automática -->
-            <div *ngIf="!service.hasResponsible" class="mt-2">
-              <small class="text-muted">
-                <i class="bi bi-info-circle"></i>
-                <strong>Atribuição automática:</strong> Você será o responsável por este serviço com prazo interno de 1 dia antes da entrega (ou hoje, se for mais próximo) e valor igual ao preço total.
-              </small>
-            </div>
-          </div>
-
-          <!-- Responsible Details (Conditional) -->
-          <div *ngIf="service.hasResponsible" class="mt-3 p-3 bg-light rounded">
+          <!-- Responsible Details (Always visible) -->
+          <div class="mt-3 p-3 bg-light rounded">
             <h6 class="text-secondary mb-3">
               <i class="bi bi-person-gear"></i> Dados do Responsável
+              <span class="req">*</span>
             </h6>
 
             <div class="row">
               <!-- Assistant Selection -->
-              <div class="col-md-4 mb-3">
+              <div class="col-md-4 col-lg-5 mb-3">
                 <label class="form-label">
-                  <i class="bi bi-person-check"></i> Responsável *
+                  <i class="bi bi-person-check"></i> Responsável
+                  <span class="req">*</span>
                 </label>
                 <select
                   class="form-control"
                   [(ngModel)]="service.responsibleUserId"
                   [name]="'responsibleUserId_' + i"
-                  [required]="service.hasResponsible">
+                  required
+                  [disabled]="!!service.responsibleLocked"
+                >
                   <option value="">Selecione o responsável</option>
-                  <option *ngFor="let assistant of assistants" [value]="assistant.id">
+                  <option
+                    *ngFor="let assistant of service.responsibleOptions"
+                    [value]="assistant.id"
+                  >
                     {{ assistant.name }}
                   </option>
                 </select>
               </div>
 
-              <!-- Assistant Deadline -->
-              <div class="col-md-4 mb-3">
+              <!-- Start Date -->
+              <div class="col-md-4 col-lg-3 mb-3">
                 <label class="form-label">
-                  <i class="bi bi-calendar-check"></i> Prazo Interno *
+                  <i class="bi bi-calendar2-week"></i> Início
+                  <span class="req">*</span>
                 </label>
                 <input
-                  type="date"
+                  type="text"
                   class="form-control"
-                  [(ngModel)]="service.assistantDeadline"
-                  [name]="'assistantDeadline_' + i"
-                  [min]="getTodayDate()"
-                  [max]="service.clientDeadline"
-                  [required]="service.hasResponsible" />
+                  [(ngModel)]="service.serviceStartDate"
+                  (change)="onServiceStartChange(i)"
+                  [name]="'serviceStartDate_' + i"
+                  placeholder="dd/mm/aaaa"
+                  appBrDatepicker
+                  readonly
+                  required
+                />
               </div>
 
-              <!-- Assistant Amount -->
-              <div class="col-md-4 mb-3">
+              <!-- End Date -->
+              <div class="col-md-4 col-lg-3 mb-3">
                 <label class="form-label">
-                  <i class="bi bi-cash"></i> Valor a Pagar *
+                  <i class="bi bi-calendar2-x"></i> Término
+                  <span class="req">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="service.serviceEndDate"
+                  [name]="'serviceEndDate_' + i"
+                  placeholder="dd/mm/aaaa"
+                  appBrDatepicker
+                  readonly
+                  required
+                />
+              </div>
+
+              <!-- User Status -->
+              <div class="col-md-4 col-lg-5 mb-3">
+                <label class="form-label">
+                  <i class="bi bi-flag-fill"></i> Status do Responsável
+                  <span class="req">*</span>
+                </label>
+                <select
+                  class="form-control"
+                  [(ngModel)]="service.userStatus"
+                  [name]="'userStatus_' + i"
+                  required
+                >
+                  <option [ngValue]="null" disabled>Selecione</option>
+                  <option *ngFor="let opt of userStatusOptions" [ngValue]="opt">
+                    {{ usersStatusLabels[opt] || opt }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Price -->
+              <div class="col-md-4 col-lg-4 mb-3">
+                <label class="form-label">
+                  <i class="bi bi-cash"></i> Valor (colaborador)
+                  <span class="req">*</span>
                 </label>
                 <input
                   type="number"
                   class="form-control"
-                  [(ngModel)]="service.assistantAmount"
-                  [name]="'assistantAmount_' + i"
+                  [(ngModel)]="service.price"
+                  [name]="'price_' + i"
                   step="0.01"
                   min="0.01"
                   placeholder="0,00"
-                  (ngModelChange)="service.assistantAmount = toNumber($event)"
-                  [required]="service.hasResponsible" />
+                  (ngModelChange)="service.price = toNumber($event)"
+                  required
+                />
+              </div>
+
+              <!-- Responsible Description -->
+              <div class="col-12 mb-3">
+                <label class="form-label">
+                  <i class="bi bi-card-text"></i> Descrição do Responsável
+                </label>
+                <textarea
+                  class="form-control"
+                  [(ngModel)]="service.userDescription"
+                  [name]="'userDescription_' + i"
+                  rows="2"
+                  placeholder="Instruções específicas ou observações para o responsável..."
+                ></textarea>
               </div>
             </div>
           </div>
@@ -278,37 +379,58 @@
     </div>
 
     <!-- Summary Card -->
-    <div class="card mb-4" *ngIf="formData.clientId && formData.services.length > 0">
+    <div
+      class="card mb-4"
+      *ngIf="formData.clientId && formData.services.length > 0"
+    >
       <div class="card-header">
         <h5><i class="bi bi-calculator"></i> Resumo da Ordem</h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
-            <p><strong>Cliente:</strong> {{ getClientName(formData.clientId) }}</p>
-            <p><strong>Quantidade de Serviços:</strong> {{ formData.services.length }}</p>
+            <p>
+              <strong>Cliente:</strong> {{ getClientName(formData.clientId) }}
+            </p>
+            <p>
+              <strong>Quantidade de Serviços:</strong>
+              {{ formData.services.length }}
+            </p>
 
             <!-- Info sobre atribuições -->
             <div class="mt-2">
               <small class="text-muted">
-                <strong>Atribuições:</strong><br>
-                • Específicas: {{ getSpecificAssignmentsCount() }}<br>
-                • Automáticas (você): {{ getAutomaticAssignmentsCount() }}
+                <strong>Atribuições:</strong><br />
+                • Específicas: {{ formData.services.length }}<br />
+                • Automáticas (você): 0
               </small>
             </div>
           </div>
           <div class="col-md-6">
-            <p><strong>Valor Total:</strong>
-              R$ {{ (getTotalValue() || 0).toFixed(2) }}
+            <p>
+              <strong>Valor Total:</strong> R$
+              {{ (getTotalValue() || 0).toFixed(2) }}
             </p>
-            <p><strong>Custos Assistentes:</strong>
-              R$ {{ (getTotalAssistantCosts() || 0).toFixed(2) }}
+            <p>
+              <strong>Custos Assistentes:</strong> R$
+              {{ (getTotalAssistantCosts() || 0).toFixed(2) }}
             </p>
-            <p><strong>Sua Receita Estimada:</strong>
-              <span class="text-success">R$ {{ (getEstimatedRevenue() || 0).toFixed(2) }}</span>
+            <p>
+              <strong>Sua Receita Estimada:</strong>
+              <span class="text-success"
+                >R$ {{ (getEstimatedRevenue() || 0).toFixed(2) }}</span
+              >
             </p>
-            <p><strong>Lucro Líquido:</strong>
-              <span class="text-success">R$ {{ getEstimatedProfit().toFixed(2) }}</span>
+            <p>
+              <strong>Lucro Líquido:</strong>
+              <span class="text-success"
+                >R$
+                {{
+                  (
+                    (getTotalValue() || 0) - (getTotalAssistantCosts() || 0)
+                  ).toFixed(2)
+                }}</span
+              >
             </p>
           </div>
         </div>
@@ -321,17 +443,22 @@
         type="button"
         class="btn btn-secondary"
         (click)="cancel()"
-        [disabled]="isSubmitting">
+        [disabled]="isSubmitting"
+      >
         <i class="bi bi-x-circle"></i> Cancelar
       </button>
 
       <button
         type="submit"
         class="btn btn-primary"
-        [disabled]="isSubmitting || !orderForm.form.valid">
-        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
+        [disabled]="isSubmitting || !orderForm.form.valid"
+      >
+        <span
+          *ngIf="isSubmitting"
+          class="spinner-border spinner-border-sm me-2"
+        ></span>
         <i *ngIf="!isSubmitting" class="bi bi-check-circle"></i>
-        {{ isSubmitting ? 'Criando...' : 'Criar Ordem de Serviço' }}
+        {{ isSubmitting ? "Criando..." : "Criar Ordem de Serviço" }}
       </button>
     </div>
   </form>

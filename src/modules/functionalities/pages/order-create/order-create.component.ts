@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { BrDatepickerDirective } from '../../../../app/core/directives/br-datepicker.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +11,12 @@ import {
   ServiceOrderItemDto,
   AssistantUser,
 } from '../../interfaces/service-order.interface';
+import {
+  FunctionalitiesClientsStatus,
+  FunctionalitiesUsersStatus,
+  FunctionalitiesClientsStatusLabels,
+  FunctionalitiesUsersStatusLabels,
+} from '../../interfaces/status.enums';
 import { FunctionalityDto } from '../../interfaces/functionalities.interface';
 import { Client } from '../../../clients/interfaces/client.interface';
 import { UserProfile } from '../../../users/interfaces/user-profile.interface';
@@ -19,11 +26,19 @@ interface ServiceOrderFormItem {
   totalPrice: number;
   paymentMethod: string;
   clientDeadline: string;
-  hasResponsible: boolean;
+  status: FunctionalitiesClientsStatus;
   responsibleUserId?: string;
+  // Single responsible available for this functionality (fetched on selection)
+  responsibleOptions?: AssistantUser[]; // kept for compatibility, but will contain a single option
+  responsibleLocked?: boolean; // UI: disable select when single responsible enforced
   assistantDeadline?: string;
   assistantAmount?: number;
+  serviceStartDate?: string;
+  serviceEndDate?: string;
+  userStatus?: FunctionalitiesUsersStatus;
+  price?: number;
   description?: string;
+  userDescription?: string; // explicit description for the responsible
 }
 
 @Component({
@@ -31,15 +46,27 @@ interface ServiceOrderFormItem {
   templateUrl: './order-create.component.html',
   styleUrls: ['./order-create.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    BrDatepickerDirective,
+  ],
 })
 export class OrderCreateComponent implements OnInit {
+  // Per-page cache: Map<entityKey, Map<tenantId, { data, expiresAt }>>
+  private cache = new Map<
+    string,
+    Map<string, { data: any[]; expiresAt: number }>
+  >();
   formData: {
     clientId: string;
+    contractDate: string; // BR format dd/MM/yyyy
     services: ServiceOrderFormItem[];
     description: string;
   } = {
     clientId: '',
+    contractDate: '',
     services: [this.createEmptyServiceItem()],
     description: '',
   };
@@ -65,12 +92,69 @@ export class OrderCreateComponent implements OnInit {
     'Dinheiro',
   ];
 
+  // Status options (clients side)
+  clientStatusOptions = [
+    FunctionalitiesClientsStatus.PENDING_PAYMENT,
+    FunctionalitiesClientsStatus.PAID,
+    FunctionalitiesClientsStatus.OVERDUE,
+    FunctionalitiesClientsStatus.CANCELED,
+  ];
+
+  userStatusOptions = [
+    FunctionalitiesUsersStatus.ASSIGNED,
+    FunctionalitiesUsersStatus.IN_PROGRESS,
+    FunctionalitiesUsersStatus.AWAITING_CLIENT,
+    FunctionalitiesUsersStatus.AWAITING_ADVISOR,
+    FunctionalitiesUsersStatus.COMPLETED,
+    FunctionalitiesUsersStatus.DELIVERED,
+    FunctionalitiesUsersStatus.CANCELED,
+  ];
+
+  // Labels maps
+  clientsStatusLabels = FunctionalitiesClientsStatusLabels;
+  usersStatusLabels = FunctionalitiesUsersStatusLabels;
+
   constructor(
     private functionalitiesService: FunctionalitiesService,
     private clientsService: ClientsService,
     private authService: AuthService,
     private router: Router
   ) {}
+
+  private getTenantId(): string {
+    return this.currentUser?.tenant?.id ?? '';
+  }
+
+  private getTTLms(): number {
+    return 7 * 60 * 1000; // 7 minutes
+  }
+
+  private getCache(entityKey: string, tenantId: string): any[] | null {
+    const byTenant = this.cache.get(entityKey);
+    if (!byTenant) return null;
+    const entry = byTenant.get(tenantId);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      byTenant.delete(tenantId);
+      return null;
+    }
+    return entry.data;
+  }
+
+  private setCache(entityKey: string, tenantId: string, data: any[]) {
+    const byTenant = this.cache.get(entityKey) ?? new Map();
+    byTenant.set(tenantId, { data, expiresAt: Date.now() + this.getTTLms() });
+    this.cache.set(entityKey, byTenant);
+  }
+
+  private invalidateCache(entityKey: string, tenantId?: string) {
+    if (!this.cache.has(entityKey)) return;
+    if (tenantId) {
+      this.cache.get(entityKey)!.delete(tenantId);
+    } else {
+      this.cache.delete(entityKey);
+    }
+  }
 
   private loadCurrentUser(): Promise<UserProfile> {
     return new Promise((resolve, reject) => {
@@ -126,12 +210,15 @@ export class OrderCreateComponent implements OnInit {
       functionalityId: '',
       totalPrice: 0,
       paymentMethod: 'Pix',
-      clientDeadline: '',
-      hasResponsible: false,
+      clientDeadline: '', // BR dd/MM/yyyy
+      status: FunctionalitiesClientsStatus.PENDING_PAYMENT,
       responsibleUserId: '',
-      assistantDeadline: '',
+      assistantDeadline: '', // BR dd/MM/yyyy (legacy)
       assistantAmount: 0,
+      userStatus: FunctionalitiesUsersStatus.ASSIGNED,
+      price: 0,
       description: '',
+      userDescription: '',
     };
   }
 
@@ -139,41 +226,76 @@ export class OrderCreateComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    // Debug: verificar token
-    const token = localStorage.getItem('token');
-    console.log('Token exists:', !!token);
-    console.log('Token value:', token ? 'Present' : 'Not found');
+    // Ensure we know the tenant for cache keys
+    this.loadCurrentUser()
+      .then(() => {
+        const tenantId = this.getTenantId();
 
-    // Load all required data in parallel, including current user
-    Promise.all([
-      this.clientsService.getClients().toPromise(),
-      this.functionalitiesService.getAll().toPromise(),
-      this.functionalitiesService.getAssistantUsers().toPromise(),
-      this.loadCurrentUser(),
-    ])
-      .then(([clients, functionalities, assistants, currentUser]) => {
-        console.log('Data loaded successfully:', {
-          clients,
-          functionalities,
-          assistants,
-          currentUser,
+        // Try cache first
+        const cachedClients = this.getCache('clients', tenantId) as
+          | Client[]
+          | null;
+        const cachedFuncs = this.getCache('functionalities', tenantId) as
+          | FunctionalityDto[]
+          | null;
+        const cachedAssistants = this.getCache('assistants', tenantId) as
+          | AssistantUser[]
+          | null;
+
+        if (cachedClients) this.clients = cachedClients;
+        if (cachedFuncs) this.functionalities = cachedFuncs;
+        if (cachedAssistants) this.assistants = cachedAssistants;
+
+        const allCached = !!(cachedClients && cachedFuncs && cachedAssistants);
+        if (allCached) {
+          this.isLoading = false;
+          this.formData.contractDate = this.getTodayDateBR();
+        }
+
+        // Background refresh: clients
+        this.clientsService.getClients().subscribe({
+          next: (clients) => {
+            this.clients = clients || [];
+            this.setCache('clients', tenantId, this.clients);
+          },
+          error: (error) => {
+            console.error('Erro ao carregar clientes:', error);
+            if (!allCached) this.error = 'Erro ao carregar clientes.';
+          },
+          complete: () => {
+            // no-op
+          },
         });
-        this.clients = clients || [];
-        this.functionalities = functionalities || [];
-        this.assistants = assistants || [];
-        this.currentUser = currentUser;
-        this.isLoading = false;
+        // Background refresh: functionalities
+        this.functionalitiesService.getAll().subscribe({
+          next: (funcs) => {
+            this.functionalities = funcs || [];
+            this.setCache('functionalities', tenantId, this.functionalities);
+          },
+          error: (error) => {
+            console.error('Erro ao carregar serviços:', error);
+            if (!allCached) this.error = 'Erro ao carregar serviços.';
+          },
+        });
+        // Background refresh: assistants/collaborators
+        this.functionalitiesService.getAssistantUsers().subscribe({
+          next: (assistants) => {
+            this.assistants = assistants || [];
+            this.setCache('assistants', tenantId, this.assistants);
+          },
+          error: (error) => {
+            console.error('Erro ao carregar responsáveis:', error);
+            if (!allCached) this.error = 'Erro ao carregar responsáveis.';
+          },
+          complete: () => {
+            this.isLoading = false;
+            this.formData.contractDate = this.getTodayDateBR();
+          },
+        });
       })
       .catch((error) => {
-        console.error('Error loading initial data:', error);
-        console.error('Error status:', error.status);
-        console.error('Error message:', error.message);
-
-        if (error.status === 401) {
-          this.error = 'Erro de autenticação. Faça login novamente.';
-        } else {
-          this.error = 'Erro ao carregar dados. Tente novamente.';
-        }
+        console.error('Error loading current user:', error);
+        this.error = 'Erro de autenticação. Faça login novamente.';
         this.isLoading = false;
       });
   }
@@ -188,12 +310,22 @@ export class OrderCreateComponent implements OnInit {
     }
   }
 
-  onResponsibleToggle(index: number) {
+  // When total price changes, if current user is the responsible, sync price to total
+  onTotalPriceChange(index: number) {
     const service = this.formData.services[index];
-    if (!service.hasResponsible) {
-      service.responsibleUserId = '';
-      service.assistantDeadline = '';
-      service.assistantAmount = 0;
+    service.totalPrice = Number(service.totalPrice);
+    this.syncPriceIfCurrentUser(index);
+  }
+
+  private syncPriceIfCurrentUser(index: number) {
+    const service = this.formData.services[index];
+    if (
+      service.responsibleUserId &&
+      this.currentUser &&
+      service.responsibleUserId === this.currentUser.id
+    ) {
+      service.price = Number(service.totalPrice) || 0;
+      service.assistantAmount = Number(service.totalPrice) || 0;
     }
   }
 
@@ -204,36 +336,107 @@ export class OrderCreateComponent implements OnInit {
     );
 
     if (functionality) {
-      // Set minimum price as default
-      if (service.totalPrice === 0) {
-        service.totalPrice = functionality.minimumPrice;
-      }
+      // Always set total price to the functionality minimum when service changes
+      service.totalPrice = functionality.minimumPrice;
 
-      // Set default assistant price if available
+      // Set default assistant price initially (may be overridden if responsible is current user)
       if (
-        functionality.defaultAssistantPrice &&
-        service.assistantAmount === 0
+        functionality.defaultAssistantPrice !== undefined &&
+        functionality.defaultAssistantPrice !== null
       ) {
         service.assistantAmount = functionality.defaultAssistantPrice;
+        service.price = functionality.defaultAssistantPrice;
+      } else {
+        service.assistantAmount = 0;
+        service.price = 0;
       }
+    }
+
+    // Reset and load single responsible; disable select
+    service.responsibleLocked = false;
+    service.responsibleUserId = '';
+    service.responsibleOptions = [];
+    if (service.functionalityId) {
+      this.functionalitiesService
+        .getFunctionalityResponsible(service.functionalityId)
+        .subscribe({
+          next: (resp) => {
+            if (resp && resp.userId) {
+              service.responsibleOptions = [
+                { id: resp.userId, name: resp.name } as AssistantUser,
+              ];
+              service.responsibleUserId = resp.userId;
+              service.responsibleLocked = true;
+              // Ensure pricing reflects responsible assignment
+              this.applyPricingDefaults(index);
+            } else {
+              service.responsibleOptions = [];
+              service.responsibleLocked = false;
+            }
+          },
+          error: (err) => {
+            console.error('Erro ao buscar responsável do serviço:', err);
+            service.responsibleOptions = [];
+            service.responsibleLocked = false;
+          },
+        });
     }
   }
 
+  private applyPricingDefaults(index: number) {
+    const service = this.formData.services[index];
+    const functionality = this.functionalities.find(
+      (f) => f.id === service.functionalityId
+    );
+    if (!functionality) return;
+
+    if (
+      this.currentUser &&
+      service.responsibleUserId &&
+      service.responsibleUserId === this.currentUser.id
+    ) {
+      // Logged-in user is responsible: collaborator amount equals total
+      const total = Number(service.totalPrice) || 0;
+      service.price = total;
+      service.assistantAmount = total;
+    } else {
+      // Another user is responsible: use default assistant price if available
+      if (
+        functionality.defaultAssistantPrice !== undefined &&
+        functionality.defaultAssistantPrice !== null
+      ) {
+        service.price = functionality.defaultAssistantPrice;
+        service.assistantAmount = functionality.defaultAssistantPrice;
+      }
+      // else keep whatever is currently set (likely 0, forcing user to input)
+    }
+  }
+
+  // helper: focus first service functionality select for quick correction
+  private focusFunctionalitySelect(index: number) {
+    setTimeout(() => {
+      const el = document.querySelector(
+        `select[name="functionalityId_${index}"]`
+      ) as HTMLSelectElement | null;
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+  // Auto-fill End Date as Start + 3 days when Start is provided and End is empty
+  onServiceStartChange(index: number) {
+    const service = this.formData.services[index];
+    if (service.serviceStartDate && !service.serviceEndDate) {
+      const start = this.parseBRDate(service.serviceStartDate);
+      if (start) {
+        const end = new Date(start);
+        end.setDate(end.getDate() + 3);
+        service.serviceEndDate = this.formatDateToBR(end);
+      }
+    }
+  }
   validateForm(): boolean {
-    this.error = null;
-
-    // Validate client
-    if (!this.formData.clientId) {
-      this.error = 'Cliente é obrigatório.';
-      return false;
-    }
-
-    // Validate services
-    if (this.formData.services.length === 0) {
-      this.error = 'Pelo menos um serviço deve ser informado.';
-      return false;
-    }
-
     for (let i = 0; i < this.formData.services.length; i++) {
       const service = this.formData.services[i];
 
@@ -260,49 +463,113 @@ export class OrderCreateComponent implements OnInit {
         this.error = `Serviço ${i + 1}: Prazo de entrega é obrigatório.`;
         return false;
       }
-
-      // Validate assistant fields if responsible is assigned
-      if (service.hasResponsible) {
-        if (!service.responsibleUserId) {
-          this.error = `Serviço ${
-            i + 1
-          }: Responsável é obrigatório quando atribuído.`;
-          return false;
-        }
-
-        if (!service.assistantDeadline) {
-          this.error = `Serviço ${i + 1}: Prazo do responsável é obrigatório.`;
-          return false;
-        }
-
-        // Validate and convert assistantAmount to number
-        const assistantAmount = Number(service.assistantAmount);
-        if (
-          !assistantAmount ||
-          assistantAmount <= 0 ||
-          isNaN(assistantAmount)
-        ) {
-          this.error = `Serviço ${
-            i + 1
-          }: Valor a pagar ao responsável deve ser um número maior que 0.`;
-          return false;
-        }
-        // Update the service with the converted number
-        service.assistantAmount = assistantAmount;
-
-        // Validate that assistant deadline is before or equal to client deadline
-        const assistantDate = new Date(service.assistantDeadline);
-        const clientDate = new Date(service.clientDeadline);
-
-        if (assistantDate > clientDate) {
-          this.error = `Serviço ${
-            i + 1
-          }: Prazo do responsável deve ser anterior ou igual ao prazo de entrega.`;
-          return false;
-        }
+      if (!this.parseBRDate(service.clientDeadline)) {
+        this.error = `Serviço ${
+          i + 1
+        }: Prazo de entrega inválido. Use o formato dd/mm/aaaa.`;
+        return false;
       }
-      // Note: Se hasResponsible = false, não validamos campos de assistant
-      // pois o usuário logado será atribuído automaticamente no submit
+
+      if (!service.status) {
+        this.error = `Serviço ${i + 1}: Status é obrigatório.`;
+        return false;
+      }
+
+      // Responsible is mandatory
+      if (!service.responsibleUserId) {
+        this.error = `Serviço ${i + 1}: Responsável é obrigatório.`;
+        return false;
+      }
+
+      // If responsible is current user, force amount to total
+      if (
+        this.currentUser &&
+        service.responsibleUserId === this.currentUser.id
+      ) {
+        service.price = Number(service.totalPrice);
+        service.assistantAmount = Number(service.totalPrice);
+      }
+
+      if (!service.serviceStartDate) {
+        this.error = `Serviço ${
+          i + 1
+        }: Data de início do colaborador é obrigatória.`;
+        return false;
+      }
+      if (!this.parseBRDate(service.serviceStartDate)) {
+        this.error = `Serviço ${
+          i + 1
+        }: Data de início inválida. Use dd/mm/aaaa.`;
+        return false;
+      }
+      if (!service.serviceEndDate) {
+        // Attempt auto-fill
+        this.onServiceStartChange(i);
+      }
+      if (!service.serviceEndDate) {
+        this.error = `Serviço ${
+          i + 1
+        }: Data de término do colaborador é obrigatória.`;
+        return false;
+      }
+      if (!this.parseBRDate(service.serviceEndDate)) {
+        this.error = `Serviço ${
+          i + 1
+        }: Data de término inválida. Use dd/mm/aaaa.`;
+        return false;
+      }
+
+      if (!service.userStatus) {
+        this.error = `Serviço ${i + 1}: Status do responsável é obrigatório.`;
+        return false;
+      }
+      // Validate and convert price to number
+      const assistantAmount = Number(service.price ?? service.assistantAmount);
+      if (!assistantAmount || assistantAmount <= 0 || isNaN(assistantAmount)) {
+        this.error = `Serviço ${
+          i + 1
+        }: Valor a pagar ao responsável deve ser um número maior que 0.`;
+        return false;
+      }
+      // Update values
+      service.price = assistantAmount;
+      service.assistantAmount = assistantAmount;
+
+      // Ensure selection equals the single allowed responsible
+      const allowedIds = (service.responsibleOptions || []).map((a) => a.id);
+      if (
+        allowedIds.length !== 1 ||
+        service.responsibleUserId !== allowedIds[0]
+      ) {
+        this.error = `Serviço ${
+          i + 1
+        }: Responsável inválido para esta funcionalidade. Escolha um da lista.`;
+        return false;
+      }
+      // Validate dates coherence
+      const startDate = this.parseBRDate(service.serviceStartDate)!;
+      const endDate = this.parseBRDate(service.serviceEndDate)!;
+      const clientDate = this.parseBRDate(service.clientDeadline)!;
+      if (endDate < startDate) {
+        this.error = `Serviço ${i + 1}: Término deve ser após o início.`;
+        return false;
+      }
+      if (endDate > clientDate) {
+        this.error = `Serviço ${
+          i + 1
+        }: Término deve ser anterior ou igual ao prazo do cliente.`;
+        return false;
+      }
+
+      // Client date must not be in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (clientDate < today) {
+        this.error = `Serviço ${
+          i + 1
+        }: Prazo do cliente não pode ser no passado.`;
+        return false;
+      }
     }
 
     return true;
@@ -332,75 +599,64 @@ export class OrderCreateComponent implements OnInit {
     console.log('Current user name:', this.currentUser.name);
 
     // Transform form data to DTO
+    const contractISO =
+      this.parseBRToISO(this.formData.contractDate) ||
+      this.parseBRToISO(this.getTodayDateBR())!;
     const dto: CreateServiceOrderDto = {
       clientId: this.formData.clientId,
+      contractDate: contractISO,
       description: this.formData.description,
       services: this.formData.services.map((service, index) => {
         const serviceItem: ServiceOrderItemDto = {
           functionalityId: service.functionalityId,
-          totalPrice: Number(service.totalPrice), // Garantir que seja number
+          totalPrice: Number(service.totalPrice),
           paymentMethod: service.paymentMethod,
-          clientDeadline: service.clientDeadline,
+          clientDeadline: this.parseBRToISO(service.clientDeadline)!,
+          status: service.status,
           description: service.description,
+          userDescription: service.userDescription,
         };
-
-        // Lógica de atribuição: se não tem responsável específico, atribuir ao usuário logado
-        const shouldAssignCurrentUser =
-          !service.hasResponsible || !service.responsibleUserId;
-
-        console.log(`Serviço ${index + 1}:`, {
-          hasResponsible: service.hasResponsible,
-          responsibleUserId: service.responsibleUserId,
-          shouldAssignCurrentUser,
-          currentUserId: this.currentUser?.id,
-        });
-
-        if (shouldAssignCurrentUser) {
-          console.log(
-            `Atribuindo serviço ${index + 1} ao usuário logado:`,
-            this.currentUser!.id
+        // Ensure selected responsible is within allowed options
+        const allowedIds = (service.responsibleOptions || []).map((a) => a.id);
+        if (
+          !service.responsibleUserId ||
+          allowedIds.length !== 1 ||
+          service.responsibleUserId !== allowedIds[0]
+        ) {
+          throw new Error(
+            'Responsável selecionado é inválido para este serviço.'
           );
-          serviceItem.responsibleUserId = this.currentUser!.id;
-
-          // Calcular data do assistant: 1 dia antes da data do cliente
-          const clientDate = new Date(service.clientDeadline);
-          const assistantDate = new Date(clientDate);
-          assistantDate.setDate(assistantDate.getDate() - 1);
-
-          // Verificar se a data calculada não é no passado
-          const today = new Date();
-          today.setHours(0, 0, 0, 0); // Reset time to start of day
-
-          if (assistantDate < today) {
-            // Se 1 dia antes for no passado, usar a data de hoje
-            serviceItem.assistantDeadline = today.toISOString().split('T')[0];
-            console.log(
-              `Data ajustada para hoje pois 1 dia antes seria no passado`
-            );
-          } else {
-            serviceItem.assistantDeadline = assistantDate
-              .toISOString()
-              .split('T')[0];
-          }
-
-          serviceItem.assistantAmount = Number(service.totalPrice); // Usar o valor total como receita do responsável
-
-          console.log(
-            `Prazo do cliente: ${service.clientDeadline}, Prazo do responsável: ${serviceItem.assistantDeadline}`
-          );
-        } else {
-          console.log(
-            `Usando responsável específico para serviço ${index + 1}:`,
-            service.responsibleUserId
-          );
-          serviceItem.responsibleUserId = service.responsibleUserId;
-          serviceItem.assistantDeadline = service.assistantDeadline;
-          serviceItem.assistantAmount = Number(service.assistantAmount); // Garantir que seja number
         }
-
+        serviceItem.responsibleUserId = service.responsibleUserId;
+        serviceItem.serviceStartDate = this.parseBRToISO(
+          service.serviceStartDate!
+        )!;
+        serviceItem.serviceEndDate = this.parseBRToISO(
+          service.serviceEndDate!
+        )!;
+        if (service.assistantDeadline) {
+          serviceItem.assistantDeadline = this.parseBRToISO(
+            service.assistantDeadline
+          )!; // legacy
+        }
+        serviceItem.userStatus = service.userStatus;
+        const computedPrice =
+          this.currentUser && service.responsibleUserId === this.currentUser.id
+            ? Number(service.totalPrice)
+            : Number(service.price ?? service.assistantAmount);
+        serviceItem.price = computedPrice;
+        serviceItem.assistantAmount = computedPrice;
         return serviceItem;
       }),
     };
+
+    // Sanitização extra: remover assistantDeadline vazia caso tenha escapado
+    dto.services = dto.services.map((s) => {
+      if ((s as any).assistantDeadline === '') {
+        delete (s as any).assistantDeadline;
+      }
+      return s;
+    });
 
     console.log('DTO to send:', dto);
     console.log('DTO types check:', {
@@ -422,7 +678,39 @@ export class OrderCreateComponent implements OnInit {
         console.error('Error status:', error.status);
         console.error('Error headers:', error.headers);
 
-        if (error.status === 401) {
+        const msg: string = error?.error?.message || '';
+        if (
+          error.status === 400 &&
+          msg.includes('Responsável não habilitado')
+        ) {
+          this.formData.services.forEach((service) => {
+            service.responsibleUserId = '';
+          });
+          alert(
+            'Responsável não habilitado para este serviço. Escolha um responsável válido da lista.'
+          );
+          this.error =
+            'Responsável não habilitado para este serviço. Escolha um responsável válido da lista.';
+          const idx = Math.max(
+            0,
+            this.formData.services.findIndex((s) => !!s)
+          );
+          this.focusFunctionalitySelect(idx === -1 ? 0 : idx);
+        } else if (
+          error.status === 400 &&
+          msg === 'responsible.invalid_for_service'
+        ) {
+          alert(
+            'Responsável inválido para este serviço. Selecione o responsável indicado.'
+          );
+          this.error =
+            'Responsável inválido para este serviço. Selecione o responsável indicado.';
+          const idx = Math.max(
+            0,
+            this.formData.services.findIndex((s) => !!s)
+          );
+          this.focusFunctionalitySelect(idx === -1 ? 0 : idx);
+        } else if (error.status === 401) {
           this.error = 'Erro de autenticação. Faça login novamente.';
         } else {
           this.error =
@@ -457,9 +745,48 @@ export class OrderCreateComponent implements OnInit {
     return client ? client.name : '';
   }
 
-  // Get today's date in YYYY-MM-DD format for min date validation
-  getTodayDate(): string {
-    return new Date().toISOString().split('T')[0];
+  // Date helpers (BR <-> ISO)
+  getTodayDateBR(): string {
+    return this.formatDateToBR(new Date());
+  }
+
+  private pad(n: number): string {
+    return n < 10 ? `0${n}` : String(n);
+  }
+
+  formatDateToBR(date: Date | string): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
+    return `${this.pad(d.getDate())}/${this.pad(
+      d.getMonth() + 1
+    )}/${d.getFullYear()}`;
+  }
+
+  parseBRDate(value?: string): Date | null {
+    if (!value) return null;
+    const m = value.match(/^\s*(\d{2})\/(\d{2})\/(\d{4})\s*$/);
+    if (!m) return null;
+    const dd = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10) - 1;
+    const yyyy = parseInt(m[3], 10);
+    const d = new Date(yyyy, mm, dd);
+    if (d.getFullYear() !== yyyy || d.getMonth() !== mm || d.getDate() !== dd)
+      return null;
+    return d;
+  }
+
+  parseBRToISO(value?: string): string | null {
+    const d = this.parseBRDate(value);
+    if (!d) return null;
+    const yyyy = d.getFullYear();
+    const mm = this.pad(d.getMonth() + 1);
+    const dd = this.pad(d.getDate());
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Template helper: coerce to number
+  toNumber(value: any): number {
+    return Number(value);
   }
 
   // Calculate total value of all services
@@ -479,50 +806,20 @@ export class OrderCreateComponent implements OnInit {
       return 0;
     }
     return this.formData.services.reduce((sum, service) => {
-      // Só calcular custo se tem responsável específico atribuído
-      if (service.hasResponsible && service.assistantAmount) {
+      if (service.assistantAmount) {
         return sum + (Number(service.assistantAmount) || 0);
       }
-      // Se não tem responsável específico, não há custo de assistente
       return sum;
     }, 0);
   }
 
-  toNumber(value: any): number {
-    return Number(value);
-  }
-
-  // Get count of services with specific responsible
-  getSpecificAssignmentsCount(): number {
-    if (!this.formData?.services) {
-      return 0;
-    }
-    return this.formData.services.filter((service) => service.hasResponsible)
-      .length;
-  }
-
-  // Get count of services with automatic assignment (current user)
-  getAutomaticAssignmentsCount(): number {
-    if (!this.formData?.services) {
-      return 0;
-    }
-    return this.formData.services.filter((service) => !service.hasResponsible)
-      .length;
-  }
-
-  // Calculate profit (revenue - costs)
-  getEstimatedProfit(): number {
-    return (this.getTotalValue() || 0) - (this.getTotalAssistantCosts() || 0);
-  }
-
-  // Calculate estimated revenue from services without specific assignment (automatic assignment)
+  // Calculate estimated revenue from services for current user (as responsible)
   getEstimatedRevenue(): number {
-    if (!this.formData?.services) {
+    if (!this.formData?.services || !this.currentUser) {
       return 0;
     }
     return this.formData.services.reduce((sum, service) => {
-      // Se não tem responsável específico, o valor total vira receita estimada
-      if (!service.hasResponsible) {
+      if (service.responsibleUserId === this.currentUser!.id) {
         return sum + (Number(service.totalPrice) || 0);
       }
       return sum;

@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../app/core/services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,7 @@ import { AuthService } from '../../app/core/services/auth.service';
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
-  isLoading = false;
+  loading = false;
   errorMessage = '';
 
   constructor(
@@ -36,44 +37,51 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {}
 
   login() {
+    // Previni reentrância e múltiplos cliques
+    if (this.loading) return;
     if (this.loginForm.valid) {
-      this.isLoading = true;
+      this.loading = true;
       this.errorMessage = '';
 
       const { email, password } = this.loginForm.value;
-      this.authService.login(email!, password!).subscribe({
-        next: (response) => {
-          console.log('Login successful:', response);
-          this.isLoading = false;
-          const mustChange =
-            response?.payload?.mustChangePassword === true ||
-            response?.user?.mustChangePassword === true;
-          if (mustChange) {
-            this.router.navigate(['/change-password']);
-          } else {
-            // prefer dashboard if present, fallback to home
-            this.router.navigate(['/home']);
-          }
-        },
-        error: (error) => {
-          console.error('Login error:', error);
-          this.isLoading = false;
-
-          // Tratamento de diferentes tipos de erro
-          if (error.status === 0) {
-            this.errorMessage =
-              'Erro de conexão. Verifique sua internet e tente novamente.';
-          } else if (error.status === 401) {
-            this.errorMessage = 'Email ou senha incorretos.';
-          } else if (error.status === 500) {
-            this.errorMessage =
-              'Erro interno do servidor. Tente novamente mais tarde.';
-          } else {
-            this.errorMessage =
-              error.error?.message || 'Erro inesperado. Tente novamente.';
-          }
-        },
-      });
+      this.authService
+        .login(email!, password!)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (response) => {
+            console.log('Login successful:', response);
+            const mustChange =
+              response?.payload?.mustChangePassword === true ||
+              response?.user?.mustChangePassword === true;
+            if (mustChange) {
+              this.router.navigate(['/change-password']);
+            } else {
+              // prefer dashboard if present, fallback to home
+              this.router.navigate(['/home']);
+            }
+          },
+          error: (error) => {
+            console.error('Login error:', error);
+            const backendMsg: string | undefined = error?.error?.message;
+            if (backendMsg === 'user.not_found') {
+              this.errorMessage = 'Usuário não encontrado ou senha inválida';
+              return;
+            }
+            // Tratamento de diferentes tipos de erro
+            if (error.status === 0) {
+              this.errorMessage =
+                'Erro de conexão. Verifique sua internet e tente novamente.';
+            } else if (error.status === 401) {
+              this.errorMessage = 'Usuário não encontrado ou senha inválida';
+            } else if (error.status === 500) {
+              this.errorMessage =
+                'Erro interno do servidor. Tente novamente mais tarde.';
+            } else {
+              this.errorMessage =
+                error.error?.message || 'Erro inesperado. Tente novamente.';
+            }
+          },
+        });
     }
   }
 

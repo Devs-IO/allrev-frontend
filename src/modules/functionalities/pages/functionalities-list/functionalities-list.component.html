@@ -1,6 +1,7 @@
-
 <div class="container my-4">
-  <h1 class="mb-4 text-primary"><i class="fas fa-cogs me-2"></i>Funcionalidades</h1>
+  <h1 class="mb-4 text-primary">
+    <i class="fas fa-cogs me-2"></i>Funcionalidades
+  </h1>
 
   <!-- Loading -->
   <div *ngIf="loading" class="text-center py-5">
@@ -30,11 +31,17 @@
           <tbody>
             <tr *ngFor="let functionality of functionalities; let i = index">
               <td>
-                <strong><i class="fas fa-cube me-2"></i>{{ functionality.name }}</strong>
+                <strong
+                  ><i class="fas fa-cube me-2"></i
+                  >{{ functionality.name }}</strong
+                >
               </td>
               <td>
                 <span *ngIf="functionality.description; else noDescription">
-                  {{ functionality.description | slice:0:50 }}<span *ngIf="functionality.description.length > 50">...</span>
+                  {{ functionality.description | slice : 0 : 50
+                  }}<span *ngIf="functionality.description.length > 50"
+                    >...</span
+                  >
                 </span>
                 <ng-template #noDescription>
                   <span class="text-muted">-</span>
@@ -42,24 +49,69 @@
               </td>
               <td>
                 <i class="fas fa-user me-1"></i>
-                {{ responsibleUsers[functionality.responsibleUserId] || '-' }}
+                <ng-container
+                  *ngIf="functionality.responsibleUserId; else noResp"
+                >
+                  <ng-container
+                    *ngIf="
+                      functionality.responsibleUserId === currentUserId;
+                      else otherResp
+                    "
+                  >
+                    <strong>{{ currentUserName || "Você" }}</strong>
+                    <span class="badge bg-info ms-1">Você</span>
+                  </ng-container>
+                  <ng-template #otherResp>
+                    {{
+                      responsibleUsers[functionality.responsibleUserId] || "-"
+                    }}
+                  </ng-template>
+                </ng-container>
+                <ng-template #noResp> - </ng-template>
               </td>
-              <td>{{ functionality.minimumPrice | currency:'BRL':'symbol':'1.2-2' }}</td>
               <td>
-                <span *ngIf="functionality.defaultAssistantPrice; else noAssistantPrice">
-                  {{ functionality.defaultAssistantPrice | currency:'BRL':'symbol':'1.2-2' }}
+                {{
+                  functionality.minimumPrice
+                    | currency : "BRL" : "symbol" : "1.2-2"
+                }}
+              </td>
+              <td>
+                <span
+                  *ngIf="
+                    functionality.defaultAssistantPrice;
+                    else noAssistantPrice
+                  "
+                >
+                  {{
+                    functionality.defaultAssistantPrice
+                      | currency : "BRL" : "symbol" : "1.2-2"
+                  }}
                 </span>
                 <ng-template #noAssistantPrice>
                   <span class="text-muted">-</span>
                 </ng-template>
               </td>
               <td>
-                <span class="badge" [class]="functionality.status === 'ACTIVE' ? 'bg-success' : 'bg-secondary'">
-                  <i class="fas" [ngClass]="functionality.status === 'ACTIVE' ? 'fa-check-circle' : 'fa-times-circle'"></i>
-                  {{ functionality.status === 'ACTIVE' ? 'Ativo' : 'Inativo' }}
+                <span
+                  class="badge"
+                  [class]="
+                    functionality.status === 'ACTIVE'
+                      ? 'bg-success'
+                      : 'bg-secondary'
+                  "
+                >
+                  <i
+                    class="fas"
+                    [ngClass]="
+                      functionality.status === 'ACTIVE'
+                        ? 'fa-check-circle'
+                        : 'fa-times-circle'
+                    "
+                  ></i>
+                  {{ functionality.status === "ACTIVE" ? "Ativo" : "Inativo" }}
                 </span>
               </td>
-              <td>{{ functionality.createdAt | date:'dd/MM/yyyy' }}</td>
+              <td>{{ functionality.createdAt | date : "dd/MM/yyyy" }}</td>
               <td>
                 <div class="btn-group" role="group">
                   <button
@@ -74,14 +126,16 @@
                     type="button"
                     class="btn btn-outline-warning action-btn"
                     title="Editar"
-                    (click)="edit(functionality.id)">
+                    (click)="edit(functionality.id)"
+                  >
                     <i class="fas fa-edit"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-danger action-btn"
                     title="Excluir"
-                    (click)="confirmDelete(functionality.id)">
+                    (click)="confirmDelete(functionality.id)"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -94,9 +148,14 @@
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!loading && functionalities.length === 0" class="text-center py-5">
+  <div
+    *ngIf="!loading && functionalities.length === 0"
+    class="text-center py-5"
+  >
     <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
     <h5 class="text-muted">Nenhuma funcionalidade cadastrada</h5>
-    <p class="text-muted">Clique no menu lateral para cadastrar uma nova funcionalidade.</p>
+    <p class="text-muted">
+      Clique no menu lateral para cadastrar uma nova funcionalidade.
+    </p>
   </div>
 </div>

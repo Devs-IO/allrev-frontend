@@ -2,15 +2,13 @@
   <h1 class="mb-4 text-primary">Clientes</h1>
 
   <!-- Loading -->
-  <div *ngIf="clients().length === 0" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-    <p class="mt-2">Carregando clientes...</p>
-  </div>
+  <div *ngIf="loading">Carregando clientes...</div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && error" class="alert alert-danger">{{ error }}</div>
 
   <!-- Tabela -->
-  <div *ngIf="clients().length > 0" class="card shadow-sm">
+  <div *ngIf="!loading && !error && (clients?.length ?? 0) > 0" class="card shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -25,7 +23,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let client of clients(); let i = index">
+            <tr *ngFor="let client of clients; let i = index">
               <th scope="row">{{ i + 1 }}</th>
               <td>
                 <strong><i class="fas fa-user me-2"></i>{{ client.name }}</strong>
@@ -73,9 +71,7 @@
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="clients().length === 0" class="text-center py-5">
-    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-    <h5 class="text-muted">Nenhum cliente cadastrado</h5>
-    <p class="text-muted">Clique no menu lateral para cadastrar um novo cliente.</p>
+  <div *ngIf="!loading && !error && (clients?.length ?? 0) === 0">
+    Nenhum cliente cadastrado<br/>Clique no menu lateral para cadastrar um novo cliente.
   </div>
 </div>

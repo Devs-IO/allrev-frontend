@@ -71,9 +71,12 @@ export class FunctionalitiesService {
   }
 
   // Listar todas as ordens de serviço (para managers)
-  getAllServiceOrdersList(): Observable<ServiceOrderResponse[]> {
+  getAllServiceOrdersList(
+    params?: Record<string, any>
+  ): Observable<ServiceOrderResponse[]> {
     return this.http.get<ServiceOrderResponse[]>(
-      `${this.apiUrl}${this.baseUrl}/service-order`
+      `${this.apiUrl}${this.baseUrl}/service-order`,
+      { params: params as any }
     );
   }
 
@@ -86,6 +89,24 @@ export class FunctionalitiesService {
 
   getAssistantUsers(): Observable<AssistantUser[]> {
     return this.http.get<AssistantUser[]>(`${this.apiUrl}/user/children`);
+  }
+
+  // Responsibles for a specific functionality (filtered and authorized by backend)
+  getFunctionalityResponsibles(
+    functionalityId: string
+  ): Observable<AssistantUser[]> {
+    return this.http.get<AssistantUser[]>(
+      `${this.apiUrl}${this.baseUrl}/${functionalityId}/responsibles`
+    );
+  }
+
+  // Single responsible for a functionality (id, name, email)
+  getFunctionalityResponsible(
+    functionalityId: string
+  ): Observable<{ userId: string; name: string; email: string }> {
+    return this.http.get<{ userId: string; name: string; email: string }>(
+      `${this.apiUrl}${this.baseUrl}/${functionalityId}/responsible`
+    );
   }
 
   update(

@@ -79,12 +79,8 @@ export class TenantCreateComponent implements OnInit {
     const oneYearFromToday = this.getOneYearFromTodayIsoDate();
     this.tenantForm = this.fb.group({
       code: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(3),
-          Validators.maxLength(20),
-        ],
+        { value: this.generateTenantCode(), disabled: true },
+        [Validators.minLength(3), Validators.maxLength(20)],
       ],
       companyName: [
         '',
@@ -129,10 +125,10 @@ export class TenantCreateComponent implements OnInit {
     if (this.tenantForm.valid) {
       this.loading = true;
       this.error = null;
-
+      const raw = this.tenantForm.getRawValue();
       const formData: CreateTenantDto = {
-        ...this.tenantForm.value,
-        paymentDueDate: new Date(this.tenantForm.value.paymentDueDate),
+        ...raw,
+        paymentDueDate: new Date(raw.paymentDueDate),
       };
 
       this.tenantsService.createTenant(formData).subscribe({
@@ -199,5 +195,15 @@ export class TenantCreateComponent implements OnInit {
   isFieldInvalid(fieldName: string): boolean {
     const field = this.tenantForm.get(fieldName);
     return !!(field?.errors && field.touched);
+  }
+
+  private generateTenantCode(): string {
+    // TEN-<6 uppercase base36>
+    const rand = Math.random()
+      .toString(36)
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '');
+    const suffix = rand.substring(0, 6).padEnd(6, 'X');
+    return `TEN-${suffix}`;
   }
 }

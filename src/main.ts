@@ -1,5 +1,8 @@
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import {
   provideHttpClient,
   withInterceptors,
@@ -28,6 +31,9 @@ export function jwtOptionsFactory() {
   };
 }
 
+// Registrar locale pt-BR para formatação dd/MM/yyyy em tela
+registerLocaleData(localePt);
+
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(routes), // Registrar as rotas
@@ -53,5 +59,6 @@ bootstrapApplication(AppComponent, {
       maxAge: 25, // Limita o histórico de ações
       //logOnly: !environment.production, // Apenas visualização em produção
     }),
+    { provide: LOCALE_ID, useValue: 'pt' },
   ],
 }).catch((err) => console.error(err));

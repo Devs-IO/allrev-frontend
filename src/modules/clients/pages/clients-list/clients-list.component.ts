@@ -1,18 +1,22 @@
-import { Component, signal, WritableSignal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ClientsService } from '../../services/clients.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Client } from '../../interfaces/client.interface';
+import { finalize, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-clients-list',
   templateUrl: './clients-list.component.html',
-  styleUrl: './clients-list.component.scss',
+  styleUrls: ['./clients-list.component.scss'],
   standalone: true,
   imports: [CommonModule],
 })
-export class ClientsListComponent {
-  clients: WritableSignal<Client[]> = signal<Client[]>([]);
+export class ClientsListComponent implements OnInit {
+  // Estados: dados, loading e erro
+  clients: Client[] = [];
+  loading = false;
+  error: string | null = null;
 
   constructor(private clientsService: ClientsService, private router: Router) {}
 
@@ -21,17 +25,36 @@ export class ClientsListComponent {
   }
 
   loadClients() {
-    this.clientsService.getClients().subscribe((data) => {
-      return this.clients.set(data);
-    });
+    this.loading = true;
+    this.error = null;
+
+    this.clientsService
+      .getClients()
+      .pipe(
+        take(1), // evita múltiplas subs durante filtros/paginação
+        finalize(() => (this.loading = false)) // garante que loading será desligado
+      )
+      .subscribe({
+        next: (resp) => {
+          this.clients = resp || [];
+          this.error = null;
+        },
+        error: () => {
+          this.error = 'Falha ao carregar clientes.';
+          this.clients = [];
+        },
+      });
   }
 
   deleteClients(id: string) {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
-      this.clientsService.deleteClients(id).subscribe({
-        next: () => this.loadClients(),
-        error: () => alert('Erro ao excluir cliente'),
-      });
+      this.clientsService
+        .deleteClients(id)
+        .pipe(take(1))
+        .subscribe({
+          next: () => this.loadClients(),
+          error: () => alert('Erro ao excluir cliente'),
+        });
     }
   }
 
