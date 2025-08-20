@@ -1,0 +1,24 @@
+@use '../../../../styles/variables.scss' as *;
+
+.orders-list {
+  .orders-list-toolbar {
+    .btn + .btn { margin-left: .5rem; }
+  }
+  .orders-list-filter { border-radius: .5rem; }
+  .orders-list-table {
+    thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
+    tbody tr:hover { background-color: rgba(0,0,0,.02); }
+    tbody tr:nth-child(odd) { background-color: rgba(0,0,0,.01); }
+  }
+  .orders-list-chips .badge { display: inline-flex; align-items: center; gap: .25rem; }
+
+  .orders-list-groups {
+    .card-header { cursor: pointer; }
+    .card + .card { margin-top: 1rem; }
+    .badge.text-bg-secondary { font-weight: 500; }
+  }
+
+  .orders-list-quick {
+    .form-check-input { margin-top: 0; }
+  }
+}

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   FunctionalityDto,
   CreateFunctionalityDto,
@@ -17,13 +18,17 @@ import {
   AssignmentResponse,
 } from '../interfaces/order-list.interface';
 import { environment } from '../../../environments/environment';
+import { OrdersService } from '../../orders/services/orders.service';
+import { FunctionalitiesOrdersAdapter } from '../../orders/adapters/functionalities.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class FunctionalitiesService {
   private baseUrl = '/functionalities';
   private apiUrl = environment.apiUrl; // URL base da API
+  // feature flag to switch to new orders backend via adapter
+  private useOrdersAdapter = true;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private orders: OrdersService) {}
 
   getAll(): Observable<FunctionalityDto[]> {
     return this.http.get<FunctionalityDto[]>(`${this.apiUrl}${this.baseUrl}`);
@@ -41,24 +46,71 @@ export class FunctionalitiesService {
   }
 
   // Service Order methods
+  /**
+   * @deprecated Usar OrdersService.create com DTO de Orders. Mantido para compatibilidade das telas antigas.
+   */
   createServiceOrder(
     dto: CreateServiceOrderDto
   ): Observable<ServiceOrderResponseDto> {
+    if (this.useOrdersAdapter) {
+      const payload = FunctionalitiesOrdersAdapter.toCreateOrderDto(dto);
+      return this.orders
+        .create(payload)
+        .pipe(
+          map((order) =>
+            FunctionalitiesOrdersAdapter.toLegacyServiceOrderResponse(order)
+          )
+        );
+    }
     return this.http.post<ServiceOrderResponseDto>(
       `${this.apiUrl}${this.baseUrl}/service-order`,
       dto
     );
   }
 
+  /**
+   * @deprecated Usar OrdersService.list + mapeamento para o shape legado (ServiceOrderResponseDto).
+   */
   getAllServiceOrders(): Observable<ServiceOrderResponseDto[]> {
+    if (this.useOrdersAdapter) {
+      return this.orders
+        .list()
+        .pipe(
+          map((page) =>
+            (page?.data || []).map((o) =>
+              FunctionalitiesOrdersAdapter.toLegacyServiceOrderResponse(o)
+            )
+          )
+        );
+    }
     return this.http.get<ServiceOrderResponseDto[]>(
       `${this.apiUrl}${this.baseUrl}/service-order`
     );
   }
 
+  /**
+   * @deprecated Usar OrdersService.list({ clientId }) ou findOne, com mapeamento para o shape legado.
+   */
   getServiceOrderByClient(
     clientId: string
   ): Observable<ServiceOrderResponseDto> {
+    if (this.useOrdersAdapter) {
+      // best-effort: list by client and return first
+      return this.orders.list({ clientId, pageSize: 1 }).pipe(
+        map((page) => {
+          const first = page?.data?.[0];
+          if (!first) {
+            throw new HttpErrorResponse({
+              status: 404,
+              error: { message: 'not_found' },
+            });
+          }
+          return FunctionalitiesOrdersAdapter.toLegacyServiceOrderResponse(
+            first
+          );
+        })
+      );
+    }
     return this.http.get<ServiceOrderResponseDto>(
       `${this.apiUrl}${this.baseUrl}/service-order/client/${clientId}`
     );
@@ -71,9 +123,23 @@ export class FunctionalitiesService {
   }
 
   // Listar todas as ordens de serviço (para managers)
+  /**
+   * @deprecated Usar OrdersService.list com paginação e mapeamento para o shape legado de lista.
+   */
   getAllServiceOrdersList(
     params?: Record<string, any>
   ): Observable<ServiceOrderResponse[]> {
+    if (this.useOrdersAdapter) {
+      return this.orders
+        .list(params)
+        .pipe(
+          map((page) =>
+            (page.data || []).map((o) =>
+              FunctionalitiesOrdersAdapter.toLegacyServiceOrderListItem(o)
+            )
+          )
+        );
+    }
     return this.http.get<ServiceOrderResponse[]>(
       `${this.apiUrl}${this.baseUrl}/service-order`,
       { params: params as any }

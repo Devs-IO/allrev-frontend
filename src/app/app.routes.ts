@@ -71,6 +71,33 @@ export const routes: Routes = [
         data: { roles: [Role.MANAGER_REVIEWERS] },
       },
       {
+        path: 'orders',
+        loadComponent: () =>
+          import(
+            '../modules/orders/pages/orders-list/orders-list.component'
+          ).then((m) => m.OrdersListComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
+        path: 'orders/create',
+        loadComponent: () =>
+          import(
+            '../modules/orders/pages/orders-create/orders-create.component'
+          ).then((m) => m.OrdersCreateComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
+        path: 'orders/:id',
+        loadComponent: () =>
+          import(
+            '../modules/orders/pages/orders-detail/orders-detail.component'
+          ).then((m) => m.OrdersDetailComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+      },
+      {
         path: 'order/create',
         loadComponent: () =>
           import(

@@ -1,8 +1,16 @@
-<aside id="sidebarMenu" class="sidebar collapse show" [class.collapsed]="isCollapsed()">
-
+<aside
+  id="sidebarMenu"
+  class="sidebar collapse show"
+  [class.collapsed]="isCollapsed()"
+>
   <!-- 🔹 Botão de Expandir/Retrair -->
   <div class="toggle-container">
-    <button class="btn toggle-btn" (click)="toggleSidebar()">
+    <button
+      class="btn toggle-btn"
+      (click)="toggleSidebar()"
+      aria-label="Expandir ou retrair menu lateral"
+      [attr.aria-pressed]="isCollapsed()"
+    >
       <i class="bi bi-list"></i>
     </button>
   </div>
@@ -11,17 +19,38 @@
   <ul class="menu nav flex-column">
     <ng-container *ngFor="let item of filteredMenuItems">
       <li class="nav-item">
-        <a [routerLink]="item.route" class="nav-link d-flex justify-content-between align-items-center"
-          (click)="toggleSubmenu(item.menu)">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link d-flex justify-content-between align-items-center"
+          (click)="toggleSubmenu(item.menu)"
+          [attr.aria-label]="'Ir para ' + item.menu"
+          [attr.aria-expanded]="item.subRoutes ? isOpen(item.menu) : null"
+        >
           <span>
             <i [class]="item.icon"></i>
             <span *ngIf="!isCollapsed()">{{ item.menu }}</span>
           </span>
-          <i *ngIf="item.subRoutes" class="bi bi-chevron-down submenu-icon" [class.rotate]="isOpen(item.menu)"></i>
+          <i
+            *ngIf="item.subRoutes"
+            class="bi bi-chevron-down submenu-icon"
+            [class.rotate]="isOpen(item.menu)"
+          ></i>
         </a>
-        <ul *ngIf="item.subRoutes" class="submenu nav flex-column" [class.active]="isOpen(item.menu)">
+        <ul
+          *ngIf="item.subRoutes"
+          class="submenu nav flex-column"
+          [class.active]="isOpen(item.menu)"
+        >
           <li *ngFor="let sub of item.subRoutes">
-            <a [routerLink]="sub.route" class="nav-link">
+            <a
+              [routerLink]="sub.route"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="nav-link"
+              [attr.aria-label]="'Ir para ' + sub.label"
+            >
               <i [class]="sub.icon + ' me-2'"></i>
               <span *ngIf="!isCollapsed()">{{ sub.label }}</span>
             </a>
@@ -35,7 +64,7 @@
   <div class="sidebar-footer">
     <div class="user-info">
       <i class="bi bi-person-circle me-2"></i>
-      <span *ngIf="!isCollapsed()">{{ userEmail() || 'Carregando...' }}</span>
+      <span *ngIf="!isCollapsed()">{{ userEmail() || "Carregando..." }}</span>
     </div>
     <div class="datetime">
       <i class="bi bi-clock me-2"></i>

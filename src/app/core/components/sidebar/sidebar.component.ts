@@ -25,15 +25,35 @@ export class SidebarComponent implements OnInit {
 
   menuItems = [
     {
+      role: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
+      menu: 'Ordens OLD',
+      route: '/order/list',
+      icon: 'bi bi-receipt-cutoff',
+      subRoutes: [
+        {
+          label: 'Listar',
+          route: '/order/list',
+          icon: 'bi bi-list-check',
+          allowed: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
+        },
+        {
+          label: 'Nova Ordem',
+          route: '/order/create',
+          icon: 'bi bi-plus-circle',
+          allowed: [Role.MANAGER_REVIEWERS],
+        },
+      ],
+    },
+    {
       role: [Role.MANAGER_REVIEWERS, Role.CLIENT, Role.ASSISTANT_REVIEWERS],
       menu: 'Ordens',
-      route: '/order/list',
-      icon: 'bi bi-clipboard-check',
+      route: '/orders',
+      icon: 'bi bi-receipt',
       // subRoutes serão filtradas conforme role (assistente não pode criar)
       subRoutes: [
         {
           label: 'Listar Ordens',
-          route: '/order/list',
+          route: '/orders',
           icon: 'bi bi-list-check',
           allowed: [
             Role.MANAGER_REVIEWERS,
@@ -43,7 +63,7 @@ export class SidebarComponent implements OnInit {
         },
         {
           label: 'Nova Ordem',
-          route: '/order/create',
+          route: '/orders/create',
           icon: 'bi bi-plus-circle',
           allowed: [Role.MANAGER_REVIEWERS, Role.CLIENT],
         },
@@ -174,9 +194,7 @@ export class SidebarComponent implements OnInit {
   }
 
   isAuthorized(roles: Role[]): boolean {
-    if (this.isAdmin) {
-      return roles.includes(Role.ADMIN); // não exibe menus sem ADMIN explicitamente
-    }
+    if (this.isAdmin) return true;
     return (
       roles.length === 0 ||
       (this.userRole != null && roles.includes(this.userRole))
