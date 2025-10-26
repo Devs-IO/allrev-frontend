@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CreateOrderDto,
@@ -8,6 +8,7 @@ import {
   OrderResponseDto,
   PaymentStatus,
 } from '../../../app/shared/models/orders';
+import { OrderResponseDto as IOrder } from '../interfaces/order.interface';
 
 export interface ListOrdersParams {
   paymentStatus?: PaymentStatus;
@@ -26,6 +27,9 @@ export interface PaginatedOrders {
   total: number;
 }
 
+// Interface para os filtros (espelhando ListOrdersQueryDto do backend)
+export type IListOrdersFilter = ListOrdersParams;
+
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
   private http = inject(HttpClient);
@@ -39,6 +43,26 @@ export class OrdersService {
     return this.http.get<PaginatedOrders>(this.baseUrl, {
       params: params as any,
     });
+  }
+
+  // Método ATUALIZADO para buscar ordens com filtros (retorna somente a lista)
+  getAllOrders(filters?: IListOrdersFilter): Observable<IOrder[]> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          if ((key === 'from' || key === 'to') && value instanceof Date) {
+            params = params.append(key, value.toISOString().split('T')[0]);
+          } else {
+            params = params.append(key, String(value));
+          }
+        }
+      });
+    }
+    // O endpoint atual retorna paginação; aqui normalizamos para apenas o array de dados
+    return this.http
+      .get<PaginatedOrders>(this.baseUrl, { params })
+      .pipe(map((res) => res.data as IOrder[]));
   }
 
   findOne(id: string): Observable<OrderResponseDto> {

@@ -5,7 +5,12 @@ export function round2(n: number): number {
 }
 
 export function sum(arr: Array<number | undefined | null>): number {
-  return round2((arr || []).reduce((acc, v) => acc + (Number(v || 0) || 0), 0));
+  const values = arr ?? [];
+  const total = values.reduce<number>(
+    (acc, v) => acc + (Number(v ?? 0) || 0),
+    0
+  );
+  return round2(total);
 }
 
 export function formatPtBR(n: number): string {
