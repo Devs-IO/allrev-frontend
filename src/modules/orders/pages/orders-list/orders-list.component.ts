@@ -15,9 +15,18 @@ import {
   OrdersService,
   IListOrdersFilter,
 } from '../../services/orders.service';
+// CORREÇÃO: Importamos 'OrderItemResponsibility' (nome correto)
 import { OrderResponseDto as IOrder } from '../../interfaces/order.interface';
+
+// Imports para os novos filtros
 import { ClientsService } from '../../../clients/services/clients.service';
 import { Client } from '../../../clients/interfaces/client.interface';
+import { FunctionalitiesService } from '../../../functionalities/services/functionalities.service';
+// CORREÇÃO: Importamos 'FunctionalityDto' (nome correto)
+import { FunctionalityDto } from '../../../functionalities/interfaces/functionalities.interface'; // <-- Nome corrigido
+import { UsersService } from '../../../users/services/users.service';
+// CORREÇÃO: Importamos 'ResponseUserDto' (tipo correto retornado pelo service)
+import { ResponseUserDto } from '../../../users/types/user.dto'; // <-- Tipo corrigido
 
 // Enumerações locais para Status
 enum PaymentStatus {
@@ -33,13 +42,7 @@ enum WorkStatus {
   CANCELED = 'CANCELED',
 }
 
-// Definição mínima local para o evento de paginação
-interface PageEvent {
-  pageIndex: number;
-  pageSize: number;
-}
-
-// REMOVEMOS A INTERFACE 'PaginatedOrdersResponse' pois a API não a retorna.
+// Interface de Paginação removida (API não suporta)
 
 @Component({
   selector: 'app-orders-list',
@@ -50,11 +53,17 @@ interface PageEvent {
 })
 export class OrdersListComponent implements OnInit, OnDestroy {
   filterForm!: FormGroup;
-  clients$!: Observable<Client[]>;
-  private clientsList: Client[] = []; // Para guardar clientes para 'getClientName'
-
   orders$ = new BehaviorSubject<IOrder[]>([]);
   isLoading$ = new BehaviorSubject<boolean>(false);
+
+  // Observables para os filtros
+  clients$!: Observable<Client[]>;
+  // CORREÇÃO: Tipo 'Functionality' alterado para 'FunctionalityDto'
+  functionalities$!: Observable<FunctionalityDto[]>;
+  // CORREÇÃO: Tipo 'User' alterado para 'ResponseUserDto'
+  users$!: Observable<ResponseUserDto[]>;
+  // Lista local de clientes para fallback de exibição de nome
+  private clientsList: Client[] = [];
 
   // Mapeamentos para os selects de status
   paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
@@ -66,10 +75,8 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     value,
   }));
 
-  // Paginação
-  totalOrders = 0; // API NÃO FORNECE. Paginação será limitada.
-  pageSize = 10;
-  currentPage = 0; // pageIndex (base 0)
+  // Variáveis de Paginação removidas
+  // totalOrders, pageSize, currentPage
 
   private destroy$ = new Subject<void>();
   private filters$ = new BehaviorSubject<IListOrdersFilter>({});
@@ -78,12 +85,16 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private ordersService: OrdersService,
     private clientsService: ClientsService,
+    private functionalitiesService: FunctionalitiesService,
+    private usersService: UsersService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.buildFilterForm();
     this.loadClients();
+    this.loadFunctionalities();
+    this.loadUsers();
     this.setupFilterSubscription();
   }
 
@@ -95,6 +106,8 @@ export class OrdersListComponent implements OnInit, OnDestroy {
   private buildFilterForm(): void {
     this.filterForm = this.fb.group({
       clientId: [''],
+      functionalityId: [''],
+      responsibleId: [''],
       from: [null],
       to: [null],
       paymentStatus: [''],
@@ -102,17 +115,22 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // CORREÇÃO ERRO 1 (CLIENTE):
-  // Carrega os clientes e também os guarda numa lista local
   private loadClients(): void {
-    this.clients$ = this.clientsService.getClients().pipe(
-      tap((clients) => {
-        this.clientsList = clients;
-      })
-    );
+    this.clients$ = this.clientsService
+      .getClients()
+      .pipe(tap((clients) => (this.clientsList = clients)));
   }
 
-  // Escuta mudanças nos filtros e na paginação
+  private loadFunctionalities(): void {
+    // Usa o método existente no service
+    this.functionalities$ = this.functionalitiesService.getAll();
+  }
+
+  private loadUsers(): void {
+    // CORREÇÃO: O 'getUsers()' já retorna o tipo correto (ResponseUserDto[])
+    this.users$ = this.usersService.getUsers();
+  }
+
   private setupFilterSubscription(): void {
     combineLatest([
       this.filterForm.valueChanges.pipe(
@@ -126,32 +144,28 @@ export class OrdersListComponent implements OnInit, OnDestroy {
           this.isLoading$.next(true);
 
           const combinedFilters: IListOrdersFilter = {
-            ...currentFilters,
+            // ...currentFilters, // Removido (sem paginação)
             ...formValues,
             clientId: formValues.clientId || undefined,
+            functionalityId: formValues.functionalityId || undefined,
+            responsibleId: formValues.responsibleId || undefined,
             paymentStatus: formValues.paymentStatus || undefined,
             workStatus: formValues.workStatus || undefined,
             from: formValues.from || undefined,
             to: formValues.to || undefined,
-            page: (currentFilters.page ?? 0) + 1, // API espera page 1
-            pageSize: currentFilters.pageSize ?? this.pageSize,
+            // 'page' e 'pageSize' removidos
           };
 
-          // --- CORREÇÃO ERRO 2 (PAGINAÇÃO) ---
-          // Chamamos o serviço. Ele retorna Observable<IOrder[]>
-          // Removemos o 'as Observable<PaginatedOrdersResponse>'
-          return this.ordersService.getAllOrders(combinedFilters);
+          // CORREÇÃO: A API retorna 'IOrder[]' diretamente, não um objeto paginado
+          return this.ordersService.getAllOrders(combinedFilters) as Observable<
+            IOrder[]
+          >;
         }),
-        tap((orders: IOrder[]) => {
-          // --- CORREÇÃO ERRO 2 (PAGINAÇÃO) ---
-          // Recebemos 'orders' (um array) em vez de 'response'
+        tap((orders) => {
+          // CORREÇÃO: Recebemos 'orders' (um array) diretamente
           this.orders$.next(orders);
-
-          // Solução paliativa para paginação:
-          // A API não retorna o total. Assumimos o total como o nº que recebemos.
-          // Isto vai fazer o componente de paginação parecer que só tem 1 página.
-          this.totalOrders = orders.length;
-
+          // (Podes guardar a contagem da página atual se quiseres)
+          // this.totalOrders = orders.length;
           this.isLoading$.next(false);
         }),
         takeUntil(this.destroy$)
@@ -159,10 +173,11 @@ export class OrdersListComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  // Limpa os filtros
   clearFilters(): void {
     this.filterForm.reset({
       clientId: '',
+      functionalityId: '',
+      responsibleId: '',
       from: null,
       to: null,
       paymentStatus: '',
@@ -170,36 +185,24 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Navega para a página de detalhes
+  // Navegação
   viewDetails(orderId: string): void {
     this.router.navigate(['/orders', orderId]);
   }
 
-  // Navega para a página de criação
   goToCreateOrder(): void {
     this.router.navigate(['/orders/create']);
   }
 
-  // Evento da paginação
-  handlePageEvent(event: PageEvent): void {
-    this.currentPage = event.pageIndex;
-    this.pageSize = event.pageSize;
+  // A função 'handlePageEvent' foi removida (sem paginação)
 
-    this.filters$.next({
-      ...this.filters$.value,
-      page: this.currentPage,
-      pageSize: this.pageSize,
-    });
-  }
+  // --- FUNÇÕES HELPER PARA O TEMPLATE ---
 
-  // --- CORREÇÃO ERRO 1 (CLIENTE) ---
-  // Função usada pelo HTML para encontrar o nome do cliente pelo ID
+  // Fallback para obter o nome do cliente quando não vier no DTO
   getClientName(clientId: string): string {
-    if (!clientId || !this.clientsList || this.clientsList.length === 0) {
-      return 'N/A';
-    }
-    const client = this.clientsList.find((c) => c.id === clientId);
-    return client ? client.name : 'Cliente não encontrado';
+    if (!clientId) return 'N/A';
+    const found = this.clientsList.find((c) => c.id === clientId);
+    return found?.name || 'N/A';
   }
 
   // Mapeia o status para classes de 'badge' do Bootstrap

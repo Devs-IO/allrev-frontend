@@ -1,5 +1,7 @@
 // Shared types and interfaces for Orders domain (frontend <-> backend contract)
 
+import { Client } from '../../../modules/clients/interfaces/client.interface';
+
 export type PaymentMethod = 'pix' | 'transfer' | 'deposit' | 'card' | 'other';
 export type PaymentTerms = 'ONE' | 'TWO' | 'THREE';
 export type PaymentStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
@@ -65,6 +67,7 @@ export interface OrderResponseDto {
   orderNumber: string;
   tenantId: string;
   clientId: string;
+  client?: Client;
   clientName?: string;
   clientEmail?: string;
   contractDate: string; // YYYY-MM-DD

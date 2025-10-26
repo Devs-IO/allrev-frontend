@@ -6,7 +6,7 @@
     </div>
     <div class="card-body">
       <form [formGroup]="filterForm" class="row g-3 align-items-end">
-        <div class="col-12 col-md-6 col-lg">
+        <div class="col-12 col-md-6 col-lg-2">
           <label for="filterClient" class="form-label">Cliente</label>
           <select
             id="filterClient"
@@ -16,6 +16,37 @@
             <option [value]="''">Todos</option>
             <option *ngFor="let client of clients$ | async" [value]="client.id">
               {{ client.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-2">
+          <label for="filterFunc" class="form-label">Funcionalidade</label>
+          <select
+            id="filterFunc"
+            formControlName="functionalityId"
+            class="form-select"
+          >
+            <option [value]="''">Todas</option>
+            <option
+              *ngFor="let func of functionalities$ | async"
+              [value]="func.id"
+            >
+              {{ func.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-2">
+          <label for="filterResp" class="form-label">Responsável</label>
+          <select
+            id="filterResp"
+            formControlName="responsibleId"
+            class="form-select"
+          >
+            <option [value]="''">Todos</option>
+            <option *ngFor="let user of users$ | async" [value]="user.id">
+              {{ user.name }}
             </option>
           </select>
         </div>
@@ -74,9 +105,9 @@
           </select>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-auto d-flex justify-content-end">
+        <div class="col-12 col-lg-auto d-flex justify-content-end">
           <button
-            class="btn btn-outline-danger"
+            class="btn btn-outline-danger w-100"
             (click)="clearFilters()"
             type="button"
           >
@@ -118,6 +149,8 @@
             <tr>
               <th scope="col">Nº Venda</th>
               <th scope="col">Cliente</th>
+              <th scope="col">Funcionalidade</th>
+              <th scope="col">Responsável</th>
               <th scope="col">Data</th>
               <th scope="col">Valor Total</th>
               <th scope="col">Status Pgto.</th>
@@ -129,6 +162,8 @@
             <tr *ngFor="let order of orders$ | async">
               <td>#{{ order.orderNumber }}</td>
               <td>{{ order.clientName || getClientName(order.clientId) }}</td>
+              <td>{{ order.items?.[0]?.functionalityName || "N/A" }}</td>
+              <td>{{ order.items?.[0]?.responsibleUserName || 'N/A' }}</td>
               <td>{{ order.contractDate | date : "dd/MM/yyyy" }}</td>
               <td>{{ order.amountTotal | currency : "BRL" }}</td>
               <td>
@@ -159,7 +194,7 @@
             </tr>
 
             <tr *ngIf="!(orders$ | async) || (orders$ | async)?.length === 0">
-              <td colspan="7" class="text-center py-4">
+              <td colspan="9" class="text-center py-4">
                 Nenhuma venda encontrada com os filtros aplicados.
               </td>
             </tr>
