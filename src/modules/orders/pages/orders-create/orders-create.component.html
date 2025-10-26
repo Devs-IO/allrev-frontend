@@ -138,10 +138,18 @@
                     <select
                       class="form-control"
                       formControlName="functionalityId"
-                      (change)="onFunctionalitySelected(i)"
+                      (change)="
+                        onServiceSelected(
+                          items.at(i).get('functionalityId')?.value,
+                          items.at(i)
+                        )
+                      "
                     >
-                      <option value="" disabled>Selecione…</option>
-                      <option *ngFor="let f of functionalities" [value]="f.id">
+                      <option [ngValue]="null" disabled>Selecione…</option>
+                      <option
+                        *ngFor="let f of functionalities$ | async"
+                        [ngValue]="f"
+                      >
                         {{ f.name }}
                       </option>
                     </select>
@@ -202,50 +210,17 @@
                     >
                     <select
                       class="form-control"
-                      formControlName="responsibleUserId"
-                      [disabled]="
-                        !!items.at(i).get('responsibleUserId')?.disabled
-                      "
+                      formControlName="responsibleId"
+                      [disabled]="!!items.at(i).get('responsibleId')?.disabled"
                     >
                       <option [ngValue]="null">—</option>
-                      <option *ngFor="let u of responsibleUsers" [value]="u.id">
+                      <option
+                        *ngFor="let u of responsibleUsers$ | async"
+                        [value]="u.id"
+                      >
                         {{ u.name }}
                       </option>
                     </select>
-                    <div
-                      class="form-text"
-                      *ngIf="!!items.at(i).get('responsibleUserId')?.disabled"
-                    >
-                      <small>
-                        Responsável definido pela funcionalidade
-                        <ng-container
-                          *ngIf="items.at(i).get('responsibleUserId')?.value"
-                        >
-                          —
-                          {{
-                            getResponsibleName(
-                              items.at(i).get("responsibleUserId")?.value
-                            )
-                          }}
-                        </ng-container>
-                      </small>
-                    </div>
-                    <div
-                      class="form-text"
-                      *ngIf="
-                        items.at(i).get('responsibleUserId')?.value &&
-                        !items.at(i).get('responsibleUserId')?.disabled
-                      "
-                    >
-                      <small
-                        >Responsável:
-                        {{
-                          getResponsibleName(
-                            items.at(i).get("responsibleUserId")?.value
-                          )
-                        }}</small
-                      >
-                    </div>
                   </div>
 
                   <div class="col-12 col-md-4">
