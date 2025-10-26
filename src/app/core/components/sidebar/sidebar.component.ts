@@ -25,26 +25,6 @@ export class SidebarComponent implements OnInit {
 
   menuItems = [
     {
-      role: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
-      menu: 'Ordens OLD',
-      route: '/order/list',
-      icon: 'bi bi-receipt-cutoff',
-      subRoutes: [
-        {
-          label: 'Listar',
-          route: '/order/list',
-          icon: 'bi bi-list-check',
-          allowed: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
-        },
-        {
-          label: 'Nova Ordem',
-          route: '/order/create',
-          icon: 'bi bi-plus-circle',
-          allowed: [Role.MANAGER_REVIEWERS],
-        },
-      ],
-    },
-    {
       role: [Role.MANAGER_REVIEWERS, Role.CLIENT, Role.ASSISTANT_REVIEWERS],
       menu: 'Ordens',
       route: '/orders',
