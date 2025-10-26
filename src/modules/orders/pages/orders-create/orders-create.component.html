@@ -1,0 +1,378 @@
+<div class="orders-create container my-4">
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5><i class="bi bi-clipboard-plus"></i> Nova Ordem de Serviço</h5>
+      <div class="d-flex gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="resetForm()"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i> Limpar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="
+            form.invalid || items.length === 0 || installments.length === 0
+          "
+          (click)="onSubmit()"
+        >
+          <i class="bi bi-save"></i> Salvar
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <!-- Informações do Cliente / Pagamento -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5><i class="bi bi-person"></i> Informações do Cliente</h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label"
+                  ><i class="bi bi-person"></i> Cliente
+                  <span class="req">*</span></label
+                >
+                <select
+                  class="form-control"
+                  formControlName="clientId"
+                  [class.is-invalid]="invalid('clientId')"
+                >
+                  <option value="" disabled>Selecione…</option>
+                  <option *ngFor="let c of clients" [value]="c.id">
+                    {{ c.name }}
+                  </option>
+                </select>
+                <div
+                  *ngIf="invalid('clientId')"
+                  class="invalid-feedback d-block"
+                >
+                  Cliente é obrigatório.
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label class="form-label"
+                  ><i class="bi bi-calendar2-event"></i> Concessão (contrato)
+                  <span class="req">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  appBrDatepicker
+                  (dateChange)="onDateChange('contractDate', $event)"
+                  [value]="form.get('contractDate')!.value"
+                />
+                <div class="form-text">
+                  <small>Data em que o serviço foi contratado.</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label class="form-label"
+                  ><i class="bi bi-wallet2"></i> Forma de pagamento
+                  <span class="req">*</span></label
+                >
+                <select
+                  class="form-control"
+                  formControlName="paymentMethod"
+                  [class.is-invalid]="invalid('paymentMethod')"
+                >
+                  <option value="" disabled>Selecione…</option>
+                  <option *ngFor="let m of paymentMethods" [value]="m.value">
+                    {{ m.label }}
+                  </option>
+                </select>
+                <div
+                  *ngIf="invalid('paymentMethod')"
+                  class="invalid-feedback d-block"
+                >
+                  Forma de pagamento é obrigatória.
+                </div>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label class="form-label"
+                  ><i class="bi bi-card-checklist"></i> Parcelamento</label
+                >
+                <select class="form-control" formControlName="paymentTerms">
+                  <option [value]="'ONE'">1x</option>
+                  <option [value]="'TWO'">2x</option>
+                  <option [value]="'THREE'">3x</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Serviços Contratados -->
+        <div class="card mb-4 mt-3">
+          <div
+            class="card-header d-flex justify-content-between align-items-center"
+          >
+            <h5><i class="bi bi-list-task"></i> Serviços Contratados</h5>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-light"
+              (click)="addItem()"
+            >
+              <i class="bi bi-plus"></i> Adicionar Serviço
+            </button>
+          </div>
+          <div class="card-body">
+            <div formArrayName="items">
+              <div
+                class="service-item border rounded p-3 mb-3"
+                *ngFor="let g of items.controls; let i = index"
+                [formGroupName]="i"
+              >
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label"
+                      ><i class="bi bi-gear"></i> Serviço
+                      <span class="req">*</span></label
+                    >
+                    <select
+                      class="form-control"
+                      formControlName="functionalityId"
+                      (change)="onFunctionalitySelected(i)"
+                    >
+                      <option value="" disabled>Selecione…</option>
+                      <option *ngFor="let f of functionalities" [value]="f.id">
+                        {{ f.name }}
+                      </option>
+                    </select>
+                    <div
+                      *ngIf="invalidItem(i, 'functionalityId')"
+                      class="invalid-feedback d-block"
+                    >
+                      Obrigatório.
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label class="form-label"
+                      ><i class="bi bi-currency-dollar"></i> Preço
+                      <span class="req">*</span></label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="price"
+                      (focus)="onMoneyFocus(i, 'price')"
+                      (blur)="onMoneyBlur(i, 'price')"
+                    />
+                    <div
+                      *ngIf="invalidItem(i, 'price')"
+                      class="invalid-feedback d-block"
+                    >
+                      Informe um valor.
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label class="form-label"
+                      ><i class="bi bi-calendar-event"></i> Prazo cliente
+                      <span class="req">*</span></label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="clientDeadline"
+                      appBrDatepicker
+                      (dateChange)="
+                        onItemDateChange(i, 'clientDeadline', $event)
+                      "
+                      [value]="items.at(i).get('clientDeadline')!.value"
+                    />
+                    <div
+                      *ngIf="invalidItem(i, 'clientDeadline')"
+                      class="invalid-feedback d-block"
+                    >
+                      Obrigatório.
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label class="form-label"
+                      ><i class="bi bi-person-fill-gear"></i> Responsável</label
+                    >
+                    <select
+                      class="form-control"
+                      formControlName="responsibleUserId"
+                      [disabled]="
+                        !!items.at(i).get('responsibleUserId')?.disabled
+                      "
+                    >
+                      <option [ngValue]="null">—</option>
+                      <option *ngFor="let u of responsibleUsers" [value]="u.id">
+                        {{ u.name }}
+                      </option>
+                    </select>
+                    <div
+                      class="form-text"
+                      *ngIf="!!items.at(i).get('responsibleUserId')?.disabled"
+                    >
+                      <small>
+                        Responsável definido pela funcionalidade
+                        <ng-container
+                          *ngIf="items.at(i).get('responsibleUserId')?.value"
+                        >
+                          —
+                          {{
+                            getResponsibleName(
+                              items.at(i).get("responsibleUserId")?.value
+                            )
+                          }}
+                        </ng-container>
+                      </small>
+                    </div>
+                    <div
+                      class="form-text"
+                      *ngIf="
+                        items.at(i).get('responsibleUserId')?.value &&
+                        !items.at(i).get('responsibleUserId')?.disabled
+                      "
+                    >
+                      <small
+                        >Responsável:
+                        {{
+                          getResponsibleName(
+                            items.at(i).get("responsibleUserId")?.value
+                          )
+                        }}</small
+                      >
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label class="form-label"
+                      ><i class="bi bi-calendar-check"></i> Prazo
+                      assistente</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="assistantDeadline"
+                      appBrDatepicker
+                      (dateChange)="
+                        onItemDateChange(i, 'assistantDeadline', $event)
+                      "
+                      [value]="items.at(i).get('assistantDeadline')!.value"
+                    />
+                    <div
+                      *ngIf="hasItemDeadlineError(i)"
+                      class="invalid-feedback d-block"
+                    >
+                      Prazo do assistente deve ser anterior ao prazo do cliente.
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-4">
+                    <label class="form-label"
+                      ><i class="bi bi-cash-coin"></i> Valor assistente</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="assistantAmount"
+                      (focus)="onMoneyFocus(i, 'assistantAmount')"
+                      (blur)="onMoneyBlur(i, 'assistantAmount')"
+                    />
+                  </div>
+
+                  <div class="col-12 d-flex justify-content-end">
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm"
+                      (click)="removeItem(i)"
+                    >
+                      <i class="bi bi-trash"></i> Remover
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parcelas -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5><i class="bi bi-receipt"></i> Parcelas</h5>
+          </div>
+          <div class="card-body">
+            <div formArrayName="installments">
+              <div
+                class="row g-3 align-items-end"
+                *ngFor="let inst of installments.controls; let idx = index"
+                [formGroupName]="idx"
+              >
+                <div class="col-12 col-md-4">
+                  <label class="form-label"
+                    ><i class="bi bi-cash"></i> Valor</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="amount"
+                    (focus)="onInstallmentFocus(idx)"
+                    (blur)="onInstallmentBlur(idx)"
+                  />
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label"
+                    ><i class="bi bi-calendar"></i> Vencimento</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    appBrDatepicker
+                    (dateChange)="onInstallmentDateChange(idx, $event)"
+                    [value]="installments.at(idx).get('dueDate')!.value"
+                  />
+                </div>
+                <div class="col-12 col-md-4 d-flex align-items-end">
+                  <span class="text-muted">#{{ idx + 1 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="text-end mt-3">
+              <small class="text-muted">Total itens:</small>
+              <strong>{{ formatPtBR(amountTotal) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden submit to support Enter key -->
+        <button type="submit" class="d-none" aria-hidden="true"></button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer fixed actions -->
+  <div
+    class="orders-create-footer py-2 bg-white border-top d-flex justify-content-end gap-2 position-sticky bottom-0"
+  >
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      (click)="resetForm()"
+    >
+      <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="
+        form.invalid || items.length === 0 || installments.length === 0
+      "
+      (click)="onSubmit()"
+    >
+      <i class="bi bi-check-circle"></i> Salvar
+    </button>
+  </div>
+</div>
