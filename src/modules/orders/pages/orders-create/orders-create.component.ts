@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   OnDestroy,
@@ -45,7 +46,7 @@ import {
   selector: 'app-orders-create',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, BrDatepickerDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // changeDetection: ChangeDetectionStrategy.OnPush, // TEMPORARIAMENTE REMOVIDO PARA DEBUG
   styleUrls: ['./orders-create.component.scss'],
   templateUrl: './orders-create.component.html',
 })
@@ -62,6 +63,11 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   // Lista de usuários que podem ser responsáveis (Dono + Assistentes)
   responsibleUsers$!: Observable<IUser[]>; // TODO: popular corretamente
 
+  // Modal de sucesso
+  showSuccessModal = false;
+  createdOrderNumber = '';
+  createdOrderId = '';
+
   constructor(
     private fb: FormBuilder,
     private ordersService: OrdersService,
@@ -69,7 +75,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     private functionalitiesService: FunctionalitiesService,
     private usersService: UsersService,
     private router: Router,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   // data
@@ -123,12 +130,21 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       .getClients()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (list) =>
-          (this.clients = (list || []).map((c: any) => ({
+        next: (list) => {
+          this.clients = (list || []).map((c: any) => ({
             id: c.id,
             name:
               c.name || c.fantasyName || c.fullName || c.email || String(c.id),
-          }))),
+          }));
+
+          // REGRA: Pré-selecionar o ÚLTIMO cliente adicionado (último da lista)
+          if (this.clients.length > 0) {
+            const lastClient = this.clients[this.clients.length - 1];
+            console.log('🎯 Pré-selecionando último cliente:', lastClient.name);
+            this.form.patchValue({ clientId: lastClient.id });
+            this.cdr.markForCheck();
+          }
+        },
       });
 
     // Carregar Serviços
@@ -146,6 +162,26 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
           defaultAssistantPrice: it.defaultAssistantPrice,
           responsibleUserId: (it as any).responsibleUserId,
         }));
+
+        // REGRA: Pré-selecionar a funcionalidade do gerente logado (tenant)
+        // Encontrar a funcionalidade onde responsibleUserId === currentUserId
+        if (this.currentUserId && this.functionalities.length > 0) {
+          const ownFunctionality = this.functionalities.find(
+            (func) => (func as any).responsibleUserId === this.currentUserId
+          );
+
+          if (ownFunctionality && this.items.length > 0) {
+            console.log(
+              '🎯 Pré-selecionando funcionalidade própria:',
+              ownFunctionality.name
+            );
+            const firstItem = this.items.at(0) as FormGroup;
+            firstItem.patchValue({ functionalityId: ownFunctionality.id });
+            // Dispara a lógica de auto-preenchimento
+            this.onServiceSelected(ownFunctionality as any, firstItem);
+            this.cdr.markForCheck();
+          }
+        }
       });
 
     // Carregar Assistentes (para o dropdown de responsáveis)
@@ -184,15 +220,45 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // initialize form first
     this.buildForm();
-    // carregar dados iniciais
-    this.loadInitialData();
-    // Adiciona uma linha de item por padrão
-    this.addItem();
 
-    // get logged user id/name
+    // get logged user id/name FIRST (before loading data)
     this.auth.getUser().subscribe((u) => {
       this.currentUserId = u?.id || null;
       this.currentUserName = (u as any)?.name || (u as any)?.fullName || null;
+      console.log(
+        '👤 Usuário logado:',
+        this.currentUserName,
+        this.currentUserId
+      );
+
+      // AGORA que temos o currentUserId, carregamos os dados iniciais
+      this.loadInitialData();
+
+      // REGRA: Prazo do cliente (deadline) deve ser 5 dias à frente (Concessão)
+      const clientDeadline5Days = this.addDaysPt(this.todayPt(), 5);
+      console.log('📅 Prazo cliente (5 dias à frente):', clientDeadline5Days);
+
+      // REGRA: Prazo do assistente deve ser ANTES do prazo do cliente
+      // Vamos definir como 3 dias à frente (2 dias antes do prazo do cliente)
+      const assistantDeadline3Days = this.addDaysPt(this.todayPt(), 3);
+      console.log(
+        '📅 Prazo assistente (3 dias à frente):',
+        assistantDeadline3Days
+      );
+
+      // Adiciona uma linha de item por padrão com os prazos pré-definidos
+      this.addItem();
+
+      // Após adicionar o item, define os prazos
+      if (this.items.length > 0) {
+        const firstItem = this.items.at(0) as FormGroup;
+        firstItem.patchValue({
+          clientDeadline: clientDeadline5Days,
+          deadline: clientDeadline5Days, // Sincronizado com clientDeadline
+          assistantDeadline: assistantDeadline3Days, // 2 dias ANTES do cliente
+        });
+        console.log('✅ Prazos configurados: Assistente < Cliente');
+      }
     });
 
     // recompute installments when total or terms change
@@ -380,9 +446,23 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       | string
       | undefined;
     const price = selectedService.minimumPrice || 0;
-    const assistantValue = (selectedService as any).defaultAssistantPrice || 0;
+    const defaultAssistantPrice =
+      (selectedService as any).defaultAssistantPrice || 0;
 
-    // 2. Pré-preenche campos do formulário usando os novos nomes
+    // 2. REGRA: Se o responsável é o próprio gerente logado (dono),
+    //    o valor do assistente deve ser 0 (não há repasse)
+    const isOwner = responsibleId === this.currentUserId;
+    const assistantValue = isOwner ? 0 : defaultAssistantPrice;
+
+    console.log('🔧 onServiceSelected:', {
+      funcName: selectedService.name,
+      responsibleId,
+      isOwner,
+      price,
+      assistantValue,
+    });
+
+    // 3. Pré-preenche campos do formulário usando os novos nomes
     item.patchValue(
       {
         responsibleId: responsibleId ?? null,
@@ -403,7 +483,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       .get('assistantAmount')
       ?.setValue(this.formatPtBR(assistantValue), { emitEvent: false });
 
-    // 3. REGRA: Trava o campo "Responsável"
+    // 4. REGRA: Trava o campo "Responsável"
     item.get('responsibleId')?.disable({ emitEvent: false });
     // travar também o campo legado exibido no template atual
     item.get('responsibleUserId')?.disable({ emitEvent: false });
@@ -506,76 +586,116 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
 
   // submit
   onSubmit() {
+    console.log('🔍 onSubmit chamado');
+    console.log('📝 orderForm.invalid:', this.orderForm.invalid);
+    console.log('📝 items.length:', this.items.length);
+    console.log('📝 orderForm value:', this.orderForm.value);
+    console.log('📝 orderForm errors:', this.orderForm.errors);
+
     // Usar orderForm (alias de form) para validação e para ler valores desabilitados
     if (this.orderForm.invalid || this.items.length === 0) {
-      this.toastService.error('Formulário inválido. Verifique os campos.');
+      console.error('❌ Form inválido ou sem itens');
+
+      // Marca todos os campos como touched para mostrar erros visuais
       this.orderForm.markAllAsTouched();
+      this.items.controls.forEach((item) => item.markAllAsTouched());
+
+      // Exibe tooltip de erro no topo
+      this.toastService.error(
+        '❌ Formulário inválido. Verifique os campos marcados em vermelho.'
+      );
+      this.cdr.markForCheck();
       return;
     }
 
+    console.log('✅ Validação inicial passou, obtendo valores...');
     // .getRawValue() pega os valores de campos desabilitados (como 'responsibleId')
     const formData = this.orderForm.getRawValue() as any;
-    // contractDate está no formato dd/MM/yyyy
-    const [gd, gm, gy] = String(formData.contractDate || '')
-      .split('/')
-      .map((s: string) => Number(s));
-    const generalDeadline = new Date(gy || 0, (gm || 1) - 1, gd || 1).getTime();
+    console.log('📦 formData:', formData);
 
-    // --- REGRA: Validação de Prazo (deadline do item < prazo geral do pedido) ---
+    // --- REGRA CORRIGIDA: Prazo do assistente deve ser < prazo do cliente do item ---
     for (let idx = 0; idx < (formData.items || []).length; idx++) {
       const it = formData.items[idx] || {};
-      if (!it.deadline) {
+
+      // Validar que ambos os prazos existem
+      if (!it.assistantDeadline) {
         this.toastService.error(
-          'Todos os itens devem ter um Prazo do Assistente.'
+          `⚠️ Item #${idx + 1}: Prazo do Assistente é obrigatório.`
         );
+        // Marca o campo específico
+        const itemForm = this.items.at(idx) as FormGroup;
+        itemForm.get('assistantDeadline')?.markAsTouched();
+        itemForm.get('assistantDeadline')?.setErrors({ required: true });
+        this.cdr.markForCheck();
         return;
       }
-      const [dd, dm, dy] = String(it.deadline)
+      if (!it.clientDeadline) {
+        this.toastService.error(
+          `⚠️ Item #${idx + 1}: Prazo do Cliente é obrigatório.`
+        );
+        // Marca o campo específico
+        const itemForm = this.items.at(idx) as FormGroup;
+        itemForm.get('clientDeadline')?.markAsTouched();
+        itemForm.get('clientDeadline')?.setErrors({ required: true });
+        this.cdr.markForCheck();
+        return;
+      }
+
+      // Comparar prazo do assistente com prazo do cliente do item
+      const [ad, am, ay] = String(it.assistantDeadline)
         .split('/')
         .map((s: string) => Number(s));
-      const assistantDeadline = new Date(
-        dy || 0,
-        (dm || 1) - 1,
-        dd || 1
-      ).getTime();
-      if (assistantDeadline >= generalDeadline) {
+      const [cd, cm, cy] = String(it.clientDeadline)
+        .split('/')
+        .map((s: string) => Number(s));
+
+      const assistantDate = new Date(ay || 0, (am || 1) - 1, ad || 1).getTime();
+      const clientDate = new Date(cy || 0, (cm || 1) - 1, cd || 1).getTime();
+
+      if (assistantDate >= clientDate) {
         this.toastService.error(
-          'O Prazo do Assistente em um item não pode ser maior ou igual ao Prazo Geral da Venda.'
+          `⚠️ Item #${idx + 1}: O Prazo do Assistente (${
+            it.assistantDeadline
+          }) deve ser anterior ao Prazo do Cliente (${it.clientDeadline}).`
         );
-        return; // Impede o envio
+        // Marca ambos os campos em vermelho
+        const itemForm = this.items.at(idx) as FormGroup;
+        itemForm.get('assistantDeadline')?.markAsTouched();
+        itemForm.get('clientDeadline')?.markAsTouched();
+        itemForm.get('assistantDeadline')?.setErrors({ invalidDate: true });
+        this.cdr.markForCheck();
+        return;
       }
     }
     // --- Fim da Validação ---
-    // Regra 3: Validação manual antes do envio
-    // Prazo do assistente (do item) deve ser anterior ao prazo do cliente do item
-    for (let i = 0; i < this.items.length; i++) {
-      const g = this.items.at(i) as FormGroup;
-      const assistantD = (g.get('assistantDeadline')?.value as string) || '';
-      const clientD = (g.get('clientDeadline')?.value as string) || '';
-      if (assistantD && clientD) {
-        const [ad, am, ay] = assistantD.split('/').map(Number);
-        const [cd, cm, cy] = clientD.split('/').map(Number);
-        const aDate = new Date(ay || 0, (am || 1) - 1, ad || 1).getTime();
-        const cDate = new Date(cy || 0, (cm || 1) - 1, cd || 1).getTime();
-        if (aDate >= cDate) {
-          this.toastService.error(
-            `Prazo do assistente deve ser anterior ao prazo do cliente no item #${
-              i + 1
-            }`
-          );
-          g.get('assistantDeadline')?.markAsTouched();
-          return;
-        }
-      }
-    }
+
+    console.log('✅ Todas validações passaram, criando DTO...');
     const payload: CreateOrderDto = this.toDto();
+    console.log('📤 Payload para enviar:', payload);
+
+    console.log('🚀 Chamando ordersService.create...');
     this.ordersService.create(payload).subscribe({
       next: (res: OrderResponseDto) => {
-        this.toastService.success('Ordem criada com sucesso');
-        this.router.navigate(['/orders', res.id]);
+        console.log('✅ Ordem criada com sucesso:', res);
+
+        // Exibe modal de sucesso com o número da ordem
+        this.createdOrderNumber = res.orderNumber || res.id;
+        this.createdOrderId = res.id;
+        this.showSuccessModal = true;
+        this.cdr.markForCheck();
       },
-      error: () => this.toastService.error('Falha ao criar a ordem'),
+      error: (err) => {
+        console.error('❌ Erro ao criar ordem:', err);
+        const errorMsg = err?.error?.message || 'Falha ao criar a ordem';
+        this.toastService.error(`❌ ${errorMsg}`);
+      },
     });
+  }
+
+  // Método para fechar modal e redirecionar
+  onSuccessModalClose(): void {
+    this.showSuccessModal = false;
+    this.router.navigate(['/orders']);
   }
 
   resetForm() {

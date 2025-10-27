@@ -18,6 +18,9 @@ export interface ListOrdersParams {
   to?: string; // YYYY-MM-DD
   page?: number;
   pageSize?: number;
+  // --- ADICIONA ESTES CAMPOS PARA OS NOVOS FILTROS ---
+  functionalityId?: string;
+  responsibleId?: string;
 }
 
 export interface PaginatedOrders {
@@ -45,8 +48,10 @@ export class OrdersService {
     });
   }
 
-  // Método ATUALIZADO para buscar ordens com filtros (retorna somente a lista)
-  getAllOrders(filters?: IListOrdersFilter): Observable<IOrder[]> {
+  // --- CORREÇÃO AQUI ---
+  // A função agora retorna 'Observable<PaginatedOrders>' (e não mais IOrder[])
+  // Removemos o '.pipe(map(res => res.data))'
+  getAllOrders(filters?: IListOrdersFilter): Observable<PaginatedOrders> {
     let params = new HttpParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -59,10 +64,9 @@ export class OrdersService {
         }
       });
     }
-    // O endpoint atual retorna paginação; aqui normalizamos para apenas o array de dados
-    return this.http
-      .get<PaginatedOrders>(this.baseUrl, { params })
-      .pipe(map((res) => res.data as IOrder[]));
+
+    // O 'map' foi removido. Agora retornamos a resposta paginada completa.
+    return this.http.get<PaginatedOrders>(this.baseUrl, { params });
   }
 
   findOne(id: string): Observable<OrderResponseDto> {

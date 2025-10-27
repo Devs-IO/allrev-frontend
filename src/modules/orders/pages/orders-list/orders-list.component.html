@@ -19,7 +19,6 @@
             </option>
           </select>
         </div>
-
         <div class="col-12 col-md-6 col-lg-2">
           <label for="filterFunc" class="form-label">Funcionalidade</label>
           <select
@@ -36,7 +35,6 @@
             </option>
           </select>
         </div>
-
         <div class="col-12 col-md-6 col-lg-2">
           <label for="filterResp" class="form-label">Responsável</label>
           <select
@@ -50,7 +48,6 @@
             </option>
           </select>
         </div>
-
         <div class="col-12 col-md-6 col-lg-2">
           <label for="filterFrom" class="form-label">Data (De)</label>
           <input
@@ -60,7 +57,6 @@
             formControlName="from"
           />
         </div>
-
         <div class="col-12 col-md-6 col-lg-2">
           <label for="filterTo" class="form-label">Data (Até)</label>
           <input
@@ -70,7 +66,6 @@
             formControlName="to"
           />
         </div>
-
         <div class="col-12 col-md-6 col-lg">
           <label for="filterPayment" class="form-label">Status Pagamento</label>
           <select
@@ -87,7 +82,6 @@
             </option>
           </select>
         </div>
-
         <div class="col-12 col-md-6 col-lg">
           <label for="filterWork" class="form-label">Status Trabalho</label>
           <select
@@ -104,7 +98,6 @@
             </option>
           </select>
         </div>
-
         <div class="col-12 col-lg-auto d-flex justify-content-end">
           <button
             class="btn btn-outline-danger w-100"
@@ -161,9 +154,15 @@
           <tbody>
             <tr *ngFor="let order of orders$ | async">
               <td>#{{ order.orderNumber }}</td>
-              <td>{{ order.clientName || getClientName(order.clientId) }}</td>
-              <td>{{ order.items?.[0]?.functionalityName || "N/A" }}</td>
-              <td>{{ order.items?.[0]?.responsibleUserName || 'N/A' }}</td>
+
+              <td>{{ getClientName(order.client?.id) }}</td>
+              <td>
+                {{ getFunctionalityName(order.items?.[0]?.functionality?.id) }}
+              </td>
+              <td>
+                {{ getResponsibleName(order.items?.[0]?.functionality?.id) }}
+              </td>
+
               <td>{{ order.contractDate | date : "dd/MM/yyyy" }}</td>
               <td>{{ order.amountTotal | currency : "BRL" }}</td>
               <td>
