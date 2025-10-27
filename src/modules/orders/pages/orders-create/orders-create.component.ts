@@ -16,6 +16,8 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -59,8 +61,9 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   orderForm!: FormGroup;
   clients$!: Observable<IClient[]>;
   functionalities$!: Observable<IFunctionality[]>;
-  assistants$!: Observable<IUser[]>;
-  // Lista de usuários que podem ser responsáveis (Dono + Assistentes)
+
+  // CORREÇÃO: Renomeado de 'assistants$' para 'users$' para clareza
+  users$!: Observable<IUser[]>;
   responsibleUsers$!: Observable<IUser[]>; // TODO: popular corretamente
 
   // Modal de sucesso
@@ -88,6 +91,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     name: string;
     minimumPrice: number;
     defaultAssistantPrice?: number;
+    responsibleUserId?: string; // Adicionado para 'ownFunctionality'
   }> = [];
   responsibleUsers: Array<{ id: string; name: string }> = [];
 
@@ -100,31 +104,24 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     { value: 'other', label: 'Outro' },
   ];
 
-  // observables (legacy declarations removed; see top for new ones)
-
   // form
   form!: FormGroup;
 
   // build the form structure
   private buildForm() {
-    // Note: backend expects lowercase payment method values (e.g., 'pix').
-    // Setting default to PIX as requested, mapped to lowercase value 'pix'.
     this.form = this.fb.group({
-      clientId: ['', Validators.required],
+      clientId: [null, Validators.required],
       contractDate: [this.todayPt(), Validators.required],
-      // REGRA: 'PIX' como padrão (mantemos 'pix' minúsculo para contrato backend)
       paymentMethod: ['pix', Validators.required],
       paymentTerms: ['ONE' as PaymentTerms, Validators.required],
-      items: this.fb.array([]),
+      items: this.fb.array([], Validators.minLength(1)), // Pelo menos 1 item
       installments: this.fb.array([]),
     });
-    // manter alias solicitado
     this.orderForm = this.form;
   }
 
   // initial data loader
   private loadInitialData() {
-    // REGRA: Carregar Clientes
     this.clients$ = this.clientsService.getClients() as Observable<IClient[]>;
     this.clientsService
       .getClients()
@@ -137,10 +134,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
               c.name || c.fantasyName || c.fullName || c.email || String(c.id),
           }));
 
-          // REGRA: Pré-selecionar o ÚLTIMO cliente adicionado (último da lista)
           if (this.clients.length > 0) {
             const lastClient = this.clients[this.clients.length - 1];
-            console.log('🎯 Pré-selecionando último cliente:', lastClient.name);
             this.form.patchValue({ clientId: lastClient.id });
             this.cdr.markForCheck();
           }
@@ -154,7 +149,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     this.functionalities$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((f) => {
-        // keep a simplified array for quick lookup and defaults
         this.functionalities = (f || []).map((it) => ({
           id: it.id,
           name: it.name,
@@ -163,19 +157,14 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
           responsibleUserId: (it as any).responsibleUserId,
         }));
 
-        // REGRA: Pré-selecionar a funcionalidade do gerente logado (tenant)
-        // Encontrar a funcionalidade onde responsibleUserId === currentUserId
         if (this.currentUserId && this.functionalities.length > 0) {
           const ownFunctionality = this.functionalities.find(
             (func) => (func as any).responsibleUserId === this.currentUserId
           );
 
           if (ownFunctionality && this.items.length > 0) {
-            console.log(
-              '🎯 Pré-selecionando funcionalidade própria:',
-              ownFunctionality.name
-            );
             const firstItem = this.items.at(0) as FormGroup;
+            // Usa o ID da funcionalidade, não o objeto
             firstItem.patchValue({ functionalityId: ownFunctionality.id });
             // Dispara a lógica de auto-preenchimento
             this.onServiceSelected(ownFunctionality as any, firstItem);
@@ -184,9 +173,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Carregar Assistentes (para o dropdown de responsáveis)
-    // MELHORIA: Idealmente, esta chamada deveria trazer o Dono + Assistentes
-    this.assistants$ = this.usersService.getUsers().pipe(
+    // CORREÇÃO: Renomeado para 'users$'
+    this.users$ = this.usersService.getUsers().pipe(
       map((users) =>
         (users || []).map((u) => ({
           id: u.id,
@@ -198,70 +186,40 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         }))
       )
     );
-    // Paliativo: usar assistants$ como responsibleUsers$ por enquanto
-    this.responsibleUsers$ = this.assistants$;
-    this.assistants$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((users) => {
-        const assistants = (users || []).filter((u) => {
-          const role = (u.role || '').toString();
-          return (
-            role === Role.ASSISTANT_REVIEWERS ||
-            role.toLowerCase().includes('assistant')
-          );
-        });
-        this.responsibleUsers = assistants.map((u) => ({
-          id: u.id,
-          name: u.name,
-        }));
-      });
+    this.responsibleUsers$ = this.users$;
+    this.users$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((users) => {
+      // Popula a lista de usuários responsáveis
+      this.responsibleUsers = (users || []).map((u) => ({
+        id: u.id,
+        name: u.name,
+      }));
+    });
   }
 
   ngOnInit(): void {
-    // initialize form first
     this.buildForm();
 
-    // get logged user id/name FIRST (before loading data)
     this.auth.getUser().subscribe((u) => {
       this.currentUserId = u?.id || null;
       this.currentUserName = (u as any)?.name || (u as any)?.fullName || null;
-      console.log(
-        '👤 Usuário logado:',
-        this.currentUserName,
-        this.currentUserId
-      );
 
-      // AGORA que temos o currentUserId, carregamos os dados iniciais
       this.loadInitialData();
 
-      // REGRA: Prazo do cliente (deadline) deve ser 5 dias à frente (Concessão)
       const clientDeadline5Days = this.addDaysPt(this.todayPt(), 5);
-      console.log('📅 Prazo cliente (5 dias à frente):', clientDeadline5Days);
-
-      // REGRA: Prazo do assistente deve ser ANTES do prazo do cliente
-      // Vamos definir como 3 dias à frente (2 dias antes do prazo do cliente)
       const assistantDeadline3Days = this.addDaysPt(this.todayPt(), 3);
-      console.log(
-        '📅 Prazo assistente (3 dias à frente):',
-        assistantDeadline3Days
-      );
 
-      // Adiciona uma linha de item por padrão com os prazos pré-definidos
+      // Adiciona o primeiro item
       this.addItem();
 
-      // Após adicionar o item, define os prazos
       if (this.items.length > 0) {
         const firstItem = this.items.at(0) as FormGroup;
         firstItem.patchValue({
           clientDeadline: clientDeadline5Days,
-          deadline: clientDeadline5Days, // Sincronizado com clientDeadline
-          assistantDeadline: assistantDeadline3Days, // 2 dias ANTES do cliente
+          assistantDeadline: assistantDeadline3Days,
         });
-        console.log('✅ Prazos configurados: Assistente < Cliente');
       }
     });
 
-    // recompute installments when total or terms change
     this.items.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.rebuildInstallments());
@@ -270,7 +228,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.rebuildInstallments());
 
-    // initial installments build
     this.rebuildInstallments();
   }
 
@@ -280,7 +237,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   get items(): FormArray<FormGroup> {
     return this.form.get('items') as FormArray<FormGroup>;
   }
-  // New alias getter as requested
   get itemsFormArray(): FormArray<FormGroup> {
     return this.orderForm.get('items') as FormArray<FormGroup>;
   }
@@ -293,12 +249,12 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const c = this.form.get(path);
     return !!c && c.touched && c.invalid;
   }
-  invalidItem(index: number, path: string): boolean {
+
+  // CORREÇÃO: Renomeado para 'itemInvalid' (para bater com o HTML que forneci)
+  itemInvalid(index: number, path: string): boolean {
     const c = (this.items.at(index) as FormGroup).get(path);
     return !!c && c.touched && c.invalid;
   }
-
-  // client selection now via <select> bound to formControlName="clientId"
 
   // date helpers
   onDateChange(control: string, ddmmyyyy: string) {
@@ -307,23 +263,18 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   onItemDateChange(index: number, control: string, ddmmyyyy: string) {
     const g = this.items.at(index) as FormGroup;
     g.get(control)!.setValue(ddmmyyyy);
-    // If client deadline changed, auto-calc assistant deadline to 3 days before
+
     if (control === 'clientDeadline' && ddmmyyyy) {
       const currentAssistant = g.get('assistantDeadline')!.value as string;
       const maybe = this.addDaysPt(ddmmyyyy, -3);
-      // Set when empty or not before client
       if (!currentAssistant) {
         g.get('assistantDeadline')!.setValue(maybe);
       } else {
-        // ensure assistant < client; if not, adjust
-        const [ad, am, ay] = (currentAssistant || '').split('/').map(Number);
-        const [cd, cm, cy] = (ddmmyyyy || '').split('/').map(Number);
-        const aDate = new Date(ay || 0, (am || 1) - 1, ad || 1).getTime();
-        const cDate = new Date(cy || 0, (cm || 1) - 1, cd || 1).getTime();
+        const aDate = this.parseDate(currentAssistant);
+        const cDate = this.parseDate(ddmmyyyy);
         if (aDate >= cDate) g.get('assistantDeadline')!.setValue(maybe);
       }
     }
-    // re-evaluate item-level validators when dates change
     g.updateValueAndValidity();
   }
   onInstallmentDateChange(index: number, ddmmyyyy: string) {
@@ -332,101 +283,39 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
 
   // item handlers
   addItem() {
-    // New fields per command
+    // CORREÇÃO: Formulário do item simplificado (sem campos duplicados)
     const itemFormGroup = this.fb.group(
       {
-        functionalityId: ['', Validators.required],
-        // 'responsibleId' começa habilitado por padrão
-        responsibleId: [null as string | null, Validators.required],
-        // new generic deadline for item
-        deadline: ['', Validators.required],
-        // 'value' é o Preço (minimumPrice do backend)
-        value: [0, [Validators.required, Validators.min(0.01)]],
-        // 'assistantValue' é o Valor Assistente (defaultAssistantPrice do backend)
-        assistantValue: [0],
-
-        // Legacy fields kept for current template/logic compatibility
-        price: ['', [Validators.required]],
+        functionalityId: [null, Validators.required],
+        price: ['R$ 0,00', [Validators.required, this.minMoney(0.01)]],
         clientDeadline: ['', Validators.required],
-        responsibleUserId: [null as string | null],
-        assistantDeadline: [''],
-        assistantAmount: [''],
+        responsibleUserId: [null as string | null], // Responsável é opcional
+        assistantDeadline: ['', Validators.required], // Prazo assistente é obrigatório
+        assistantAmount: ['R$ 0,00'],
       },
       { validators: [this.itemDeadlineValidator] }
     );
 
-    // Synchronize new fields with legacy ones (bi-directional, suppress loops)
-    // value <-> price
-    itemFormGroup.get('value')!.valueChanges.subscribe((v) => {
-      const formatted = this.formatPtBR(Number(v || 0));
-      if (itemFormGroup.get('price')!.value !== formatted) {
-        itemFormGroup.get('price')!.setValue(formatted, { emitEvent: false });
-      }
-    });
-    itemFormGroup.get('price')!.valueChanges.subscribe((v) => {
-      const parsed = this.parseMoney(v) || 0;
-      if (itemFormGroup.get('value')!.value !== parsed) {
-        itemFormGroup.get('value')!.setValue(parsed, { emitEvent: false });
-      }
-    });
-
-    // assistantValue <-> assistantAmount
-    itemFormGroup.get('assistantValue')!.valueChanges.subscribe((v) => {
-      const formatted = this.formatPtBR(Number(v || 0));
-      if (itemFormGroup.get('assistantAmount')!.value !== formatted) {
-        itemFormGroup
-          .get('assistantAmount')!
-          .setValue(formatted, { emitEvent: false });
-      }
-    });
-    itemFormGroup.get('assistantAmount')!.valueChanges.subscribe((v) => {
-      const parsed = this.parseMoney(v) || 0;
-      if (itemFormGroup.get('assistantValue')!.value !== parsed) {
-        itemFormGroup
-          .get('assistantValue')!
-          .setValue(parsed, { emitEvent: false });
-      }
-    });
-
-    // deadline <-> clientDeadline
-    itemFormGroup.get('deadline')!.valueChanges.subscribe((v) => {
-      if (itemFormGroup.get('clientDeadline')!.value !== v) {
-        itemFormGroup.get('clientDeadline')!.setValue(v, { emitEvent: false });
-      }
-    });
-    itemFormGroup.get('clientDeadline')!.valueChanges.subscribe((v) => {
-      if (itemFormGroup.get('deadline')!.value !== v) {
-        itemFormGroup.get('deadline')!.setValue(v, { emitEvent: false });
-      }
-    });
-
-    // responsibleId <-> responsibleUserId
-    itemFormGroup.get('responsibleId')!.valueChanges.subscribe((v) => {
-      if (itemFormGroup.get('responsibleUserId')!.value !== v) {
-        itemFormGroup
-          .get('responsibleUserId')!
-          .setValue(v, { emitEvent: false });
-      }
-    });
-    itemFormGroup.get('responsibleUserId')!.valueChanges.subscribe((v) => {
-      if (itemFormGroup.get('responsibleId')!.value !== v) {
-        itemFormGroup.get('responsibleId')!.setValue(v, { emitEvent: false });
-      }
-    });
-
-    // Push into the array using the new alias getter
-    this.itemsFormArray.push(itemFormGroup);
+    this.items.push(itemFormGroup);
   }
+
   removeItem(i: number) {
     this.items.removeAt(i);
     this.rebuildInstallments();
   }
-  onFunctionalitySelected(index: number) {
-    const g = this.items.at(index) as FormGroup;
-    const fid = g.get('functionalityId')!.value as string;
-    const func = this.functionalities.find((f) => f.id === fid);
-    if (func) {
-      this.onServiceSelected(func as any, g);
+
+  // CORREÇÃO: Adicionada função 'onFunctionalityChange' para bater com o HTML
+  onFunctionalityChange(index: number, event: Event) {
+    const selectElement = event.target as HTMLSelectElement;
+    const functionalityId = selectElement.value;
+    const itemFormGroup = this.items.at(index) as FormGroup;
+
+    const selectedService = this.functionalities.find(
+      (f) => f.id === functionalityId
+    );
+
+    if (selectedService) {
+      this.onServiceSelected(selectedService as IFunctionality, itemFormGroup);
     }
   }
 
@@ -441,7 +330,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const item = itemFormGroup as FormGroup;
     if (!selectedService || !item) return;
 
-    // 1. Dados do serviço vindos da API
     const responsibleId = (selectedService as any).responsibleUserId as
       | string
       | undefined;
@@ -449,44 +337,25 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const defaultAssistantPrice =
       (selectedService as any).defaultAssistantPrice || 0;
 
-    // 2. REGRA: Se o responsável é o próprio gerente logado (dono),
-    //    o valor do assistente deve ser 0 (não há repasse)
     const isOwner = responsibleId === this.currentUserId;
     const assistantValue = isOwner ? 0 : defaultAssistantPrice;
 
-    console.log('🔧 onServiceSelected:', {
-      funcName: selectedService.name,
-      responsibleId,
-      isOwner,
-      price,
-      assistantValue,
-    });
-
-    // 3. Pré-preenche campos do formulário usando os novos nomes
+    // CORREÇÃO: Preenche os campos corretos (sem 'value' ou 'responsibleId')
     item.patchValue(
       {
-        responsibleId: responsibleId ?? null,
-        value: price,
-        assistantValue: assistantValue,
+        responsibleUserId: responsibleId ?? null,
+        price: this.formatPtBR(price),
+        assistantAmount: this.formatPtBR(assistantValue),
       },
-      { emitEvent: true }
+      { emitEvent: true } // Dispara 'valueChanges' para recálculo
     );
 
-    // Sincroniza também os campos legados para compatibilidade imediata
-    if (responsibleId != null) {
-      item.get('responsibleUserId')?.setValue(responsibleId, {
-        emitEvent: false,
-      });
+    // Trava o campo "Responsável"
+    if (responsibleId) {
+      item.get('responsibleUserId')?.disable({ emitEvent: false });
+    } else {
+      item.get('responsibleUserId')?.enable({ emitEvent: false });
     }
-    item.get('price')?.setValue(this.formatPtBR(price), { emitEvent: false });
-    item
-      .get('assistantAmount')
-      ?.setValue(this.formatPtBR(assistantValue), { emitEvent: false });
-
-    // 4. REGRA: Trava o campo "Responsável"
-    item.get('responsibleId')?.disable({ emitEvent: false });
-    // travar também o campo legado exibido no template atual
-    item.get('responsibleUserId')?.disable({ emitEvent: false });
   }
 
   // money formatting/parsing
@@ -501,7 +370,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const v = g.get(control)!.value;
     const n = this.parseMoney(v);
     g.get(control)!.setValue(this.formatPtBR(n || 0));
-    this.rebuildInstallments();
+    // Não precisa chamar rebuildInstallments() aqui, pois o valueChanges do items já faz isso
   }
 
   onInstallmentFocus(idx: number) {
@@ -529,16 +398,18 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const n = this.paymentTermsToN(
       this.form.get('paymentTerms')!.value as PaymentTerms
     );
-    // adjust form array length
     while (this.installments.length > n)
       this.installments.removeAt(this.installments.length - 1);
     while (this.installments.length < n)
       this.installments.push(this.fb.group({ amount: [''], dueDate: [''] }));
-    // distribute amounts
+
     const base = this.round2(total / n);
     const amounts = Array(n).fill(base);
     const residue = this.round2(total - this.round2(base * n));
-    amounts[n - 1] = this.round2(amounts[n - 1] + residue);
+    if (n > 0) {
+      amounts[n - 1] = this.round2(amounts[n - 1] + residue);
+    }
+
     for (let i = 0; i < n; i++) {
       this.installments
         .at(i)
@@ -555,18 +426,28 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   redistributeInstallments(editedIndex: number, editedAmount: number) {
     const total = this.amountTotal;
     const n = this.installments.length;
-    // sum of others new should be total - edited
+    if (n <= 1) {
+      // Não redistribui se só há uma parcela
+      this.installments
+        .at(editedIndex)
+        .get('amount')!
+        .setValue(this.formatPtBR(total)); // Força o total
+      return;
+    }
+
     const remaining = this.round2(total - editedAmount);
-    const others = [] as number[];
     const shareCount = n - 1;
     const base = this.round2(remaining / shareCount);
+
+    const others = [] as number[];
     for (let i = 0; i < n; i++) {
       if (i === editedIndex) continue;
       others.push(base);
     }
+
     const sumOthers = this.round2(others.reduce((a, b) => a + b, 0));
     const residue = this.round2(remaining - sumOthers);
-    // apply amounts; residue on last non-edited
+
     let oi = 0;
     for (let i = 0; i < n; i++) {
       if (i === editedIndex) continue;
@@ -577,7 +458,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       this.installments.at(i).get('amount')!.setValue(this.formatPtBR(val));
       oi++;
     }
-    // ensure edited amount formatted too
     this.installments
       .at(editedIndex)
       .get('amount')!
@@ -586,21 +466,10 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
 
   // submit
   onSubmit() {
-    console.log('🔍 onSubmit chamado');
-    console.log('📝 orderForm.invalid:', this.orderForm.invalid);
-    console.log('📝 items.length:', this.items.length);
-    console.log('📝 orderForm value:', this.orderForm.value);
-    console.log('📝 orderForm errors:', this.orderForm.errors);
-
-    // Usar orderForm (alias de form) para validação e para ler valores desabilitados
-    if (this.orderForm.invalid || this.items.length === 0) {
-      console.error('❌ Form inválido ou sem itens');
-
-      // Marca todos os campos como touched para mostrar erros visuais
+    // Usa orderForm (alias de form) para validação e para ler valores desabilitados
+    if (this.orderForm.invalid) {
       this.orderForm.markAllAsTouched();
       this.items.controls.forEach((item) => item.markAllAsTouched());
-
-      // Exibe tooltip de erro no topo
       this.toastService.error(
         '❌ Formulário inválido. Verifique os campos marcados em vermelho.'
       );
@@ -608,21 +477,16 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Validação inicial passou, obtendo valores...');
-    // .getRawValue() pega os valores de campos desabilitados (como 'responsibleId')
     const formData = this.orderForm.getRawValue() as any;
-    console.log('📦 formData:', formData);
 
-    // --- REGRA CORRIGIDA: Prazo do assistente deve ser < prazo do cliente do item ---
+    // --- Validação de Prazos ---
     for (let idx = 0; idx < (formData.items || []).length; idx++) {
       const it = formData.items[idx] || {};
 
-      // Validar que ambos os prazos existem
       if (!it.assistantDeadline) {
         this.toastService.error(
           `⚠️ Item #${idx + 1}: Prazo do Assistente é obrigatório.`
         );
-        // Marca o campo específico
         const itemForm = this.items.at(idx) as FormGroup;
         itemForm.get('assistantDeadline')?.markAsTouched();
         itemForm.get('assistantDeadline')?.setErrors({ required: true });
@@ -633,7 +497,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         this.toastService.error(
           `⚠️ Item #${idx + 1}: Prazo do Cliente é obrigatório.`
         );
-        // Marca o campo específico
         const itemForm = this.items.at(idx) as FormGroup;
         itemForm.get('clientDeadline')?.markAsTouched();
         itemForm.get('clientDeadline')?.setErrors({ required: true });
@@ -641,16 +504,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Comparar prazo do assistente com prazo do cliente do item
-      const [ad, am, ay] = String(it.assistantDeadline)
-        .split('/')
-        .map((s: string) => Number(s));
-      const [cd, cm, cy] = String(it.clientDeadline)
-        .split('/')
-        .map((s: string) => Number(s));
-
-      const assistantDate = new Date(ay || 0, (am || 1) - 1, ad || 1).getTime();
-      const clientDate = new Date(cy || 0, (cm || 1) - 1, cd || 1).getTime();
+      const assistantDate = this.parseDate(it.assistantDeadline);
+      const clientDate = this.parseDate(it.clientDeadline);
 
       if (assistantDate >= clientDate) {
         this.toastService.error(
@@ -658,7 +513,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
             it.assistantDeadline
           }) deve ser anterior ao Prazo do Cliente (${it.clientDeadline}).`
         );
-        // Marca ambos os campos em vermelho
         const itemForm = this.items.at(idx) as FormGroup;
         itemForm.get('assistantDeadline')?.markAsTouched();
         itemForm.get('clientDeadline')?.markAsTouched();
@@ -669,23 +523,16 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     }
     // --- Fim da Validação ---
 
-    console.log('✅ Todas validações passaram, criando DTO...');
     const payload: CreateOrderDto = this.toDto();
-    console.log('📤 Payload para enviar:', payload);
 
-    console.log('🚀 Chamando ordersService.create...');
     this.ordersService.create(payload).subscribe({
       next: (res: OrderResponseDto) => {
-        console.log('✅ Ordem criada com sucesso:', res);
-
-        // Exibe modal de sucesso com o número da ordem
         this.createdOrderNumber = res.orderNumber || res.id;
         this.createdOrderId = res.id;
         this.showSuccessModal = true;
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('❌ Erro ao criar ordem:', err);
         const errorMsg = err?.error?.message || 'Falha ao criar a ordem';
         this.toastService.error(`❌ ${errorMsg}`);
       },
@@ -700,43 +547,45 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
 
   resetForm() {
     this.form.reset({
-      clientId: '',
+      clientId: null,
       contractDate: this.todayPt(),
-      paymentMethod: '',
+      paymentMethod: 'pix',
       paymentTerms: 'ONE',
     });
     this.items.clear();
     this.installments.clear();
-    this.addItem();
+    this.addItem(); // Adiciona um item limpo
     this.rebuildInstallments();
   }
 
   // mapping
   toDto(): CreateOrderDto {
-    const paymentMethod = this.form.get('paymentMethod')!.value as string;
+    // Pega o valor "raw" para incluir campos desabilitados (como responsibleUserId)
+    const rawForm = this.form.getRawValue();
+
+    const paymentMethod = rawForm.paymentMethod as string;
     const dto: CreateOrderDto & { paymentMethod?: string } = {
-      clientId: this.form.get('clientId')!.value,
-      contractDate: this.toIso(this.form.get('contractDate')!.value),
-      paymentTerms: this.form.get('paymentTerms')!.value as PaymentTerms,
-      items: this.items.controls.map((g, idx) => {
-        const fg = g as FormGroup;
-        const fidVal = fg.get('functionalityId')!.value as any;
-        const functionalityId =
-          typeof fidVal === 'string' ? fidVal : fidVal?.id;
+      clientId: rawForm.clientId,
+      contractDate: this.toIso(rawForm.contractDate),
+      paymentTerms: rawForm.paymentTerms as PaymentTerms,
+      items: rawForm.items.map((it: any) => {
         const item: CreateOrderItemDto = {
-          functionalityId: functionalityId,
-          price: this.parseMoney(fg.get('price')!.value) || 0,
-          clientDeadline: this.toIso(fg.get('clientDeadline')!.value),
+          functionalityId: it.functionalityId, // ID já é string
+          price: this.parseMoney(it.price) || 0,
+          clientDeadline: this.toIso(it.clientDeadline),
+          assistantDeadline: this.toIso(it.assistantDeadline), // Campo obrigatório
+          // CORREÇÃO: Adiciona assistantAmount
+          assistantAmount: this.parseMoney(it.assistantAmount) || 0,
         };
-        const rid = fg.get('responsibleUserId')!.value;
-        if (rid) item.responsibleUserId = rid;
-        const ad = fg.get('assistantDeadline')!.value;
-        if (ad) item.assistantDeadline = this.toIso(ad);
-        // Do not send amountForAssistant; backend rejects this property currently
+
+        // Adiciona responsável apenas se selecionado
+        if (it.responsibleUserId) {
+          item.responsibleUserId = it.responsibleUserId;
+        }
+
         return item;
       }),
     };
-    // Send paymentMethod at order-level (backend expects it here)
     if (paymentMethod) dto.paymentMethod = paymentMethod;
     return dto;
   }
@@ -757,9 +606,12 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       '0'
     )}`;
   }
+  parseDate(ddmmyyyy: string): number {
+    const [dd, mm, yyyy] = (ddmmyyyy || '').split('/').map(Number);
+    return new Date(yyyy || 0, (mm || 1) - 1, dd || 1).getTime();
+  }
   addDaysPt(ddmmyyyy: string, days: number): string {
-    const [dd, mm, yyyy] = ddmmyyyy.split('/').map((s) => Number(s));
-    const d = new Date(yyyy, (mm || 1) - 1, dd || 1);
+    const d = new Date(this.parseDate(ddmmyyyy));
     d.setDate(d.getDate() + days);
     const rdd = String(d.getDate()).padStart(2, '0');
     const rmm = String(d.getMonth() + 1).padStart(2, '0');
@@ -783,15 +635,24 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     if (typeof v === 'number') return v;
     let s = String(v).trim();
     if (!s) return null;
-    // remove currency symbols and spaces
     s = s.replace(/[^0-9,.-]/g, '');
-    // if has comma as decimal
     if (s.includes(',') && s.lastIndexOf(',') > s.lastIndexOf('.')) {
       s = s.replace(/[.]/g, '');
       s = s.replace(',', '.');
     }
     const n = Number(s);
     return isNaN(n) ? null : this.round2(n);
+  }
+
+  // Validador de dinheiro
+  minMoney(min: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = this.parseMoney(control.value);
+      if (value == null || value < min) {
+        return { minMoney: { requiredValue: min, actualValue: value } };
+      }
+      return null;
+    };
   }
 
   // template helper for responsible name
@@ -811,10 +672,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const clientD = group.get('clientDeadline')?.value as string;
     const assistantD = group.get('assistantDeadline')?.value as string;
     if (assistantD && clientD) {
-      const [ad, am, ay] = (assistantD || '').split('/').map(Number);
-      const [cd, cm, cy] = (clientD || '').split('/').map(Number);
-      const aDate = new Date(ay || 0, (am || 1) - 1, ad || 1).getTime();
-      const cDate = new Date(cy || 0, (cm || 1) - 1, cd || 1).getTime();
+      const aDate = this.parseDate(assistantD);
+      const cDate = this.parseDate(clientD);
       if (aDate >= cDate) return { assistantAfterClient: true };
     }
     return null;

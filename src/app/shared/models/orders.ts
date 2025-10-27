@@ -1,7 +1,3 @@
-// Shared types and interfaces for Orders domain (frontend <-> backend contract)
-
-import { Client } from '../../../modules/clients/interfaces/client.interface';
-
 export type PaymentMethod = 'pix' | 'transfer' | 'deposit' | 'card' | 'other';
 export type PaymentTerms = 'ONE' | 'TWO' | 'THREE';
 export type PaymentStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
@@ -24,37 +20,31 @@ export interface OrderInstallment {
   paidAt?: string; // ISO
   channel?: PaymentMethod | string;
 }
-
-export interface ResponsibilityUser {
+export interface OrderItemResponsible {
   userId: string;
   name?: string;
-  email?: string;
-}
-
-export interface OrderItemResponsibility {
-  id?: string;
-  orderItemId?: string;
-  userId: string;
-  assistantDeadline?: string; // YYYY-MM-DD
-  amount?: number; // collaborator amount
-  paidAt?: string; // ISO
-  delivered?: boolean;
+  assistantDeadline?: string | null; // YYYY-MM-DD
+  amount?: number;
 }
 
 export interface OrderItem {
   id: string;
   orderId?: string;
-  functionalityId: string;
-  functionalityName?: string;
+
+  functionality: {
+    id: string;
+    name?: string;
+  };
+
   clientId: string;
   price: number;
   paymentMethod?: string; // keep string for flexibility
   clientDeadline: string; // YYYY-MM-DD
-  status: ItemStatus | string;
-  responsibleUserId?: string;
-  responsibleUserName?: string;
-  assistantDeadline?: string; // YYYY-MM-DD
-  amountForAssistant?: number;
+
+  itemStatus: ItemStatus | string;
+
+  responsible?: OrderItemResponsible;
+
   serviceStartDate?: string; // YYYY-MM-DD
   serviceEndDate?: string; // YYYY-MM-DD
   userStatus?: ItemStatus | string;
@@ -65,11 +55,14 @@ export interface OrderItem {
 export interface OrderResponseDto {
   id: string;
   orderNumber: string;
-  tenantId: string;
+
   clientId: string;
-  client?: Client;
-  clientName?: string;
-  clientEmail?: string;
+
+  client: {
+    id: string;
+    name?: string;
+  };
+
   contractDate: string; // YYYY-MM-DD
   description?: string;
   amountTotal: number;
@@ -92,7 +85,9 @@ export interface CreateOrderItemDto {
   description?: string;
   responsibleUserId?: string;
   assistantDeadline?: string; // YYYY-MM-DD
-  amountForAssistant?: number;
+
+  assistantAmount?: number;
+
   serviceStartDate?: string; // YYYY-MM-DD
   serviceEndDate?: string; // YYYY-MM-DD
   userStatus?: ItemStatus | string;
@@ -105,4 +100,6 @@ export interface CreateOrderDto {
   description?: string;
   paymentTerms?: PaymentTerms; // default set by backend if omitted
   items: CreateOrderItemDto[];
+
+  paymentMethod?: PaymentMethod | string;
 }

@@ -18,30 +18,28 @@ import {
   take,
 } from 'rxjs/operators';
 
-// CORREÇÃO: Importa a interface de paginação do serviço
+// Importa a interface de paginação do serviço
 import {
   OrdersService,
   IListOrdersFilter,
-  PaginatedOrders, // Importado
+  PaginatedOrders,
 } from '../../services/orders.service';
 
-// CORREÇÃO: Importa o nome correto 'OrderItemResponsibility' (baseado nos teus ficheiros de models)
+// Importa a interface de Ordem (IOrder)
 import {
   OrderResponseDto as IOrder,
-  OrderItemResponsibility, // Nome corrigido
+  // OrderItemResponsibility removida (não é mais usada diretamente)
 } from '../../interfaces/order.interface';
 
 // Imports para os filtros
 import { ClientsService } from '../../../clients/services/clients.service';
 import { Client } from '../../../clients/interfaces/client.interface';
 import { FunctionalitiesService } from '../../../functionalities/services/functionalities.service';
-// CORREÇÃO: O nome da interface é 'FunctionalityDto'
-import { FunctionalityDto } from '../../../functionalities/interfaces/functionalities.interface'; // Nome corrigido
+import { FunctionalityDto } from '../../../functionalities/interfaces/functionalities.interface';
 import { UsersService } from '../../../users/services/users.service';
-// CORREÇÃO: O serviço retorna 'ResponseUserDto'
-import { ResponseUserDto } from '../../../users/types/user.dto'; // Tipo corrigido
+import { ResponseUserDto } from '../../../users/types/user.dto';
 
-// Enumerações (iguais)
+// Enumerações
 enum PaymentStatus {
   PENDING = 'PENDING',
   PAID = 'PAID',
@@ -78,12 +76,12 @@ export class OrdersListComponent implements OnInit, OnDestroy {
   functionalities$!: Observable<FunctionalityDto[]>;
   users$!: Observable<ResponseUserDto[]>;
 
-  // --- CORREÇÃO "N/A": Arrays locais para tradução ---
+  // Arrays locais para tradução
   private clientsList: Client[] = [];
   private functionalitiesList: FunctionalityDto[] = [];
   private usersList: ResponseUserDto[] = [];
 
-  // Mapeamentos para os selects de status (iguais)
+  // Mapeamentos para os selects de status
   paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
     key,
     value,
@@ -93,13 +91,12 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     value,
   }));
 
-  // --- CORREÇÃO: Paginação (restaurada) ---
+  // Paginação
   totalOrders = 0;
   pageSize = 10;
   currentPage = 0; // base 0 (pageIndex)
 
   private destroy$ = new Subject<void>();
-  // Este BehaviorSubject vai guardar o estado ATUAL dos filtros (incluindo paginação)
   private filtersTrigger$ = new BehaviorSubject<IListOrdersFilter>({
     page: 1, // API espera base 1
     pageSize: this.pageSize,
@@ -144,9 +141,9 @@ export class OrdersListComponent implements OnInit, OnDestroy {
    * inicia a subscrição principal que busca as Vendas.
    */
   private loadFilterDataAndSubscribeToOrders(): void {
-    // CORREÇÃO: Usa os métodos corretos dos serviços
+    // Usa os métodos corretos dos serviços
     this.clients$ = this.clientsService.getClients();
-    this.functionalities$ = this.functionalitiesService.getAll(); // Método correto do service
+    this.functionalities$ = this.functionalitiesService.getAll();
     this.users$ = this.usersService.getUsers(); // Nome 'getUsers' assumido
 
     // Usamos forkJoin para esperar que TODOS os dados dos filtros cheguem
@@ -157,7 +154,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ clients, functionalities, users }) => {
-        // --- CORREÇÃO "N/A": Guardamos os dados nas listas locais ---
+        // Guardamos os dados nas listas locais
         this.clientsList = clients;
         this.functionalitiesList = functionalities;
         this.usersList = users;
@@ -190,11 +187,11 @@ export class OrdersListComponent implements OnInit, OnDestroy {
             to: formValues.to || undefined,
           };
 
-          // CORREÇÃO: O serviço agora retorna 'PaginatedOrders'
+          // O serviço agora retorna 'PaginatedOrders'
           return this.ordersService.getAllOrders(combinedFilters);
         }),
         tap((response: PaginatedOrders) => {
-          // CORREÇÃO: Extraímos 'data' e 'total' da resposta
+          // Extraímos 'data' e 'total' da resposta
           this.orders$.next(response.data);
           this.totalOrders = response.total;
           this.isLoading$.next(false);
@@ -235,7 +232,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     // O 'setupFormSubscription' já vai detetar a mudança e recarregar
   }
 
-  // Navegação (igual)
+  // Navegação
   viewDetails(orderId: string): void {
     this.router.navigate(['/orders', orderId]);
   }
@@ -244,7 +241,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/orders/create']);
   }
 
-  // --- CORREÇÃO: Lógica de Paginação (restaurada) ---
+  // Lógica de Paginação
   handlePageEvent(event: PageEvent): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
@@ -255,13 +252,14 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- CORREÇÃO "N/A": Funções de Tradução (usadas no HTML) ---
+  // --- Funções de Tradução (usadas no HTML) ---
 
   /**
    * Encontra o nome do Cliente baseado no ID.
    * Usa a lista 'clientsList' carregada no início.
    */
-  getClientName(clientId: string): string {
+  // CORREÇÃO: Aceita 'string | undefined'
+  getClientName(clientId: string | undefined): string {
     if (!clientId || this.clientsList.length === 0) return 'N/A';
     const client = this.clientsList.find((c) => c.id === clientId);
     return client?.name || 'N/A';
@@ -271,7 +269,8 @@ export class OrdersListComponent implements OnInit, OnDestroy {
    * Encontra o nome da Funcionalidade baseado no ID.
    * Usa a lista 'functionalitiesList' carregada no início.
    */
-  getFunctionalityName(funcId: string): string {
+  // CORREÇÃO: Aceita 'string | undefined'
+  getFunctionalityName(funcId: string | undefined): string {
     if (!funcId || this.functionalitiesList.length === 0) return 'N/A';
     const func = this.functionalitiesList.find((f) => f.id === funcId);
     return func?.name || 'N/A';
@@ -283,7 +282,8 @@ export class OrdersListComponent implements OnInit, OnDestroy {
    * 2. Pega o 'responsibleUserId' dessa funcionalidade.
    * 3. Encontra o nome do Usuário por esse 'responsibleUserId'.
    */
-  getResponsibleName(funcId: string): string {
+  // CORREÇÃO: Aceita 'string | undefined'
+  getResponsibleName(funcId: string | undefined): string {
     if (
       !funcId ||
       this.functionalitiesList.length === 0 ||
@@ -300,20 +300,18 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     return user?.name || 'N/A';
   }
 
-  // (A função 'getResponsiblesNames' foi removida, pois 'responsibilities' não vem na API de Vendas)
-
-  // Mapeia o status para classes de 'badge' do Bootstrap (igual)
+  // Mapeia o status para classes de 'badge' do Bootstrap
   getStatusClass(status: string): string {
     switch (status) {
       case 'PAID':
       case 'FINISHED':
-      case 'COMPLETED': // Adicionado (vi no JSON)
+      case 'COMPLETED':
         return 'text-bg-success';
       case 'PENDING':
       case 'IN_PROGRESS':
-      case 'AWAITING_CLIENT': // Adicionado
-      case 'AWAITING_ADVISOR': // Adicionado
-      case 'PARTIALLY_PAID': // Adicionado
+      case 'AWAITING_CLIENT':
+      case 'AWAITING_ADVISOR':
+      case 'PARTIALLY_PAID':
         return 'text-bg-warning';
       case 'OVERDUE':
         return 'text-bg-info';
@@ -324,7 +322,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Mapeia o status para texto traduzido (igual)
+  // Mapeia o status para texto traduzido
   translateStatus(status: string): string {
     const statusMap: { [key: string]: string } = {
       PENDING: 'Pendente',

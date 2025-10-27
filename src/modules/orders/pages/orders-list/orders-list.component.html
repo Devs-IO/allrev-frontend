@@ -155,12 +155,12 @@
             <tr *ngFor="let order of orders$ | async">
               <td>#{{ order.orderNumber }}</td>
 
-              <td>{{ getClientName(order.client?.id) }}</td>
+              <td>{{ getClientName(order.client.id) }}</td>
               <td>
-                {{ getFunctionalityName(order.items?.[0]?.functionality?.id) }}
+                {{ getFunctionalityName(order.items[0]?.functionality?.id) }}
               </td>
               <td>
-                {{ getResponsibleName(order.items?.[0]?.functionality?.id) }}
+                {{ getResponsibleName(order.items[0]?.functionality?.id) }}
               </td>
 
               <td>{{ order.contractDate | date : "dd/MM/yyyy" }}</td>
