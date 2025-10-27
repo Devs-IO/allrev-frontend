@@ -56,19 +56,19 @@ export class FunctionalitiesOrdersAdapter {
   ): ServiceOrderResponseDto {
     return {
       clientId: order.clientId,
-      clientName: order.clientName || '',
-      clientEmail: order.clientEmail || '',
+      clientName: order.client?.name || '',
+      clientEmail: '', // not available in new model
       totalAmount: order.amountTotal,
       totalAssistantAmount:
         order.items?.reduce(
-          (sum, it) => sum + (it.amountForAssistant || 0),
+          (sum, it) => sum + (it.responsible?.amount || 0),
           0
         ) || 0,
       serviceCount: order.items?.length || 0,
       services: (order.items || []).map((it) => ({
         id: it.id,
-        functionalityId: it.functionalityId,
-        functionalityName: it.functionalityName || '',
+        functionalityId: it.functionality.id,
+        functionalityName: it.functionality.name || '',
         totalPrice: it.price,
         paymentMethod: it.paymentMethod || '',
         clientDeadline: it.clientDeadline,
@@ -78,10 +78,10 @@ export class FunctionalitiesOrdersAdapter {
           order.paymentStatus === 'PAID'
             ? order.updatedAt || order.createdAt
             : undefined,
-        responsibleUserId: it.responsibleUserId,
-        responsibleUserName: it.responsibleUserName,
-        assistantDeadline: it.assistantDeadline,
-        assistantAmount: it.amountForAssistant,
+        responsibleUserId: it.responsible?.userId,
+        responsibleUserName: it.responsible?.name,
+        assistantDeadline: it.responsible?.assistantDeadline || undefined,
+        assistantAmount: it.responsible?.amount,
         assistantPaidAt: undefined,
         delivered:
           it.userStatus === 'DELIVERED' || it.userStatus === 'COMPLETED',
@@ -109,7 +109,7 @@ export class FunctionalitiesOrdersAdapter {
 
     const totalAssistant =
       (order.items || []).reduce(
-        (sum, it) => sum + (it.amountForAssistant || 0),
+        (sum, it) => sum + (it.responsible?.amount || 0),
         0
       ) || 0;
 
@@ -133,8 +133,8 @@ export class FunctionalitiesOrdersAdapter {
     return {
       orderId: order.id,
       clientId: order.clientId,
-      clientName: order.clientName || '',
-      clientEmail: order.clientEmail || '',
+      clientName: order.client?.name || '',
+      clientEmail: '', // not available in new model
       clientInstitution: undefined,
       deadline: aggDeadline,
       contractDate: order.contractDate,
@@ -147,8 +147,8 @@ export class FunctionalitiesOrdersAdapter {
       ),
       services: (order.items || []).map((it) => ({
         id: it.id,
-        functionalityId: it.functionalityId,
-        functionalityName: it.functionalityName || '',
+        functionalityId: it.functionality.id,
+        functionalityName: it.functionality.name || '',
         totalPrice: it.price,
         paymentMethod: it.paymentMethod || '',
         clientDeadline: it.clientDeadline,
@@ -161,14 +161,14 @@ export class FunctionalitiesOrdersAdapter {
           order.paymentStatus === 'PAID'
             ? order.updatedAt || order.createdAt
             : undefined,
-        responsibleUserId: it.responsibleUserId,
-        responsibleUserName: it.responsibleUserName,
-        assistantDeadline: it.assistantDeadline,
-        assistantAmount: it.amountForAssistant,
+        responsibleUserId: it.responsible?.userId,
+        responsibleUserName: it.responsible?.name,
+        assistantDeadline: it.responsible?.assistantDeadline || undefined,
+        assistantAmount: it.responsible?.amount,
         serviceStartDate: it.serviceStartDate,
         serviceEndDate: it.serviceEndDate,
         userStatus: it.userStatus,
-        price: it.amountForAssistant,
+        price: it.responsible?.amount,
         delivered:
           it.userStatus === 'DELIVERED' || it.userStatus === 'COMPLETED',
         createdAt: order.createdAt,

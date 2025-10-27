@@ -13,9 +13,7 @@
         <button
           type="button"
           class="btn btn-primary"
-          [disabled]="
-            form.invalid || items.length === 0 || installments.length === 0
-          "
+          [disabled]="form.invalid"
           (click)="onSubmit()"
         >
           <i class="bi bi-save"></i> Salvar
@@ -24,7 +22,6 @@
     </div>
     <div class="card-body">
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <!-- Informações do Cliente / Pagamento -->
         <div class="card mb-4">
           <div class="card-header">
             <h5><i class="bi bi-person"></i> Informações do Cliente</h5>
@@ -41,8 +38,8 @@
                   formControlName="clientId"
                   [class.is-invalid]="invalid('clientId')"
                 >
-                  <option value="" disabled>Selecione…</option>
-                  <option *ngFor="let c of clients" [value]="c.id">
+                  <option [ngValue]="null" disabled>Selecione…</option>
+                  <option *ngFor="let c of clients$ | async" [value]="c.id">
                     {{ c.name }}
                   </option>
                 </select>
@@ -60,11 +57,10 @@
                   <span class="req">*</span></label
                 >
                 <input
-                  type="text"
+                  type="date"
                   class="form-control"
-                  appBrDatepicker
-                  (dateChange)="onDateChange('contractDate', $event)"
-                  [value]="form.get('contractDate')!.value"
+                  formControlName="contractDate"
+                  [class.is-invalid]="invalid('contractDate')"
                 />
                 <div class="form-text">
                   <small>Data em que o serviço foi contratado.</small>
@@ -81,7 +77,7 @@
                   formControlName="paymentMethod"
                   [class.is-invalid]="invalid('paymentMethod')"
                 >
-                  <option value="" disabled>Selecione…</option>
+                  <option [ngValue]="null" disabled>Selecione…</option>
                   <option *ngFor="let m of paymentMethods" [value]="m.value">
                     {{ m.label }}
                   </option>
@@ -108,7 +104,6 @@
           </div>
         </div>
 
-        <!-- Serviços Contratados -->
         <div class="card mb-4 mt-3">
           <div
             class="card-header d-flex justify-content-between align-items-center"
@@ -116,8 +111,9 @@
             <h5><i class="bi bi-list-task"></i> Serviços Contratados</h5>
             <button
               type="button"
-              class="btn btn-sm btn-outline-light"
+              class="btn btn-sm btn-outline-primary"
               (click)="addItem()"
+              [disabled]="form.invalid"
             >
               <i class="bi bi-plus"></i> Adicionar Serviço
             </button>
@@ -126,7 +122,7 @@
             <div formArrayName="items">
               <div
                 class="service-item border rounded p-3 mb-3"
-                *ngFor="let g of items.controls; let i = index"
+                *ngFor="let item of items.controls; let i = index"
                 [formGroupName]="i"
               >
                 <div class="row g-3">
@@ -138,216 +134,127 @@
                     <select
                       class="form-control"
                       formControlName="functionalityId"
-                      (change)="
-                        onServiceSelected(
-                          items.at(i).get('functionalityId')?.value,
-                          items.at(i)
-                        )
-                      "
+                      (change)="onFunctionalityChange(i, $event)"
+                      [class.is-invalid]="itemInvalid(i, 'functionalityId')"
                     >
                       <option [ngValue]="null" disabled>Selecione…</option>
                       <option
                         *ngFor="let f of functionalities$ | async"
-                        [ngValue]="f"
+                        [value]="f.id"
                       >
                         {{ f.name }}
                       </option>
                     </select>
-                    <div
-                      *ngIf="invalidItem(i, 'functionalityId')"
-                      class="invalid-feedback d-block"
-                    >
-                      Obrigatório.
-                    </div>
                   </div>
 
-                  <div class="col-12 col-md-6">
+                  <div class="col-12 col-md-3">
                     <label class="form-label"
-                      ><i class="bi bi-currency-dollar"></i> Preço
+                      ><i class="bi bi-currency-dollar"></i> Preço (Cliente)
                       <span class="req">*</span></label
                     >
                     <input
-                      type="text"
+                      type="number"
                       class="form-control"
                       formControlName="price"
-                      (focus)="onMoneyFocus(i, 'price')"
-                      (blur)="onMoneyBlur(i, 'price')"
+                      [class.is-invalid]="itemInvalid(i, 'price')"
                     />
-                    <div
-                      *ngIf="invalidItem(i, 'price')"
-                      class="invalid-feedback d-block"
-                    >
-                      Informe um valor.
-                    </div>
                   </div>
 
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-3">
                     <label class="form-label"
-                      ><i class="bi bi-calendar-event"></i> Prazo cliente
+                      ><i class="bi bi-calendar-check"></i> Prazo (Cliente)
                       <span class="req">*</span></label
                     >
                     <input
-                      type="text"
+                      type="date"
                       class="form-control"
                       formControlName="clientDeadline"
-                      appBrDatepicker
-                      (dateChange)="
-                        onItemDateChange(i, 'clientDeadline', $event)
-                      "
-                      [value]="items.at(i).get('clientDeadline')!.value"
+                      [class.is-invalid]="itemInvalid(i, 'clientDeadline')"
                     />
-                    <div
-                      *ngIf="invalidItem(i, 'clientDeadline')"
-                      class="invalid-feedback d-block"
-                    >
-                      Obrigatório.
-                    </div>
                   </div>
 
                   <div class="col-12 col-md-4">
                     <label class="form-label"
-                      ><i class="bi bi-person-fill-gear"></i> Responsável</label
+                      ><i class="bi bi-person-check"></i> Responsável</label
                     >
                     <select
                       class="form-control"
-                      formControlName="responsibleId"
-                      [disabled]="!!items.at(i).get('responsibleId')?.disabled"
+                      formControlName="responsibleUserId"
                     >
-                      <option [ngValue]="null">—</option>
+                      <option [ngValue]="null">Ninguém (Padrão)</option>
                       <option
-                        *ngFor="let u of responsibleUsers$ | async"
-                        [value]="u.id"
+                        *ngFor="let user of users$ | async"
+                        [value]="user.id"
                       >
-                        {{ u.name }}
+                        {{ user.name }}
                       </option>
                     </select>
                   </div>
 
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-2">
                     <label class="form-label"
-                      ><i class="bi bi-calendar-check"></i> Prazo
-                      assistente</label
+                      ><i class="bi bi-cash"></i> Valor (Assist.)</label
                     >
                     <input
-                      type="text"
-                      class="form-control"
-                      formControlName="assistantDeadline"
-                      appBrDatepicker
-                      (dateChange)="
-                        onItemDateChange(i, 'assistantDeadline', $event)
-                      "
-                      [value]="items.at(i).get('assistantDeadline')!.value"
-                    />
-                    <div
-                      *ngIf="hasItemDeadlineError(i)"
-                      class="invalid-feedback d-block"
-                    >
-                      Prazo do assistente deve ser anterior ao prazo do cliente.
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-md-4">
-                    <label class="form-label"
-                      ><i class="bi bi-cash-coin"></i> Valor assistente</label
-                    >
-                    <input
-                      type="text"
+                      type="number"
                       class="form-control"
                       formControlName="assistantAmount"
-                      (focus)="onMoneyFocus(i, 'assistantAmount')"
-                      (blur)="onMoneyBlur(i, 'assistantAmount')"
                     />
                   </div>
 
-                  <div class="col-12 d-flex justify-content-end">
+                  <div class="col-12 col-md-3">
+                    <label class="form-label"
+                      ><i class="bi bi-calendar-minus"></i> Prazo
+                      (Assist.)</label
+                    >
+                    <input
+                      type="date"
+                      class="form-control"
+                      formControlName="assistantDeadline"
+                    />
+                  </div>
+
+                  <div class="col-12 col-md-3 d-flex align-items-end">
                     <button
                       type="button"
-                      class="btn btn-outline-danger btn-sm"
+                      class="btn btn-sm btn-outline-danger w-100"
                       (click)="removeItem(i)"
+                      aria-label="Remover este serviço"
                     >
                       <i class="bi bi-trash"></i> Remover
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Parcelas -->
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5><i class="bi bi-receipt"></i> Parcelas</h5>
-          </div>
-          <div class="card-body">
-            <div formArrayName="installments">
               <div
-                class="row g-3 align-items-end"
-                *ngFor="let inst of installments.controls; let idx = index"
-                [formGroupName]="idx"
+                *ngIf="items.controls.length === 0"
+                class="text-center text-muted p-3"
               >
-                <div class="col-12 col-md-4">
-                  <label class="form-label"
-                    ><i class="bi bi-cash"></i> Valor</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="amount"
-                    (focus)="onInstallmentFocus(idx)"
-                    (blur)="onInstallmentBlur(idx)"
-                  />
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label"
-                    ><i class="bi bi-calendar"></i> Vencimento</label
-                  >
-                  <input
-                    type="text"
-                    class="form-control"
-                    appBrDatepicker
-                    (dateChange)="onInstallmentDateChange(idx, $event)"
-                    [value]="installments.at(idx).get('dueDate')!.value"
-                  />
-                </div>
-                <div class="col-12 col-md-4 d-flex align-items-end">
-                  <span class="text-muted">#{{ idx + 1 }}</span>
-                </div>
+                Nenhum serviço adicionado. Clique em "Adicionar Serviço" para
+                começar.
               </div>
             </div>
-            <div class="text-end mt-3">
-              <small class="text-muted">Total itens:</small>
-              <strong>{{ formatPtBR(amountTotal) }}</strong>
-            </div>
           </div>
         </div>
 
-        <!-- Hidden submit to support Enter key -->
-        <button type="submit" class="d-none" aria-hidden="true"></button>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button
+            type="button"
+            class="btn btn-lg btn-outline-secondary"
+            (click)="resetForm()"
+          >
+            Limpar Formulário
+          </button>
+          <button
+            type="submit"
+            class="btn btn-lg btn-primary"
+            [disabled]="form.invalid"
+          >
+            Salvar Ordem de Serviço
+          </button>
+        </div>
       </form>
     </div>
-  </div>
-
-  <!-- Footer fixed actions -->
-  <div
-    class="orders-create-footer py-2 bg-white border-top d-flex justify-content-end gap-2 position-sticky bottom-0"
-  >
-    <button
-      type="button"
-      class="btn btn-outline-secondary"
-      (click)="resetForm()"
-    >
-      <i class="bi bi-x-circle"></i> Cancelar
-    </button>
-    <button
-      type="button"
-      class="btn btn-primary"
-      [disabled]="
-        form.invalid || items.length === 0 || installments.length === 0
-      "
-      (click)="onSubmit()"
-    >
-      <i class="bi bi-check-circle"></i> Salvar
-    </button>
   </div>
 </div>

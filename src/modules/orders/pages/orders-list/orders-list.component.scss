@@ -1,13 +1,26 @@
 // Importando variáveis globais se existirem (ajuste o caminho se necessário)
 // @import 'styles/variables';
 
+
+.container { max-width: 1200px; }
+
+// Card and table styles
+.card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: none;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
 // Estilo base para os badges de status
 .status-badge {
   display: inline-block;
   padding: 4px 8px;
   border-radius: 12px; // Mais arredondado
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 400;
   text-transform: uppercase;
   color: #fff; // Cor padrão do texto
   text-align: center;
