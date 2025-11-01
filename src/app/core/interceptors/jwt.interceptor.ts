@@ -22,10 +22,10 @@ export const jwtInterceptor: HttpInterceptorFn = (
     // ignore parse errors
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('JWT Interceptor - URL:', req.url);
-    console.log('JWT Interceptor - Token exists:', !!token);
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log('JWT Interceptor - URL:', req.url);
+  //   console.log('JWT Interceptor - Token exists:', !!token);
+  // }
 
   if (token) {
     const setHeaders: Record<string, string> = {

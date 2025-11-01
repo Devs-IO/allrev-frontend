@@ -1,686 +1,330 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  DestroyRef,
-  OnDestroy,
-  OnInit,
-  inject,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+// Angular Core
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import {
-  AbstractControl,
   FormArray,
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
+
+// RxJS
+import { Observable, debounceTime, map, withLatestFrom } from 'rxjs';
+
+// Date utilities
+import { addDays, formatISO } from 'date-fns';
+
+// Services
 import { AuthService } from '../../../../app/core/services/auth.service';
-import { OrdersService } from '../../services/orders.service';
+import { ToastService } from '../../../../app/core/services/toast.service';
 import { ClientsService } from '../../../clients/services/clients.service';
 import { FunctionalitiesService } from '../../../functionalities/services/functionalities.service';
-import { BrDatepickerDirective } from '../../../../app/core/directives/br-datepicker.directive';
-import { ToastService } from '../../../../app/core/services/toast.service';
-import { Observable, map } from 'rxjs';
-import { Client } from '../../../clients/interfaces/client.interface';
-// Aliases requested
-import type { Client as IClient } from '../../../clients/interfaces/client.interface';
-import type { FunctionalityDto as IFunctionality } from '../../../functionalities/interfaces/functionalities.interface';
-import type { User as IUser } from '../../../users/interfaces/user.interface';
 import { UsersService } from '../../../users/services/users.service';
+import { OrdersService } from '../../services/orders.service';
+
+// Interfaces - Clients
+import { Client } from '../../../clients/interfaces/client.interface';
+
+// Interfaces - Functionalities
 import { FunctionalityDto } from '../../../functionalities/interfaces/functionalities.interface';
+
+// Interfaces - Users
+import { UserProfile } from '../../../users/interfaces/user-profile.interface';
 import { ResponseUserDto } from '../../../users/types/user.dto';
-import { Role } from '../../../users/interfaces/user.enums';
+
+// Interfaces - Orders (shared models)
 import {
   CreateOrderDto,
-  CreateOrderItemDto,
-  OrderResponseDto,
-  PaymentTerms,
+  PaymentMethod,
+  OrderInstallment,
 } from '../../../../app/shared/models/orders';
 
 @Component({
   selector: 'app-orders-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BrDatepickerDirective],
-  // changeDetection: ChangeDetectionStrategy.OnPush, // TEMPORARIAMENTE REMOVIDO PARA DEBUG
-  styleUrls: ['./orders-create.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './orders-create.component.html',
+  styleUrls: ['./orders-create.component.scss'],
 })
-export class OrdersCreateComponent implements OnInit, OnDestroy {
-  // services retained via inject when not in the requested constructor block
-  private destroyRef = inject(DestroyRef);
-  private auth = inject(AuthService);
-
-  // Observables and form (as requested)
+export class OrdersCreateComponent implements OnInit {
   orderForm!: FormGroup;
-  clients$!: Observable<IClient[]>;
-  functionalities$!: Observable<IFunctionality[]>;
+  clients$!: Observable<Client[]>;
+  functionalities$!: Observable<FunctionalityDto[]>;
+  assistants$!: Observable<ResponseUserDto[]>;
+  currentUser!: UserProfile;
 
-  // CORREÇÃO: Renomeado de 'assistants$' para 'users$' para clareza
-  users$!: Observable<IUser[]>;
-  responsibleUsers$!: Observable<IUser[]>; // TODO: popular corretamente
-
-  // Modal de sucesso
-  showSuccessModal = false;
-  createdOrderNumber = '';
-  createdOrderId = '';
+  paymentMethods: PaymentMethod[] = [
+    'pix',
+    'transfer',
+    'deposit',
+    'card',
+    'other',
+  ];
+  // REQ 4: Limite de parcelas atualizado
+  installmentsOptions = [1, 2, 3];
 
   constructor(
     private fb: FormBuilder,
-    private ordersService: OrdersService,
     private clientsService: ClientsService,
     private functionalitiesService: FunctionalitiesService,
     private usersService: UsersService,
-    private router: Router,
+    private ordersService: OrdersService,
+    private authService: AuthService,
     private toastService: ToastService,
-    private cdr: ChangeDetectorRef
+    private router: Router
   ) {}
 
-  // data
-  clients: Array<{ id: string; name: string }> = [];
-  private currentUserId: string | null = null;
-  private currentUserName: string | null = null;
-  functionalities: Array<{
-    id: string;
-    name: string;
-    minimumPrice: number;
-    defaultAssistantPrice?: number;
-    responsibleUserId?: string; // Adicionado para 'ownFunctionality'
-  }> = [];
-  responsibleUsers: Array<{ id: string; name: string }> = [];
-
-  // Must match backend: 'pix' | 'transfer' | 'deposit' | 'card' | 'other'
-  paymentMethods = [
-    { value: 'pix', label: 'Pix' },
-    { value: 'transfer', label: 'Transferência' },
-    { value: 'deposit', label: 'Depósito' },
-    { value: 'card', label: 'Cartão' },
-    { value: 'other', label: 'Outro' },
-  ];
-
-  // form
-  form!: FormGroup;
-
-  // build the form structure
-  private buildForm() {
-    this.form = this.fb.group({
-      clientId: [null, Validators.required],
-      contractDate: [this.todayPt(), Validators.required],
-      paymentMethod: ['pix', Validators.required],
-      paymentTerms: ['ONE' as PaymentTerms, Validators.required],
-      items: this.fb.array([], Validators.minLength(1)), // Pelo menos 1 item
-      installments: this.fb.array([]),
-    });
-    this.orderForm = this.form;
+  ngOnInit(): void {
+    // Ordem importante:
+    // 1. Construir o formulário (para que exista)
+    this.buildForm();
+    // 2. Carregar dados (que irão preencher o formulário, como o responsável)
+    this.loadInitialData();
+    // 3. Configurar listeners de mudanças
+    this.setupFormListeners();
   }
 
-  // initial data loader
-  private loadInitialData() {
-    this.clients$ = this.clientsService.getClients() as Observable<IClient[]>;
-    this.clientsService
-      .getClients()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (list) => {
-          this.clients = (list || []).map((c: any) => ({
-            id: c.id,
-            name:
-              c.name || c.fantasyName || c.fullName || c.email || String(c.id),
-          }));
+  buildForm(): void {
+    const today = new Date();
+    const clientDeadlineDate = addDays(today, 10);
+    const assistantDeadlineDate = addDays(today, 5);
 
-          if (this.clients.length > 0) {
-            const lastClient = this.clients[this.clients.length - 1];
-            this.form.patchValue({ clientId: lastClient.id });
-            this.cdr.markForCheck();
-          }
-        },
+    const contractDateDefault = today.toISOString().split('T')[0];
+    const clientDeadlineDefault = clientDeadlineDate
+      .toISOString()
+      .split('T')[0];
+    const assistantDeadlineDefault = assistantDeadlineDate
+      .toISOString()
+      .split('T')[0];
+
+    this.orderForm = this.fb.group({
+      clientId: [null, Validators.required],
+      functionalityId: [null, Validators.required],
+      // REQ 5: 'title' removido, 'description' adicionado
+      description: [null, Validators.required],
+      contractDate: [contractDateDefault, Validators.required],
+      clientDeadline: [clientDeadlineDefault, Validators.required],
+      assistantDeadline: [assistantDeadlineDefault],
+      clientPrice: [null, [Validators.required, Validators.min(0)]],
+      assistantPrice: [null, [Validators.min(0)]],
+      paymentMethod: ['pix' as PaymentMethod, Validators.required],
+      installments: [1, Validators.required],
+      // REQ 2/3: Trocado 'responsibles' (array) por 'responsibleId' (valor único)
+      // e 'responsibleName' (apenas exibição)
+      responsibleId: [null, Validators.required],
+      responsibleName: [null], // Campo de exibição, será desabilitado
+      installmentsArray: this.fb.array([]),
+    });
+
+    this.recalculateInstallments();
+  }
+
+  loadInitialData(): void {
+    this.clients$ = this.clientsService.getClients();
+    this.functionalities$ = this.functionalitiesService.getAll();
+    this.assistants$ = this.usersService.getUsers();
+
+    // REQ 2/3: Carregar o usuário logado e preencher o campo responsável
+    this.authService.getUserProfile().subscribe((user: UserProfile) => {
+      this.currentUser = user;
+
+      // Preenche os campos do responsável (Ex: "Brenda")
+      this.orderForm.patchValue({
+        responsibleId: user.id,
+        responsibleName: user.name,
       });
 
-    // Carregar Serviços
-    this.functionalities$ = this.functionalitiesService.getAll() as Observable<
-      IFunctionality[]
-    >;
+      // Desabilita o campo de NOME (apenas exibição)
+      this.orderForm.get('responsibleName')?.disable();
+    });
+  }
+
+  setupFormListeners(): void {
+    this.orderForm
+      .get('clientPrice')
+      ?.valueChanges.pipe(debounceTime(300))
+      .subscribe(() => {
+        this.recalculateInstallments();
+      });
+
+    this.orderForm.get('installments')?.valueChanges.subscribe(() => {
+      this.recalculateInstallments();
+    });
+  }
+
+  get installmentsArray(): FormArray {
+    return this.orderForm.get('installmentsArray') as FormArray;
+  }
+
+  createInstallmentItem(
+    value: number | null,
+    dueDate: string | null
+  ): FormGroup {
+    return this.fb.group({
+      value: [value, [Validators.required, Validators.min(0)]],
+      dueDate: [dueDate, Validators.required],
+    });
+  }
+
+  recalculateInstallments(): void {
+    const installmentsCount = this.orderForm.get('installments')?.value || 1;
+    const clientPrice = this.orderForm.get('clientPrice')?.value || 0;
+
+    const installmentValue =
+      clientPrice > 0 && installmentsCount > 0
+        ? parseFloat((clientPrice / installmentsCount).toFixed(2))
+        : null;
+
+    this.installmentsArray.clear();
+    const today = new Date();
+
+    for (let i = 0; i < installmentsCount; i++) {
+      const dueDate = addDays(today, (i + 1) * 30)
+        .toISOString()
+        .split('T')[0];
+
+      this.installmentsArray.push(
+        this.createInstallmentItem(installmentValue, dueDate)
+      );
+    }
+  }
+
+  onServiceSelected(functionalityId: string): void {
+    if (!functionalityId) return;
+
     this.functionalities$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((f) => {
-        this.functionalities = (f || []).map((it) => ({
-          id: it.id,
-          name: it.name,
-          minimumPrice: it.minimumPrice,
-          defaultAssistantPrice: it.defaultAssistantPrice,
-          responsibleUserId: (it as any).responsibleUserId,
-        }));
+      .pipe(map((funcs) => funcs.find((f) => f.id === functionalityId)))
+      .subscribe((func) => {
+        if (!func) return;
 
-        if (this.currentUserId && this.functionalities.length > 0) {
-          const ownFunctionality = this.functionalities.find(
-            (func) => (func as any).responsibleUserId === this.currentUserId
-          );
+        // ESTA ERA A LÓGICA ANTIGA QUE FUNCIONAVA
+        // E VAMOS MANTÊ-LA, SÓ ADICIONANDO A ATUALIZAÇÃO DO RESPONSÁVEL
 
-          if (ownFunctionality && this.items.length > 0) {
-            const firstItem = this.items.at(0) as FormGroup;
-            // Usa o ID da funcionalidade, não o objeto
-            firstItem.patchValue({ functionalityId: ownFunctionality.id });
-            // Dispara a lógica de auto-preenchimento
-            this.onServiceSelected(ownFunctionality as any, firstItem);
-            this.cdr.markForCheck();
-          }
+        // 1. Define o preço do cliente
+        this.orderForm.patchValue({
+          clientPrice: func.minimumPrice,
+        });
+
+        // 2. LÓGICA DO RESPONSÁVEL
+        // Verificamos se o responsável PELO SERVIÇO (func.responsibleUserId)
+        // é a usuária logada (this.currentUser.id)
+        if (func.responsibleUserId === this.currentUser.id) {
+          // Se for, o responsável é a usuária logada
+          this.orderForm.patchValue({
+            responsibleId: this.currentUser.id,
+            responsibleName: this.currentUser.name,
+            assistantPrice: null, // Zera o preço do assistente
+          });
+
+          // Desabilita o nome (pois é a própria usuária) e o preço do assistente
+          this.orderForm.get('responsibleName')?.disable();
+          this.orderForm.get('assistantPrice')?.disable();
+        } else {
+          // Se NÃO for, significa que é OUTRO assistente
+          // (Aqui precisamos encontrar o nome do outro assistente)
+
+          // ESTA PARTE É A NOVA - precisamos carregar a lista de assistentes
+          this.assistants$.subscribe((assistants) => {
+            const responsibleAssistant = assistants.find(
+              (a) => a.id === func.responsibleUserId
+            );
+
+            this.orderForm.patchValue({
+              responsibleId: func.responsibleUserId,
+              responsibleName: responsibleAssistant
+                ? responsibleAssistant.name
+                : 'Assistente não encontrado',
+              assistantPrice: func.defaultAssistantPrice, // Define o preço padrão
+            });
+
+            // Habilita os campos caso estivessem desabilitados
+            this.orderForm.get('responsibleName')?.enable(); // Deixamos editar? Ou desabilitamos?
+            // Por enquanto, vou deixar desabilitado para manter o padrão
+            this.orderForm.get('responsibleName')?.disable();
+            this.orderForm.get('assistantPrice')?.enable();
+          });
         }
       });
-
-    // CORREÇÃO: Renomeado para 'users$'
-    this.users$ = this.usersService.getUsers().pipe(
-      map((users) =>
-        (users || []).map((u) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          isActive: (u as any).isActive ?? true,
-          role: ((u as any).role || '') as Role,
-          isAdmin: false,
-        }))
-      )
-    );
-    this.responsibleUsers$ = this.users$;
-    this.users$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((users) => {
-      // Popula a lista de usuários responsáveis
-      this.responsibleUsers = (users || []).map((u) => ({
-        id: u.id,
-        name: u.name,
-      }));
-    });
   }
 
-  ngOnInit(): void {
+  resetForm(): void {
     this.buildForm();
-
-    this.auth.getUser().subscribe((u) => {
-      this.currentUserId = u?.id || null;
-      this.currentUserName = (u as any)?.name || (u as any)?.fullName || null;
-
-      this.loadInitialData();
-
-      const clientDeadline5Days = this.addDaysPt(this.todayPt(), 5);
-      const assistantDeadline3Days = this.addDaysPt(this.todayPt(), 3);
-
-      // Adiciona o primeiro item
-      this.addItem();
-
-      if (this.items.length > 0) {
-        const firstItem = this.items.at(0) as FormGroup;
-        firstItem.patchValue({
-          clientDeadline: clientDeadline5Days,
-          assistantDeadline: assistantDeadline3Days,
-        });
-      }
-    });
-
-    this.items.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.rebuildInstallments());
-    this.form
-      .get('paymentTerms')!
-      .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.rebuildInstallments());
-
-    this.rebuildInstallments();
+    // Recarrega os dados para preencher o responsável novamente
+    this.loadInitialData();
   }
 
-  ngOnDestroy(): void {}
-
-  // getters
-  get items(): FormArray<FormGroup> {
-    return this.form.get('items') as FormArray<FormGroup>;
-  }
-  get itemsFormArray(): FormArray<FormGroup> {
-    return this.orderForm.get('items') as FormArray<FormGroup>;
-  }
-  get installments(): FormArray<FormGroup> {
-    return this.form.get('installments') as FormArray<FormGroup>;
+  invalid(controlName: string): boolean {
+    const control = this.orderForm.get(controlName);
+    return !!control && control.invalid && (control.touched || control.dirty);
   }
 
-  // validation helpers
-  invalid(path: string): boolean {
-    const c = this.form.get(path);
-    return !!c && c.touched && c.invalid;
-  }
-
-  // CORREÇÃO: Renomeado para 'itemInvalid' (para bater com o HTML que forneci)
-  itemInvalid(index: number, path: string): boolean {
-    const c = (this.items.at(index) as FormGroup).get(path);
-    return !!c && c.touched && c.invalid;
-  }
-
-  // date helpers
-  onDateChange(control: string, ddmmyyyy: string) {
-    this.form.get(control)!.setValue(ddmmyyyy);
-  }
-  onItemDateChange(index: number, control: string, ddmmyyyy: string) {
-    const g = this.items.at(index) as FormGroup;
-    g.get(control)!.setValue(ddmmyyyy);
-
-    if (control === 'clientDeadline' && ddmmyyyy) {
-      const currentAssistant = g.get('assistantDeadline')!.value as string;
-      const maybe = this.addDaysPt(ddmmyyyy, -3);
-      if (!currentAssistant) {
-        g.get('assistantDeadline')!.setValue(maybe);
-      } else {
-        const aDate = this.parseDate(currentAssistant);
-        const cDate = this.parseDate(ddmmyyyy);
-        if (aDate >= cDate) g.get('assistantDeadline')!.setValue(maybe);
-      }
-    }
-    g.updateValueAndValidity();
-  }
-  onInstallmentDateChange(index: number, ddmmyyyy: string) {
-    this.installments.at(index).get('dueDate')!.setValue(ddmmyyyy);
-  }
-
-  // item handlers
-  addItem() {
-    // CORREÇÃO: Formulário do item simplificado (sem campos duplicados)
-    const itemFormGroup = this.fb.group(
-      {
-        functionalityId: [null, Validators.required],
-        price: ['R$ 0,00', [Validators.required, this.minMoney(0.01)]],
-        clientDeadline: ['', Validators.required],
-        responsibleUserId: [null as string | null], // Responsável é opcional
-        assistantDeadline: ['', Validators.required], // Prazo assistente é obrigatório
-        assistantAmount: ['R$ 0,00'],
-      },
-      { validators: [this.itemDeadlineValidator] }
-    );
-
-    this.items.push(itemFormGroup);
-  }
-
-  removeItem(i: number) {
-    this.items.removeAt(i);
-    this.rebuildInstallments();
-  }
-
-  // CORREÇÃO: Adicionada função 'onFunctionalityChange' para bater com o HTML
-  onFunctionalityChange(index: number, event: Event) {
-    const selectElement = event.target as HTMLSelectElement;
-    const functionalityId = selectElement.value;
-    const itemFormGroup = this.items.at(index) as FormGroup;
-
-    const selectedService = this.functionalities.find(
-      (f) => f.id === functionalityId
-    );
-
-    if (selectedService) {
-      this.onServiceSelected(selectedService as IFunctionality, itemFormGroup);
-    }
-  }
-
-  /**
-   * Disparado quando um "Serviço" (Functionality) é selecionado.
-   * Preenche automaticamente o Responsável, Preço e Valor Assistente.
-   */
-  onServiceSelected(
-    selectedService: IFunctionality,
-    itemFormGroup: AbstractControl
-  ): void {
-    const item = itemFormGroup as FormGroup;
-    if (!selectedService || !item) return;
-
-    const responsibleId = (selectedService as any).responsibleUserId as
-      | string
-      | undefined;
-    const price = selectedService.minimumPrice || 0;
-    const defaultAssistantPrice =
-      (selectedService as any).defaultAssistantPrice || 0;
-
-    const isOwner = responsibleId === this.currentUserId;
-    const assistantValue = isOwner ? 0 : defaultAssistantPrice;
-
-    // CORREÇÃO: Preenche os campos corretos (sem 'value' ou 'responsibleId')
-    item.patchValue(
-      {
-        responsibleUserId: responsibleId ?? null,
-        price: this.formatPtBR(price),
-        assistantAmount: this.formatPtBR(assistantValue),
-      },
-      { emitEvent: true } // Dispara 'valueChanges' para recálculo
-    );
-
-    // Trava o campo "Responsável"
-    if (responsibleId) {
-      item.get('responsibleUserId')?.disable({ emitEvent: false });
-    } else {
-      item.get('responsibleUserId')?.enable({ emitEvent: false });
-    }
-  }
-
-  // money formatting/parsing
-  onMoneyFocus(index: number, control: string) {
-    const g = this.items.at(index) as FormGroup;
-    const v = g.get(control)!.value;
-    const n = this.parseMoney(v);
-    g.get(control)!.setValue(n ? String(n).replace('.', ',') : '');
-  }
-  onMoneyBlur(index: number, control: string) {
-    const g = this.items.at(index) as FormGroup;
-    const v = g.get(control)!.value;
-    const n = this.parseMoney(v);
-    g.get(control)!.setValue(this.formatPtBR(n || 0));
-    // Não precisa chamar rebuildInstallments() aqui, pois o valueChanges do items já faz isso
-  }
-
-  onInstallmentFocus(idx: number) {
-    const c = this.installments.at(idx).get('amount')!;
-    const n = this.parseMoney(c.value);
-    c.setValue(n ? String(n).replace('.', ',') : '');
-  }
-  onInstallmentBlur(idx: number) {
-    const c = this.installments.at(idx).get('amount')!;
-    const n = this.parseMoney(c.value) || 0;
-    c.setValue(this.formatPtBR(n));
-    this.redistributeInstallments(idx, n);
-  }
-
-  // totals and installments
-  get amountTotal(): number {
-    const prices = this.items.controls.map(
-      (g) => this.parseMoney((g as FormGroup).get('price')!.value) || 0
-    );
-    return this.round2(prices.reduce((a, b) => a + b, 0));
-  }
-
-  rebuildInstallments() {
-    const total = this.amountTotal;
-    const n = this.paymentTermsToN(
-      this.form.get('paymentTerms')!.value as PaymentTerms
-    );
-    while (this.installments.length > n)
-      this.installments.removeAt(this.installments.length - 1);
-    while (this.installments.length < n)
-      this.installments.push(this.fb.group({ amount: [''], dueDate: [''] }));
-
-    const base = this.round2(total / n);
-    const amounts = Array(n).fill(base);
-    const residue = this.round2(total - this.round2(base * n));
-    if (n > 0) {
-      amounts[n - 1] = this.round2(amounts[n - 1] + residue);
-    }
-
-    for (let i = 0; i < n; i++) {
-      this.installments
-        .at(i)
-        .get('amount')!
-        .setValue(this.formatPtBR(amounts[i]));
-      const cd = this.form.get('contractDate')!.value as string;
-      this.installments
-        .at(i)
-        .get('dueDate')!
-        .setValue(this.addDaysPt(cd, 30 * i));
-    }
-  }
-
-  redistributeInstallments(editedIndex: number, editedAmount: number) {
-    const total = this.amountTotal;
-    const n = this.installments.length;
-    if (n <= 1) {
-      // Não redistribui se só há uma parcela
-      this.installments
-        .at(editedIndex)
-        .get('amount')!
-        .setValue(this.formatPtBR(total)); // Força o total
-      return;
-    }
-
-    const remaining = this.round2(total - editedAmount);
-    const shareCount = n - 1;
-    const base = this.round2(remaining / shareCount);
-
-    const others = [] as number[];
-    for (let i = 0; i < n; i++) {
-      if (i === editedIndex) continue;
-      others.push(base);
-    }
-
-    const sumOthers = this.round2(others.reduce((a, b) => a + b, 0));
-    const residue = this.round2(remaining - sumOthers);
-
-    let oi = 0;
-    for (let i = 0; i < n; i++) {
-      if (i === editedIndex) continue;
-      const val =
-        oi === others.length - 1
-          ? this.round2(others[oi] + residue)
-          : others[oi];
-      this.installments.at(i).get('amount')!.setValue(this.formatPtBR(val));
-      oi++;
-    }
-    this.installments
-      .at(editedIndex)
-      .get('amount')!
-      .setValue(this.formatPtBR(editedAmount));
-  }
-
-  // submit
-  onSubmit() {
-    // Usa orderForm (alias de form) para validação e para ler valores desabilitados
+  onSubmit(): void {
     if (this.orderForm.invalid) {
-      this.orderForm.markAllAsTouched();
-      this.items.controls.forEach((item) => item.markAllAsTouched());
       this.toastService.error(
-        '❌ Formulário inválido. Verifique os campos marcados em vermelho.'
+        'Formulário inválido. Verifique os campos obrigatórios.'
       );
-      this.cdr.markForCheck();
+      this.orderForm.markAllAsTouched();
       return;
     }
 
-    const formData = this.orderForm.getRawValue() as any;
+    // REQ 2/3: Usar getRawValue() para pegar TODOS os valores,
+    // incluindo campos desabilitados (como responsibleId e assistantPrice).
+    const formValue = this.orderForm.getRawValue();
 
-    // --- Validação de Prazos ---
-    for (let idx = 0; idx < (formData.items || []).length; idx++) {
-      const it = formData.items[idx] || {};
+    //
+    // CORREÇÃO ESTÁ AQUI:
+    //
+    const payload: any = {
+      // 1. Campos da "raiz" do CreateOrderDto
+      clientId: formValue.clientId,
+      contractDate: formValue.contractDate,
+      description: formValue.description,
+      paymentTerms: 'ONE',
+      paymentMethod: formValue.paymentMethod, // <-- CORREÇÃO: Movido para a raiz
 
-      if (!it.assistantDeadline) {
-        this.toastService.error(
-          `⚠️ Item #${idx + 1}: Prazo do Assistente é obrigatório.`
-        );
-        const itemForm = this.items.at(idx) as FormGroup;
-        itemForm.get('assistantDeadline')?.markAsTouched();
-        itemForm.get('assistantDeadline')?.setErrors({ required: true });
-        this.cdr.markForCheck();
-        return;
-      }
-      if (!it.clientDeadline) {
-        this.toastService.error(
-          `⚠️ Item #${idx + 1}: Prazo do Cliente é obrigatório.`
-        );
-        const itemForm = this.items.at(idx) as FormGroup;
-        itemForm.get('clientDeadline')?.markAsTouched();
-        itemForm.get('clientDeadline')?.setErrors({ required: true });
-        this.cdr.markForCheck();
-        return;
-      }
+      // 2. Campos do 'items' (CreateOrderItemDto)
+      items: [
+        {
+          functionalityId: formValue.functionalityId,
+          price: parseFloat(formValue.clientPrice),
+          // paymentMethod: formValue.paymentMethod, // <-- REMOVIDO DAQUI
+          clientDeadline: formValue.clientDeadline,
+          responsibleUserId: formValue.responsibleId,
+          assistantDeadline: formValue.assistantDeadline,
+          assistantAmount: formValue.assistantPrice
+            ? parseFloat(formValue.assistantPrice)
+            : undefined,
+        },
+      ],
 
-      const assistantDate = this.parseDate(it.assistantDeadline);
-      const clientDate = this.parseDate(it.clientDeadline);
+      // 3. Dados das parcelas (que serão removidos depois)
+      installments: formValue.installmentsArray.map((installment: any) => ({
+        value: parseFloat(installment.value),
+        dueDate: formatISO(new Date(installment.dueDate)),
+      })),
+    };
 
-      if (assistantDate >= clientDate) {
-        this.toastService.error(
-          `⚠️ Item #${idx + 1}: O Prazo do Assistente (${
-            it.assistantDeadline
-          }) deve ser anterior ao Prazo do Cliente (${it.clientDeadline}).`
-        );
-        const itemForm = this.items.at(idx) as FormGroup;
-        itemForm.get('assistantDeadline')?.markAsTouched();
-        itemForm.get('clientDeadline')?.markAsTouched();
-        itemForm.get('assistantDeadline')?.setErrors({ invalidDate: true });
-        this.cdr.markForCheck();
-        return;
-      }
-    }
-    // --- Fim da Validação ---
-
-    const payload: CreateOrderDto = this.toDto();
+    // Remove propriedades do form que não fazem parte do payload final
+    delete payload.installmentsArray;
+    // Esta linha provavelmente está correta, pois o DTO de criação não pede parcelas
+    delete payload.installments;
+    delete payload.responsibleName; // Não precisamos enviar o nome, só o ID
 
     this.ordersService.create(payload).subscribe({
-      next: (res: OrderResponseDto) => {
-        this.createdOrderNumber = res.orderNumber || res.id;
-        this.createdOrderId = res.id;
-        this.showSuccessModal = true;
-        this.cdr.markForCheck();
+      next: () => {
+        this.toastService.success('Pedido criado com sucesso!');
+        this.router.navigate(['/orders']);
       },
-      error: (err) => {
-        const errorMsg = err?.error?.message || 'Falha ao criar a ordem';
-        this.toastService.error(`❌ ${errorMsg}`);
+      error: (err: any) => {
+        console.error('Erro ao criar pedido:', err);
+        // O erro 400 não deve mais acontecer, mas se acontecer, mostrará aqui
+        const errorMsg = err.error?.message || 'Erro ao criar pedido.';
+        this.toastService.error(
+          Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg
+        );
       },
     });
-  }
-
-  // Método para fechar modal e redirecionar
-  onSuccessModalClose(): void {
-    this.showSuccessModal = false;
-    this.router.navigate(['/orders']);
-  }
-
-  resetForm() {
-    this.form.reset({
-      clientId: null,
-      contractDate: this.todayPt(),
-      paymentMethod: 'pix',
-      paymentTerms: 'ONE',
-    });
-    this.items.clear();
-    this.installments.clear();
-    this.addItem(); // Adiciona um item limpo
-    this.rebuildInstallments();
-  }
-
-  // mapping
-  toDto(): CreateOrderDto {
-    // Pega o valor "raw" para incluir campos desabilitados (como responsibleUserId)
-    const rawForm = this.form.getRawValue();
-
-    const paymentMethod = rawForm.paymentMethod as string;
-    const dto: CreateOrderDto & { paymentMethod?: string } = {
-      clientId: rawForm.clientId,
-      contractDate: this.toIso(rawForm.contractDate),
-      paymentTerms: rawForm.paymentTerms as PaymentTerms,
-      items: rawForm.items.map((it: any) => {
-        const item: CreateOrderItemDto = {
-          functionalityId: it.functionalityId, // ID já é string
-          price: this.parseMoney(it.price) || 0,
-          clientDeadline: this.toIso(it.clientDeadline),
-          assistantDeadline: this.toIso(it.assistantDeadline), // Campo obrigatório
-          // CORREÇÃO: Adiciona assistantAmount
-          assistantAmount: this.parseMoney(it.assistantAmount) || 0,
-        };
-
-        // Adiciona responsável apenas se selecionado
-        if (it.responsibleUserId) {
-          item.responsibleUserId = it.responsibleUserId;
-        }
-
-        return item;
-      }),
-    };
-    if (paymentMethod) dto.paymentMethod = paymentMethod;
-    return dto;
-  }
-
-  // utils
-  todayPt(): string {
-    const d = new Date();
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
-  }
-  toIso(ddmmyyyy: string): string {
-    if (!ddmmyyyy) return '';
-    const [dd, mm, yyyy] = ddmmyyyy.split('/').map((s) => Number(s));
-    return `${yyyy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(
-      2,
-      '0'
-    )}`;
-  }
-  parseDate(ddmmyyyy: string): number {
-    const [dd, mm, yyyy] = (ddmmyyyy || '').split('/').map(Number);
-    return new Date(yyyy || 0, (mm || 1) - 1, dd || 1).getTime();
-  }
-  addDaysPt(ddmmyyyy: string, days: number): string {
-    const d = new Date(this.parseDate(ddmmyyyy));
-    d.setDate(d.getDate() + days);
-    const rdd = String(d.getDate()).padStart(2, '0');
-    const rmm = String(d.getMonth() + 1).padStart(2, '0');
-    const ryyyy = d.getFullYear();
-    return `${rdd}/${rmm}/${ryyyy}`;
-  }
-  paymentTermsToN(pt: PaymentTerms): number {
-    return pt === 'THREE' ? 3 : pt === 'TWO' ? 2 : 1;
-  }
-  round2(n: number): number {
-    return Math.round((n + Number.EPSILON) * 100) / 100;
-  }
-  formatPtBR(n: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(n);
-  }
-  parseMoney(v: any): number | null {
-    if (v == null) return null;
-    if (typeof v === 'number') return v;
-    let s = String(v).trim();
-    if (!s) return null;
-    s = s.replace(/[^0-9,.-]/g, '');
-    if (s.includes(',') && s.lastIndexOf(',') > s.lastIndexOf('.')) {
-      s = s.replace(/[.]/g, '');
-      s = s.replace(',', '.');
-    }
-    const n = Number(s);
-    return isNaN(n) ? null : this.round2(n);
-  }
-
-  // Validador de dinheiro
-  minMoney(min: number): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const value = this.parseMoney(control.value);
-      if (value == null || value < min) {
-        return { minMoney: { requiredValue: min, actualValue: value } };
-      }
-      return null;
-    };
-  }
-
-  // template helper for responsible name
-  getResponsibleName(id?: string | null): string {
-    if (!id) return '';
-    const found = this.responsibleUsers.find((u) => u.id === id)?.name;
-    if (found) return found;
-    if (this.currentUserId && id === this.currentUserId) {
-      return this.currentUserName || 'Você';
-    }
-    return '';
-  }
-
-  // item-level validator: assistantDeadline must be before clientDeadline when provided
-  itemDeadlineValidator = (ctrl: AbstractControl) => {
-    const group = ctrl as FormGroup;
-    const clientD = group.get('clientDeadline')?.value as string;
-    const assistantD = group.get('assistantDeadline')?.value as string;
-    if (assistantD && clientD) {
-      const aDate = this.parseDate(assistantD);
-      const cDate = this.parseDate(clientD);
-      if (aDate >= cDate) return { assistantAfterClient: true };
-    }
-    return null;
-  };
-
-  hasItemDeadlineError(index: number): boolean {
-    const g = this.items.at(index) as FormGroup;
-    return !!g && g.hasError('assistantAfterClient') && (g.touched || g.dirty);
   }
 }
