@@ -11,8 +11,7 @@ import {
 import { Router } from '@angular/router';
 
 // RxJS
-import { Observable, debounceTime, map, withLatestFrom } from 'rxjs';
-
+import { Observable, debounceTime, map, withLatestFrom, forkJoin } from 'rxjs';
 // Date utilities
 import { addDays, formatISO } from 'date-fns';
 
@@ -102,8 +101,10 @@ export class OrdersCreateComponent implements OnInit {
     this.orderForm = this.fb.group({
       clientId: [null, Validators.required],
       functionalityId: [null, Validators.required],
-      // REQ 5: 'title' removido, 'description' adicionado
-      description: [null, Validators.required],
+
+      // REQUISIÇÃO 1: 'description' agora tem um valor padrão
+      description: ['trabalho academico', Validators.required],
+
       contractDate: [contractDateDefault, Validators.required],
       clientDeadline: [clientDeadlineDefault, Validators.required],
       assistantDeadline: [assistantDeadlineDefault],
@@ -111,8 +112,6 @@ export class OrdersCreateComponent implements OnInit {
       assistantPrice: [null, [Validators.min(0)]],
       paymentMethod: ['pix' as PaymentMethod, Validators.required],
       installments: [1, Validators.required],
-      // REQ 2/3: Trocado 'responsibles' (array) por 'responsibleId' (valor único)
-      // e 'responsibleName' (apenas exibição)
       responsibleId: [null, Validators.required],
       responsibleName: [null], // Campo de exibição, será desabilitado
       installmentsArray: this.fb.array([]),
@@ -122,22 +121,50 @@ export class OrdersCreateComponent implements OnInit {
   }
 
   loadInitialData(): void {
+    // 1. Inicia os Observables para os dropdowns (como antes)
     this.clients$ = this.clientsService.getClients();
     this.functionalities$ = this.functionalitiesService.getAll();
     this.assistants$ = this.usersService.getUsers();
 
-    // REQ 2/3: Carregar o usuário logado e preencher o campo responsável
-    this.authService.getUserProfile().subscribe((user: UserProfile) => {
+    // 2. Usamos forkJoin para buscar os dados que precisamos para os "defaults"
+    forkJoin({
+      user: this.authService.getUserProfile(),
+      clients: this.clients$,
+      functionalities: this.functionalities$,
+    }).subscribe(({ user, clients, functionalities }) => {
+      // 3. Define o usuário logado (como antes)
       this.currentUser = user;
-
-      // Preenche os campos do responsável (Ex: "Brenda")
       this.orderForm.patchValue({
         responsibleId: user.id,
         responsibleName: user.name,
       });
-
-      // Desabilita o campo de NOME (apenas exibição)
       this.orderForm.get('responsibleName')?.disable();
+
+      // 4. REQUISIÇÃO 2: Define o "último cliente"
+      // Assumindo que a API retorna os clientes mais novos primeiro (clients[0])
+      if (clients && clients.length > 0) {
+        const latestClient = clients[0]; // Pega o primeiro da lista
+        this.orderForm.patchValue({
+          clientId: latestClient.id,
+        });
+      }
+
+      // 5. REQUISIÇÃO 3: Define a funcionalidade padrão do usuário logado
+      if (functionalities && functionalities.length > 0) {
+        const userFunctionality = functionalities.find(
+          (f) => f.responsibleUserId === user.id
+        );
+
+        if (userFunctionality) {
+          this.orderForm.patchValue({
+            functionalityId: userFunctionality.id,
+          });
+
+          // IMPORTANTE: Dispara manualmente a lógica de seleção
+          // para carregar preços e ajustar os campos do assistente
+          this.onServiceSelected(userFunctionality.id);
+        }
+      }
     });
   }
 
