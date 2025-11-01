@@ -1,5 +1,35 @@
-@use '../../../../styles/variables.scss' as *;
+@use "../../../../styles/variables.scss" as *;
 
-.orders-detail {
-  header { border-color: rgba(0,0,0,.1); }
+// Estilo para o novo card de resumo financeiro
+.card-financial-summary {
+  .list-group-item {
+    span {
+      display: flex;
+      align-items: center;
+    }
+    .bi {
+      font-size: 1.2rem;
+    }
+  }
+  // Destaca o lucro
+  .list-group-item:last-child {
+    strong {
+      font-size: 1.75rem; // Tamanho maior para o lucro
+    }
+  }
+}
+
+// Estilo para o novo alerta de prazo
+.deadline-alert {
+  .bi {
+    // Garante que o ícone fique alinhado
+    vertical-align: -0.125em;
+  }
+
+  // Destaca mais o texto de atraso
+  &.text-danger {
+    background-color: rgba(220, 53, 69, 0.1); // Usando cor RGB diretamente
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
 }

@@ -1,10 +1,14 @@
-<div
-  class="orders-detail container p-4 mx-auto max-w-5xl"
-  *ngIf="order as o; else loadingTpl"
->
+<div class="orders-detail container p-4" *ngIf="order as o; else loadingTpl">
+  <div class="mb-3">
+    <a [routerLink]="['/orders']" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>
+      Voltar para Ordens
+    </a>
+  </div>
+
   <div class="row g-3 mb-3">
-    <div class="col-12 col-xxl-8">
-      <div class="card">
+    <div class="col-12 col-lg-7">
+      <div class="card h-100">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <h1 class="h5 m-0">Ordem {{ o.orderNumber }}</h1>
@@ -15,7 +19,7 @@
               <span class="badge bg-light text-dark">{{ o.workStatus }}</span>
             </div>
           </div>
-          <div class="text-muted small">
+          <div class="text-muted small mb-1">
             Cliente:
             <strong class="text-body">{{
               o.client.name || o.client.id
@@ -25,138 +29,229 @@
             Contrato:
             <strong class="text-body">{{ toPtDate(o.contractDate) }}</strong>
           </div>
+          <div *ngIf="o.description">
+            <hr />
+            <p class="small mb-0">{{ o.description }}</p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-12 col-xxl-4">
-      <div class="card h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fs-5">{{ formatPtBR(o.amountTotal) }}</div>
-            <small class="text-muted">Total</small>
-          </div>
-          <div
-            class="progress"
-            role="progressbar"
-            aria-label="Progresso de pagamento"
-            [attr.aria-valuenow]="progressPct"
-            aria-valuemin="0"
-            aria-valuemax="100"
+
+    <div class="col-12 col-lg-5">
+      <div class="card h-100 card-financial-summary">
+        <div class="card-header">
+          <h2 class="h6 m-0">Resumo Financeiro (Gerente)</h2>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
           >
-            <div class="progress-bar" [style.width.%]="progressPct"></div>
+            <span>
+              <i class="bi bi-box-arrow-in-down me-2 text-success"></i>
+              Total a Receber (Cliente):
+            </span>
+            <strong class="fs-5 text-success">{{
+              formatPtBR(o.amountTotal)
+            }}</strong>
+          </li>
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <span>
+              <i class="bi bi-box-arrow-up me-2 text-danger"></i>
+              Total a Pagar (Assistentes):
+            </span>
+            <strong class="fs-5 text-danger">{{
+              formatPtBR(totalAPagarAssistentes)
+            }}</strong>
+          </li>
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center bg-light"
+          >
+            <span>
+              <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+              Lucro Estimado:
+            </span>
+            <strong class="fs-4 text-primary">{{
+              formatPtBR(lucroEstimado)
+            }}</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-xl-4">
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h2 class="h6 m-0">Pagamentos (Cliente)</h2>
+          <button
+            class="btn btn-sm btn-outline-secondary py-0 px-2"
+            (click)="toggle('installments')"
+          >
+            <i
+              class="bi"
+              [class.bi-chevron-up]="isOpen('installments')"
+              [class.bi-chevron-down]="!isOpen('installments')"
+            ></i>
+          </button>
+        </div>
+        <div class="card-body pb-0">
+          <div class="d-flex justify-content-between small mb-1">
+            <span
+              >{{ formatPtBR(o.amountPaid) }} /
+              {{ formatPtBR(o.amountTotal) }}</span
+            >
+            <span>{{ getPaidPct() }}%</span>
           </div>
-          <div class="small text-muted mt-1">
-            {{ formatPtBR(o.amountPaid) }} de
-            {{ formatPtBR(o.amountTotal) }}
+          <div class="progress" style="height: 5px">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              [style.width.%]="getPaidPct()"
+            ></div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Parcelas</span>
-      <button
-        class="btn btn-sm btn-link"
-        (click)="toggle('installments')"
-        [attr.aria-expanded]="isOpen('installments')"
-      >
-        {{ isOpen("installments") ? "Ocultar" : "Mostrar" }}
-      </button>
-    </div>
-    <div class="card-body" *ngIf="isOpen('installments')">
-      <div class="table-responsive">
-        <table class="table table-sm align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Valor</th>
-              <th>Vencimento</th>
-              <th>Pago em</th>
-              <th class="text-end">Ação</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let inst of o.installments; trackBy: trackByInst">
-              <td>{{ inst.sequence }}</td>
-              <td>{{ formatPtBR(inst.amount) }}</td>
-              <td>{{ toPtDate(inst.dueDate) }}</td>
-              <td>{{ inst.paidAt ? toPtDate(inst.paidAt) : "—" }}</td>
-              <td class="text-end">
-                <button
-                  class="btn btn-sm btn-success"
-                  aria-label="Marcar parcela como paga"
-                  (click)="markPaid(inst)"
-                  [disabled]="!!inst.paidAt || paying"
-                >
-                  Marcar paga
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Itens</span>
-      <button
-        class="btn btn-sm btn-link"
-        (click)="toggle('items')"
-        [attr.aria-expanded]="isOpen('items')"
-      >
-        {{ isOpen("items") ? "Ocultar" : "Mostrar" }}
-      </button>
-    </div>
-    <div class="card-body" *ngIf="isOpen('items')">
-      <div class="row g-3">
-        <div
-          class="col-12 col-md-6"
-          *ngFor="let it of o.items; trackBy: trackByItem"
+        <ul
+          class="list-group list-group-flush"
+          *ngIf="isOpen('installments') && o.installments.length > 0"
         >
-          <div class="border rounded p-3 h-100">
-            <div class="fw-semibold mb-1">
-              {{ it.functionality.name || it.functionality.id }}
-            </div>
-            <div class="text-muted small mb-1">
-              Preço:
-              <strong class="text-body">{{ formatPtBR(it.price) }}</strong>
-              • Prazo cliente:
-              <strong class="text-body">{{
-                toPtDate(it.clientDeadline)
-              }}</strong>
-            </div>
-            <div class="mb-2">
-              <span class="badge bg-light text-dark">{{ it.itemStatus }}</span>
-            </div>
-            <div class="small text-muted">
+          <li
+            class="list-group-item"
+            *ngFor="let inst of o.installments; let i = index"
+          >
+            <div class="d-flex justify-content-between align-items-center">
               <div>
-                Responsável:
-                <strong class="text-body">{{
-                  (it.responsible && it.responsible.name) ||
-                    (it.responsible && it.responsible.userId) ||
-                    "—"
-                }}</strong>
+                <span
+                  class="badge me-2"
+                  [class.bg-success]="inst.paidAt"
+                  [class.bg-light]="!inst.paidAt"
+                  [class.text-dark]="!inst.paidAt"
+                >
+                  {{ inst.paidAt ? "PAGO" : "PENDENTE" }}
+                </span>
+                <span>{{ i + 1 }}ª Parcela</span>
               </div>
-              <div>
-                Prazo assistente:
+              <strong class="text-body">{{ formatPtBR(inst.amount) }}</strong>
+            </div>
+            <div class="small text-muted mt-1">
+              Vencimento: {{ toPtDate(inst.dueDate) }}
+              <ng-container *ngIf="inst.paidAt">
+                • Pago em: {{ toPtDate(inst.paidAt) }}
+              </ng-container>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-8">
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h2 class="h6 m-0">Serviços</h2>
+          <button
+            class="btn btn-sm btn-outline-secondary py-0 px-2"
+            (click)="toggle('items')"
+          >
+            <i
+              class="bi"
+              [class.bi-chevron-up]="isOpen('items')"
+              [class.bi-chevron-down]="!isOpen('items')"
+            ></i>
+          </button>
+        </div>
+        <div
+          class="list-group list-group-flush"
+          *ngIf="isOpen('items') && o.items.length > 0"
+        >
+          <div class="list-group-item" *ngFor="let it of o.items">
+            <div class="d-flex justify-content-between align-items-start">
+              <h3 class="h6 m-0">
+                {{ it.functionality.name || it.functionality.id }}
+              </h3>
+              <span class="badge bg-light text-dark ms-2">{{
+                it.itemStatus
+              }}</span>
+            </div>
+
+            <div class_="small text-muted my-2">
+              <span>
+                <i class="bi bi-person-circle me-1"></i>
+                Cliente:
+                <strong class="text-body">{{ formatPtBR(it.price) }}</strong>
+                • Prazo:
                 <strong class="text-body">{{
-                  it.responsible && it.responsible.assistantDeadline
-                    ? toPtDate(it.responsible.assistantDeadline)
-                    : "—"
+                  toPtDate(it.clientDeadline)
                 }}</strong>
+              </span>
+
+              <span
+                *ngIf="getDeadlineAlert(it).text"
+                class="ms-2 deadline-alert"
+                [ngClass]="getDeadlineAlert(it).class"
+                [title]="getDeadlineAlert(it).text"
+              >
+                <i class="bi" [ngClass]="getDeadlineAlert(it).icon"></i>
+                <span class="d-none d-md-inline ms-1">{{
+                  getDeadlineAlert(it).text
+                }}</span>
+              </span>
+            </div>
+
+            <div class="card bg-light border-0" *ngIf="it.responsible as resp">
+              <div class="card-body p-2 small">
+                <div class_="mb-1">
+                  <i class="bi bi-person-check me-1"></i>
+                  Assistente:
+                  <strong class="text-body">{{
+                    resp.name || resp.userId
+                  }}</strong>
+                </div>
+                <div>
+                  <i class="bi bi-calendar-event me-1"></i>
+                  Prazo Assist.:
+                  <strong class="text-body">{{
+                    toPtDate(resp.assistantDeadline)
+                  }}</strong>
+                </div>
+
+                <div
+                  class="mt-1 d-flex justify-content-between align-items-center"
+                >
+                  <div>
+                    <i class="bi bi-currency-dollar me-1"></i>
+                    Valor Assist.:
+                    <strong class="text-body fw-bold">{{
+                      formatPtBR(resp.amount || 0)
+                    }}</strong>
+                  </div>
+                  <span
+                    class="badge"
+                    [class.bg-success]="isAssistantPaid(it)"
+                    [class.bg-warning]="!isAssistantPaid(it)"
+                    [class.text-dark]="!isAssistantPaid(it)"
+                  >
+                    <i
+                      class="bi me-1"
+                      [class.bi-check-lg]="isAssistantPaid(it)"
+                      [class.bi-hourglass-split]="!isAssistantPaid(it)"
+                    ></i>
+                    {{ isAssistantPaid(it) ? "PAGO" : "PENDENTE" }}
+                  </span>
+                </div>
               </div>
-              <div>
-                Valor assistente:
-                <strong class="text-body">{{
-                  it.responsible && it.responsible.amount != null
-                    ? formatPtBR(it.responsible.amount)
-                    : "—"
-                }}</strong>
-              </div>
+            </div>
+
+            <div
+              class="small text-muted fst-italic mt-2"
+              *ngIf="!it.responsible"
+            >
+              (Sem assistente responsável definida)
             </div>
           </div>
         </div>
@@ -166,5 +261,10 @@
 </div>
 
 <ng-template #loadingTpl>
-  <div class="container p-4">Carregando…</div>
+  <div class="container p-4 text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+    <p class="mt-2">Carregando detalhes da ordem...</p>
+  </div>
 </ng-template>
