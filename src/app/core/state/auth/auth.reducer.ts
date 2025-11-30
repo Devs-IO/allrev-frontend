@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import * as AuthActions from './auth.actions';
-import { User } from '../../../../modules/users/interfaces/user.interface';
+import { User } from '../../../../features/admin/users/interfaces/user.interface';
 
 export interface AuthState {
   isAuthenticated: boolean;

@@ -1,0 +1,269 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+
+// Serviços de Features (ajuste de caminho relativo)
+import { TenantsService } from '../../../tenants/services/tenants.service';
+import { UsersService } from '../../services/users.service';
+
+// Tipos e Interfaces
+import { CreateUserDto } from '../../types/user.dto';
+import { Role, RoleLabels } from '../../interfaces/user.enums';
+
+// Core Services & Helpers
+import { AuthService } from '../../../../../app/core/services/auth.service';
+import { ErrorHelper } from '../../../../../app/core/helpers/error.helper';
+
+// Shared Directives (Movido de Core para Shared)
+import { PhoneMaskDirective } from '../../../../../app/shared/directives/phone-mask.directive';
+
+@Component({
+  selector: 'app-user-create',
+  templateUrl: './user-create.component.html',
+  styleUrls: ['./user-create.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    PhoneMaskDirective,
+  ],
+})
+export class UserCreateComponent implements OnInit {
+  userForm!: FormGroup;
+  error: string | null = null;
+  success = false;
+  loading = false;
+
+  // Tipagem melhorada (se possível, use interface Tenant, senão any está ok pro MVP)
+  tenants: any[] = [];
+
+  isAdmin = false;
+  tenantName = '';
+  currentUserRole = '';
+
+  // Enums para o template
+  Role = Role;
+
+  // Labels para exibição no Select
+  roleOptions: { value: string; label: string }[] = [];
+
+  constructor(
+    private fb: FormBuilder,
+    private usersService: UsersService,
+    private router: Router,
+    private tenantsService: TenantsService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    this.initializeForm();
+    // Ordem importante: carregar roles, depois checar permissões
+    this.loadAvailableRoles();
+    this.checkAdminAndTenant();
+  }
+
+  private initializeForm() {
+    this.userForm = this.fb.group({
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(2),
+          Validators.maxLength(100),
+        ],
+      ],
+      email: [
+        '',
+        [Validators.required, Validators.email, Validators.maxLength(100)],
+      ],
+      phone: [
+        '',
+        [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)],
+      ],
+      // Role inicia vazia, será preenchida ao carregar as opções
+      role: [null, Validators.required],
+      address: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(10),
+          Validators.maxLength(200),
+        ],
+      ],
+      tenantId: [''], // Validação será dinâmica
+      isActive: [true],
+      photo: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+    });
+  }
+
+  private checkAdminAndTenant() {
+    this.authService.currentUser$.subscribe({
+      next: (user: any) => {
+        if (!user) return;
+
+        this.currentUserRole = user.role;
+        this.isAdmin = user.role === Role.ADMIN;
+
+        const tenantIdControl = this.userForm?.get('tenantId');
+
+        if (this.isAdmin) {
+          // Admin: Campo obrigatório e habilitado (deve escolher na lista)
+          tenantIdControl?.setValidators([Validators.required]);
+          tenantIdControl?.enable();
+          this.loadTenants();
+        } else if (user.tenantId || user.tenant?.id) {
+          // Gestor/Outros: Campo preenchido e desabilitado
+          const tId = user.tenantId || user.tenant?.id;
+          this.tenantName = user.tenant?.companyName || 'Sua Empresa';
+
+          tenantIdControl?.clearValidators();
+          tenantIdControl?.setValue(tId);
+          tenantIdControl?.disable();
+        } else {
+          // Erro de consistência (User sem tenant)
+          this.error =
+            'Usuário não possui empresa associada. Contate o suporte.';
+          tenantIdControl?.disable();
+        }
+
+        tenantIdControl?.updateValueAndValidity();
+      },
+      error: (err) => {
+        this.error = ErrorHelper.getErrorMessage(err);
+      },
+    });
+  }
+
+  private loadTenants() {
+    this.tenantsService.getTenants().subscribe({
+      next: (tenants: any[]) => {
+        this.tenants = tenants;
+
+        // UX: Se for Admin e só tiver 1 tenant, seleciona automático
+        if (this.isAdmin && tenants.length === 1) {
+          const t = tenants[0];
+          this.userForm.get('tenantId')?.setValue(t.id);
+          this.tenantName = t.companyName;
+        }
+      },
+      error: (err) => {
+        this.error = ErrorHelper.getErrorMessage(err);
+        this.tenants = [];
+      },
+    });
+  }
+
+  loadAvailableRoles() {
+    // Busca roles permitidas para quem está logado (ex: Gestor não vê role Admin)
+    this.usersService.getAvailableRoles().subscribe({
+      next: (roles: Role[]) => {
+        this.roleOptions = roles.map((role) => ({
+          value: role,
+          label: RoleLabels[role] || role,
+        }));
+
+        // Define valor padrão inteligente
+        const roleCtrl = this.userForm.get('role');
+        const hasManager = roles.includes(Role.MANAGER_REVIEWERS);
+        const hasAssistant = roles.includes(Role.ASSISTANT_REVIEWERS);
+
+        // Se for gestor criando, sugere Assistente. Se for Admin, sugere Gestor.
+        if (roleCtrl && !roleCtrl.value) {
+          if (hasAssistant) roleCtrl.setValue(Role.ASSISTANT_REVIEWERS);
+          else if (hasManager) roleCtrl.setValue(Role.MANAGER_REVIEWERS);
+          else if (roles.length > 0) roleCtrl.setValue(roles[0]);
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao carregar roles:', err);
+        this.error = 'Não foi possível carregar as funções disponíveis.';
+      },
+    });
+  }
+
+  onSubmit() {
+    if (this.userForm.invalid) {
+      this.markFormGroupTouched();
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+    this.success = false;
+
+    // Prepara o Payload
+    const formValue = this.userForm.getRawValue(); // Pega inclusive campos disabled (tenantId)
+
+    // Remove campos desnecessários ou sensíveis que não existem mais no form
+    const { password, confirmPassword, ...payload } = formValue;
+
+    const createUserDto: CreateUserDto = payload as CreateUserDto;
+
+    this.usersService.createUser(createUserDto).subscribe({
+      next: () => {
+        this.loading = false;
+        this.success = true;
+        // UX: Feedback visual e redirecionamento
+        setTimeout(() => {
+          this.router.navigate(['/users']);
+        }, 1500);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.success = false;
+        this.error = ErrorHelper.getErrorMessage(err);
+      },
+    });
+  }
+
+  private markFormGroupTouched() {
+    Object.keys(this.userForm.controls).forEach((key) => {
+      const control = this.userForm.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  // --- Helpers de UI ---
+
+  getFieldError(fieldName: string): string | null {
+    const field = this.userForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      const label = this.getFieldLabel(fieldName);
+
+      if (field.errors['required']) return `${label} é obrigatório`;
+      if (field.errors['minlength']) return `${label} muito curto`;
+      if (field.errors['maxlength']) return `${label} muito longo`;
+      if (field.errors['email']) return `E-mail inválido`;
+      if (field.errors['pattern']) return `Formato inválido`;
+    }
+    return null;
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.userForm.get(fieldName);
+    return !!(field?.errors && field.touched);
+  }
+
+  private getFieldLabel(fieldName: string): string {
+    const labels: Record<string, string> = {
+      name: 'Nome',
+      email: 'Email',
+      phone: 'Telefone',
+      role: 'Função',
+      address: 'Endereço',
+      tenantId: 'Empresa',
+    };
+    return labels[fieldName] || fieldName;
+  }
+
+  openTenantForm() {
+    this.router.navigate(['/tenants/create']);
+  }
+}

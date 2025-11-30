@@ -12,7 +12,9 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () =>
-      import('../modules/login/login.component').then((m) => m.LoginComponent),
+      import('../features/admin/auth/pages/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
     title: 'Login - AllRev',
   },
 
@@ -21,7 +23,7 @@ export const routes: Routes = [
     path: 'portal/login',
     loadComponent: () =>
       import(
-        '../modules/portal/pages/portal-login/portal-login.component'
+        '../features/portal/pages/portal-login/portal-login.component'
       ).then((m) => m.PortalLoginComponent),
     title: 'Acesso do Cliente',
   },
@@ -32,9 +34,9 @@ export const routes: Routes = [
   {
     path: 'change-password',
     loadComponent: () =>
-      import('../modules/auth/pages/change-password.component').then(
-        (m) => m.ChangePasswordComponent
-      ),
+      import(
+        '../features/admin/auth/pages/change-password/change-password.component'
+      ).then((m) => m.ChangePasswordComponent),
     canActivate: [authGuard],
     title: 'Alterar Senha',
   },
@@ -53,7 +55,7 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () =>
-          import('../modules/portal/pages/home/home.component').then(
+          import('../features/portal/pages/home/home.component').then(
             (m) => m.PortalHomeComponent
           ),
         title: 'Portal do Cliente',
@@ -68,7 +70,7 @@ export const routes: Routes = [
   {
     path: '', // Rota base para usuários internos (Layout com Sidebar)
     loadComponent: () =>
-      import('./core/components/layout/layout.component').then(
+      import('./core/layout/layout/layout.component').then(
         (m) => m.LayoutComponent
       ),
     canActivate: [authGuard],
@@ -83,7 +85,9 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () =>
-          import('../modules/home/home.component').then((m) => m.HomeComponent),
+          import('../features/dashboard/home.component').then(
+            (m) => m.HomeComponent
+          ),
         title: 'Dashboard',
       },
 
@@ -91,7 +95,7 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('../modules/profile/profile.component').then(
+          import('../features/admin/auth/pages/profile/profile.component').then(
             (m) => m.ProfileComponent
           ),
         title: 'Meu Perfil',
@@ -104,7 +108,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN] },
         loadComponent: () =>
           import(
-            '../modules/tenants/pages/tenant-list/tenant-list.component'
+            '../features/admin/tenants/pages/tenant-list/tenant-list.component'
           ).then((m) => m.TenantListComponent),
         title: 'Empresas',
       },
@@ -114,7 +118,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN] },
         loadComponent: () =>
           import(
-            '../modules/tenants/pages/tenant-create/tenant-create.component'
+            '../features/admin/tenants/pages/tenant-create/tenant-create.component'
           ).then((m) => m.TenantCreateComponent),
         title: 'Nova Empresa',
       },
@@ -124,7 +128,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN] },
         loadComponent: () =>
           import(
-            '../modules/tenants/pages/tenant-view/tenant-view.component'
+            '../features/admin/tenants/pages/tenant-view/tenant-view.component'
           ).then((m) => m.TenantViewComponent),
         title: 'Detalhes da Empresa',
       },
@@ -134,7 +138,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN] },
         loadComponent: () =>
           import(
-            '../modules/tenants/pages/tenant-edit/tenant-edit.component'
+            '../features/admin/tenants/pages/tenant-edit/tenant-edit.component'
           ).then((m) => m.TenantEditComponent),
         title: 'Editar Empresa',
       },
@@ -145,9 +149,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
-          import('../modules/users/pages/users-list/users-list.component').then(
-            (m) => m.UsersListComponent
-          ),
+          import(
+            '../features/admin/users/pages/users-list/users-list.component'
+          ).then((m) => m.UsersListComponent),
         title: 'Usuários',
       },
       {
@@ -156,7 +160,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
-            '../modules/users/pages/user-create/user-create.component'
+            '../features/admin/users/pages/user-create/user-create.component'
           ).then((m) => m.UserCreateComponent),
         title: 'Novo Usuário',
       },
@@ -165,9 +169,9 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
-          import('../modules/users/pages/user-edit/user-edit.component').then(
-            (m) => m.UserEditComponent
-          ),
+          import(
+            '../features/admin/users/pages/user-edit/user-edit.component'
+          ).then((m) => m.UserEditComponent),
         title: 'Editar Usuário',
       },
 
@@ -180,7 +184,7 @@ export const routes: Routes = [
         }, // Assistente pode ver? Definido como Leitura na matriz
         loadComponent: () =>
           import(
-            '../modules/clients/pages/clients-list/clients-list.component'
+            '../features/operations/clients/pages/clients-list/clients-list.component'
           ).then((m) => m.ClientsListComponent),
         title: 'Clientes',
       },
@@ -190,7 +194,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] }, // Assistente não cria
         loadComponent: () =>
           import(
-            '../modules/clients/pages/clients-create/clients-create.component'
+            '../features/operations/clients/pages/clients-create/clients-create.component'
           ).then((m) => m.ClientsCreateComponent),
         title: 'Novo Cliente',
       },
@@ -200,7 +204,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
-            '../modules/clients/pages/clients-edit/clients-edit.component'
+            '../features/operations/clients/pages/clients-edit/clients-edit.component'
           ).then((m) => m.ClientsEditComponent),
         title: 'Editar Cliente',
       },
@@ -210,7 +214,7 @@ export const routes: Routes = [
         path: 'orders',
         loadComponent: () =>
           import(
-            '../modules/orders/pages/orders-list/orders-list.component'
+            '../features/operations/orders/pages/orders-list/orders-list.component'
           ).then((m) => m.OrdersListComponent),
         title: 'Trabalhos',
       },
@@ -220,7 +224,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] }, // Assistente cria? Geralmente sim, ajustar se necessário
         loadComponent: () =>
           import(
-            '../modules/orders/pages/orders-create/orders-create.component'
+            '../features/operations/orders/pages/orders-create/orders-create.component'
           ).then((m) => m.OrdersCreateComponent),
         title: 'Novo Trabalho',
       },
@@ -228,7 +232,7 @@ export const routes: Routes = [
         path: 'orders/:id',
         loadComponent: () =>
           import(
-            '../modules/orders/pages/orders-detail/orders-detail.component'
+            '../features/operations/orders/pages/orders-detail/orders-detail.component'
           ).then((m) => m.OrdersDetailComponent),
         title: 'Detalhes do Trabalho',
       },
@@ -240,7 +244,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
-            '../modules/functionalities/pages/functionalities-list/functionalities-list.component'
+            '../features/operations/functionalities/pages/functionalities-list/functionalities-list.component'
           ).then((m) => m.FunctionalitiesListComponent),
         title: 'Catálogo de Serviços',
       },
@@ -250,7 +254,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
-            '../modules/functionalities/pages/functionalities-create/functionalities-create.component'
+            '../features/operations/functionalities/pages/functionalities-create/functionalities-create.component'
           ).then((m) => m.FunctionalitiesCreateComponent),
         title: 'Novo Serviço',
       },
@@ -260,7 +264,7 @@ export const routes: Routes = [
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
-            '../modules/functionalities/pages/functionalities-edit/functionalities-edit.component'
+            '../features/operations/functionalities/pages/functionalities-edit/functionalities-edit.component'
           ).then((m) => m.FunctionalitiesEditComponent),
         title: 'Editar Serviço',
       },
@@ -271,7 +275,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
-          import('../modules/reports/reports.component').then(
+          import('../features/reports/reports.component').then(
             (m) => m.ReportsComponent
           ),
         title: 'Relatórios',
@@ -281,7 +285,7 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
-          import('../modules/settings/settings.component').then(
+          import('../features/settings/settings.component').then(
             (m) => m.SettingsComponent
           ),
         title: 'Configurações',

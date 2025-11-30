@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { User } from '../../../../modules/users/interfaces/user.interface';
+import { User } from '../../../../features/admin/users/interfaces/user.interface';
 import { AuthResponse } from '../../services/auth.service';
 
 // --- Login Administrativo (Admin, Gestor, Assistente) ---
