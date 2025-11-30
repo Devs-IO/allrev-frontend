@@ -39,7 +39,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Se já estiver logado, redireciona para o dashboard
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/home']);
     }
   }
 
@@ -64,7 +64,7 @@ export class LoginComponent implements OnInit {
               this.router.navigate(['/change-password']);
             } else {
               // Sucesso: Redireciona para o Dashboard Administrativo
-              this.router.navigate(['/dashboard']);
+              this.router.navigate(['/home']);
             }
           },
           error: (error) => {

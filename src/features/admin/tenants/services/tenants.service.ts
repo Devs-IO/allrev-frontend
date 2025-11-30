@@ -11,22 +11,22 @@ export class TenantsService {
   constructor(private http: HttpClient) {}
 
   getTenants(): Observable<Tenant[]> {
-    return this.http.get<Tenant[]>(`${this.apiUrl}/tenant`);
+    return this.http.get<Tenant[]>(`${this.apiUrl}/tenants`);
   }
 
   getTenant(id: string): Observable<Tenant> {
-    return this.http.get<Tenant>(`${this.apiUrl}/tenant/${id}`);
+    return this.http.get<Tenant>(`${this.apiUrl}/tenants/${id}`);
   }
 
   createTenant(data: CreateTenantDto): Observable<Tenant> {
-    return this.http.post<Tenant>(`${this.apiUrl}/tenant`, data);
+    return this.http.post<Tenant>(`${this.apiUrl}/tenants`, data);
   }
 
   updateTenant(id: string, data: Partial<CreateTenantDto>): Observable<Tenant> {
-    return this.http.put<Tenant>(`${this.apiUrl}/tenant/${id}`, data);
+    return this.http.put<Tenant>(`${this.apiUrl}/tenants/${id}`, data);
   }
 
   deleteTenant(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/tenant/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/tenants/${id}`);
   }
 }

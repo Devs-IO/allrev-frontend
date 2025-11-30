@@ -23,10 +23,10 @@ export class UsersService {
         }
 
         if (user.role === Role.ADMIN) {
-          return this.http.get<ResponseUserDto[]>(`${this.apiUrl}/user/all`);
+          return this.http.get<ResponseUserDto[]>(`${this.apiUrl}/users/all`);
         } else {
           return this.http.get<ResponseUserDto[]>(
-            `${this.apiUrl}/user/children`
+            `${this.apiUrl}/users/children`
           );
         }
       }),
@@ -38,25 +38,25 @@ export class UsersService {
   }
 
   getUserById(id: string): Observable<ResponseUserDto> {
-    return this.http.get<ResponseUserDto>(`${this.apiUrl}/user/${id}`);
+    return this.http.get<ResponseUserDto>(`${this.apiUrl}/users/${id}`);
   }
 
   createUser(data: CreateUserDto): Observable<ResponseUserDto> {
-    return this.http.post<ResponseUserDto>(`${this.apiUrl}/user`, data);
+    return this.http.post<ResponseUserDto>(`${this.apiUrl}/users`, data);
   }
 
   updateUser(
     id: string,
     data: Partial<CreateUserDto>
   ): Observable<ResponseUserDto> {
-    return this.http.put<ResponseUserDto>(`${this.apiUrl}/user/${id}`, data);
+    return this.http.put<ResponseUserDto>(`${this.apiUrl}/users/${id}`, data);
   }
 
   deleteUser(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/user/${id}`);
+    return this.http.delete<any>(`${this.apiUrl}/users/${id}`);
   }
 
   getAvailableRoles(): Observable<Role[]> {
-    return this.http.get<Role[]>(`${this.apiUrl}/user/roles`);
+    return this.http.get<Role[]>(`${this.apiUrl}/users/available-roles`);
   }
 }

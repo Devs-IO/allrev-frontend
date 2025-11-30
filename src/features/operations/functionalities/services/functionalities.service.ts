@@ -42,7 +42,7 @@ export class FunctionalitiesService {
   }
 
   getResponsibleUsers(): Observable<ResponsibleUser[]> {
-    return this.http.get<ResponsibleUser[]>(`${this.apiUrl}/user/children`);
+    return this.http.get<ResponsibleUser[]>(`${this.apiUrl}/users/children`);
   }
 
   // Service Order methods
@@ -154,7 +154,7 @@ export class FunctionalitiesService {
   }
 
   getAssistantUsers(): Observable<AssistantUser[]> {
-    return this.http.get<AssistantUser[]>(`${this.apiUrl}/user/children`);
+    return this.http.get<AssistantUser[]>(`${this.apiUrl}/users/children`);
   }
 
   // Responsibles for a specific functionality (filtered and authorized by backend)
