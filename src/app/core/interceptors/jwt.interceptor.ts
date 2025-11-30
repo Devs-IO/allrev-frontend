@@ -1,45 +1,35 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { HttpRequest, HttpHandlerFn } from '@angular/common/http';
 
-export const jwtInterceptor: HttpInterceptorFn = (
-  req: HttpRequest<unknown>,
-  next: HttpHandlerFn
-) => {
-  const token = localStorage.getItem('token'); // Pega o token armazenado
-  // Best-effort tenant extraction from persisted user
-  let tenantId: string | undefined;
-  try {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const u = JSON.parse(userStr);
-      tenantId =
-        u?.tenant?.id ||
-        u?.tenantId ||
-        u?.tenants?.[0]?.tenantId ||
-        u?.tenants?.[0]?.id;
-    }
-  } catch {
-    // ignore parse errors
-  }
+export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
+  const token = localStorage.getItem('token');
 
-  // if (process.env.NODE_ENV === 'development') {
-  //   console.log('JWT Interceptor - URL:', req.url);
-  //   console.log('JWT Interceptor - Token exists:', !!token);
-  // }
+  // Clonamos os headers iniciais
+  let headers = req.headers;
 
   if (token) {
-    const setHeaders: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-    };
-    if (tenantId) setHeaders['X-Tenant-Id'] = String(tenantId);
+    headers = headers.set('Authorization', `Bearer ${token}`);
 
-    const clonedReq = req.clone({ setHeaders });
-    //console.log('JWT Interceptor - Added Bearer token to request');
-    return next(clonedReq);
+    // Otimização: Tenta pegar o Tenant ID de forma segura sem quebrar se o JSON for inválido
+    const tenantId = getTenantIdFromStorage();
+    if (tenantId) {
+      headers = headers.set('X-Tenant-Id', tenantId);
+    }
   }
 
-  // console.log(
-  //   'JWT Interceptor - No token found, proceeding without auth header'
-  // );
-  return next(req);
+  const clonedReq = req.clone({ headers });
+  return next(clonedReq);
 };
+
+// Função auxiliar para não poluir o interceptor principal
+function getTenantIdFromStorage(): string | null {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+
+    const u = JSON.parse(userStr);
+    // Prioridade: 1. tenantId direto, 2. objeto tenant.id, 3. primeiro da lista de tenants
+    return u.tenantId || u.tenant?.id || u.tenants?.[0]?.id || null;
+  } catch {
+    return null;
+  }
+}

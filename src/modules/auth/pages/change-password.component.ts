@@ -18,7 +18,8 @@ import { ToastService } from '../../../app/core/services/toast.service';
   styleUrls: ['./change-password.component.scss'],
 })
 export class ChangePasswordComponent {
-  private readonly SUCCESS_REDIRECT_DELAY_MS = 800;
+  private readonly SUCCESS_REDIRECT_DELAY_MS = 1500; // Aumentei levemente para dar tempo de ler o toast
+
   form = this.fb.group(
     {
       password: ['', [Validators.required, Validators.minLength(8)]],
@@ -46,27 +47,39 @@ export class ChangePasswordComponent {
 
   submit() {
     if (this.form.invalid) return;
+
     this.loading = true;
     this.error = null;
     this.success = false;
 
-    this.authService
-      .changePassword(this.form.value.password as string)
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.success = true;
-          this.toast.success('Senha alterada com sucesso');
-          setTimeout(
-            () => this.router.navigate(['/']),
-            this.SUCCESS_REDIRECT_DELAY_MS
-          );
-        },
-        error: (err) => {
-          this.loading = false;
-          this.error = err?.error?.message || 'Erro ao alterar a senha.';
-          this.toast.error('Erro ao alterar senha');
-        },
-      });
+    // Prepara o payload correto (Objeto ao invés de string simples)
+    const payload = {
+      password: this.form.value.password,
+      confirmPassword: this.form.value.confirmPassword, // Enviando ambos caso o DTO exija validação no back
+    };
+
+    this.authService.changePassword(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        this.success = true;
+        this.toast.success('Senha alterada com sucesso! Redirecionando...');
+
+        setTimeout(
+          () => this.router.navigate(['/home']), // Redireciona para Home após trocar
+          this.SUCCESS_REDIRECT_DELAY_MS
+        );
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error(err);
+        // Tratamento de erro aprimorado
+        const msg = err?.error?.message;
+        if (Array.isArray(msg)) {
+          this.error = msg.join(', '); // Se for erro de validação (array de strings)
+        } else {
+          this.error = msg || 'Erro ao alterar a senha. Tente novamente.';
+        }
+      },
+    });
   }
 }

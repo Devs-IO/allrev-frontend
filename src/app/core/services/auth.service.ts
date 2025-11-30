@@ -1,26 +1,34 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, timer } from 'rxjs';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap, catchError, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { UserProfile } from '../../../modules/users/interfaces/user-profile.interface';
 import { User } from '../../../modules/users/interfaces/user.interface';
 
+// Interface para tipar a resposta do Login (Boas Práticas)
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken?: string;
+  user: User;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = environment.apiUrl;
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser$: Observable<User | null>; // reactive stream
-  private refreshTokenTimeout: any;
-  public currentUser: Observable<User | null>;
 
-  // Cache do perfil
+  // Estado Reativo do Usuário
+  private currentUserSubject: BehaviorSubject<User | null>;
+  public currentUser$: Observable<User | null>;
+
+  // Estado do Perfil (Admin/Gestor)
   private profileSubject = new BehaviorSubject<UserProfile | null>(null);
   public userProfile$ = this.profileSubject.asObservable();
 
-  private currentUserCached$ = new BehaviorSubject<User | null>(null);
+  // Controle de Timer
+  private refreshTokenTimeout: any;
 
   constructor(
     private http: HttpClient,
@@ -31,158 +39,207 @@ export class AuthService {
     this.currentUserSubject = new BehaviorSubject<User | null>(
       storedUser ? JSON.parse(storedUser) : null
     );
-    this.currentUser = this.currentUserSubject.asObservable();
     this.currentUser$ = this.currentUserSubject.asObservable();
+
+    // Se recarregar a página e tiver token, tenta agendar o refresh
+    if (this.getToken()) {
+      this.startTokenRefresh();
+    }
   }
 
-  // Login do usuário
-  login(email: string, password: string) {
+  // ============================================================
+  // LOGIN ADM
+  // ============================================================
+  login(email: string, password: string): Observable<AuthResponse> {
     return this.http
-      .post<any>(`${this.apiUrl}/auth/login`, { email, password })
+      .post<AuthResponse>(`${this.apiUrl}/auth/login`, { email, password })
       .pipe(
-        tap(() => this.profileSubject.next(null)), // limpa cache de perfil
+        tap(() => this.profileSubject.next(null)),
         map((response) => {
-          if (response?.accessToken && response?.user) {
-            localStorage.setItem('user', JSON.stringify(response.user));
-            localStorage.setItem('token', response.accessToken);
-            if (response.refreshToken) {
-              localStorage.setItem('refreshToken', response.refreshToken);
-            }
-            this.currentUserSubject.next(response.user as User);
-            this.startTokenRefresh();
-            return response;
-          }
-          throw new Error('Resposta de login inválida.');
+          this.setSession(response);
+          return response;
         }),
-        // garante que o observable só complete após cachear o profile
+        // Tenta carregar perfil, mas não bloqueia o login se falhar
         switchMap((response) =>
-          this.loadUserProfile().pipe(map(() => response))
+          this.loadUserProfile().pipe(
+            map(() => response),
+            catchError(() => of(response))
+          )
         )
       );
   }
 
-  // Logout do usuário
+  // ============================================================
+  // LOGIN CLIENTE (Otimizado)
+  // ============================================================
+  loginClient(credentials: {
+    email: string;
+    password: string;
+  }): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/auth/client/login`, credentials)
+      .pipe(
+        tap(() => this.profileSubject.next(null)),
+        map((response) => {
+          this.setSession(response);
+          return response;
+        })
+      );
+  }
+
+  // ============================================================
+  // GESTÃO DE SESSÃO (Centralizada)
+  // ============================================================
+  private setSession(response: AuthResponse): void {
+    if (response?.accessToken && response?.user) {
+      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('token', response.accessToken);
+
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+
+      this.currentUserSubject.next(response.user);
+      this.startTokenRefresh();
+    } else {
+      throw new Error('Resposta de login inválida.');
+    }
+  }
+
   logout() {
-    // Remove o usuário e o token do localStorage
+    this.stopRefreshToken();
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+
     this.currentUserSubject.next(null);
     this.profileSubject.next(null);
-    clearTimeout(this.refreshTokenTimeout);
+
     this.router.navigate(['/login']);
   }
 
-  // Obtém o token atual
-  getToken() {
-    return localStorage.getItem('token');
-  }
-  getRefreshToken() {
-    return localStorage.getItem('refreshToken');
-  }
-
-  // Verifica se o usuário está autenticado
-  isAuthenticated() {
-    const token = this.getToken();
-    return !!token && !this.jwtHelper.isTokenExpired(token);
-  }
-
-  // Carrega perfil com cache para evitar múltiplas chamadas
-  loadUserProfile(): Observable<UserProfile> {
-    const cached = this.profileSubject.getValue();
-    if (cached) return of(cached);
-    return this.http
-      .get<UserProfile>(`${this.apiUrl}/user/profile`)
-      .pipe(tap((profile) => this.profileSubject.next(profile)));
-  }
-
-  // Mantém compatibilidade (evite usar diretamente; prefira userProfile$ ou loadUserProfile)
-  getUserProfile(): Observable<UserProfile> {
-    return this.loadUserProfile();
-  }
-  getUser(): Observable<User> {
-    // legacy callers -> redirect to cached loader
-    return this.loadUserIfNeeded();
-  }
-
-  // Carrega /user/me apenas uma vez e cacheia em currentUserSubject
-  loadUserIfNeeded(): Observable<User> {
-    const cached = this.currentUserSubject.getValue();
-    const token = this.getToken();
-    if (cached && token && !this.jwtHelper.isTokenExpired(token)) {
-      return of(cached);
+  // ============================================================
+  // OPTIMIZATION: getUserCached Refatorado
+  // ============================================================
+  // Antes: Fazia subscribe interno (perdia controle de erro).
+  // Agora: Retorna o Observable direto.
+  getUserCached(): Observable<User | null> {
+    const user = this.currentUserSubject.value;
+    if (user) {
+      return of(user);
     }
-    if (!token) {
-      return of(null as any);
-    }
-    return this.http.get<User>(`${this.apiUrl}/user/me`).pipe(
-      tap((u) => {
-        if (u) {
-          localStorage.setItem('user', JSON.stringify(u));
-          this.currentUserSubject.next(u);
-        }
+
+    return this.http.get<User>(`${this.apiUrl}/users/me`).pipe(
+      tap((u) => this.currentUserSubject.next(u)), // Atualiza estado global
+      catchError(() => {
+        // Se der erro (ex: 401), garante que o estado local limpe
+        // this.logout(); // Opcional: forçar logout se falhar o /me
+        return of(null);
       })
     );
   }
 
-  getCurrentUser$(): Observable<User | null> {
-    const cached = this.currentUserCached$.getValue();
-    if (cached) return this.currentUserCached$.asObservable();
-    // dispara carregamento único
-    this.http.get<User>(`${this.apiUrl}/user/me`).subscribe({
-      next: (u) => this.currentUserCached$.next(u),
-      error: () => this.currentUserCached$.next(null),
-    });
-    return this.currentUserCached$.asObservable();
+  // ============================================================
+  // PERFIL & UTILITÁRIOS
+  // ============================================================
+  loadUserProfile(): Observable<UserProfile> {
+    return this.http
+      .get<UserProfile>(`${this.apiUrl}/users/profile`)
+      .pipe(tap((profile) => this.profileSubject.next(profile)));
   }
 
-  // Configura a renovação automática do token
+  updateProfile(data: Partial<UserProfile>): Observable<UserProfile> {
+    return this.http
+      .patch<UserProfile>(`${this.apiUrl}/users/profile`, data)
+      .pipe(
+        tap((updatedProfile) => {
+          this.profileSubject.next(updatedProfile);
+
+          // Atualiza o user básico no Subject para refletir mudança de nome no header
+          const currentUser = this.currentUserSubject.value;
+          if (currentUser) {
+            const updatedUser = { ...currentUser, name: updatedProfile.name };
+            this.currentUserSubject.next(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        })
+      );
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    return !!token && !this.jwtHelper.isTokenExpired(token);
+  }
+
+  // ============================================================
+  // REFRESH TOKEN (Com limpeza de Timer)
+  // ============================================================
+  private stopRefreshToken() {
+    if (this.refreshTokenTimeout) {
+      clearTimeout(this.refreshTokenTimeout);
+      this.refreshTokenTimeout = null;
+    }
+  }
+
   startTokenRefresh() {
+    this.stopRefreshToken(); // Garante que não tenha timer duplicado
+
     const token = this.getToken();
     if (token && !this.jwtHelper.isTokenExpired(token)) {
-      const exp = this.jwtHelper.getTokenExpirationDate(token)?.getTime() || 0;
-      const delay = exp - Date.now() - 5 * 60 * 1000;
+      const expirationDate = this.jwtHelper.getTokenExpirationDate(token);
+      const exp = expirationDate ? expirationDate.getTime() : 0;
+
+      // Renova 2 minutos antes de expirar (mais seguro que 5)
+      const delay = exp - Date.now() - 2 * 60 * 1000;
+
       if (delay > 0) {
         this.refreshTokenTimeout = setTimeout(() => this.refreshToken(), delay);
       } else {
-        this.logout();
+        // Se o token ainda é válido mas o delay é negativo, renova agora
+        this.refreshToken();
       }
-    } else {
-      this.logout();
     }
   }
 
-  // Renova o token automaticamente
   refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      this.logout();
+      // Sem refresh token, deixa a sessão morrer naturalmente ou força logout
       return;
     }
-    // Envia refresh token no Authorization header
+
     this.http
-      .post<any>(
+      .post<AuthResponse>(
         `${this.apiUrl}/auth/refresh`,
         {},
-        {
-          headers: { Authorization: `Bearer ${refreshToken}` },
-        }
+        { headers: { Authorization: `Bearer ${refreshToken}` } }
       )
       .subscribe({
         next: (res) => {
-          if (res?.accessToken) localStorage.setItem('token', res.accessToken);
-          if (res?.refreshToken)
-            localStorage.setItem('refreshToken', res.refreshToken);
-          this.startTokenRefresh();
+          if (res?.accessToken) {
+            localStorage.setItem('token', res.accessToken);
+            if (res.refreshToken) {
+              localStorage.setItem('refreshToken', res.refreshToken);
+            }
+            this.startTokenRefresh(); // Reinicia o ciclo
+          }
         },
-        error: () => this.logout(),
+        error: () => {
+          // Se falhar renovar (ex: refresh expirado), logout obrigatório
+          this.logout();
+        },
       });
   }
 
-  // Change current user's password
-  changePassword(newPassword: string) {
-    return this.http.put(`${this.apiUrl}/auth/change-password`, {
-      newPassword,
-    });
+  changePassword(data: any) {
+    return this.http.post(`${this.apiUrl}/auth/change-password`, data);
   }
 }

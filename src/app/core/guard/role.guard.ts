@@ -1,33 +1,44 @@
-import { inject, Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { Role } from '../enum/roles.enum';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
+import { ToastService } from '../services/toast.service';
 
-@Injectable({ providedIn: 'root' })
-export class RoleGuard implements CanActivate {
-  private authService = inject(AuthService);
-  private router = inject(Router);
+export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  const toast = inject(ToastService);
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
-    const user$ = this.authService.getUser(); // Obtém o usuário logado
-    const requiredRoles: Role[] = route.data['roles'] || [];
+  const requiredRoles = route.data['roles'] as Role[];
 
-    return user$.pipe(
-      map(user => {
-        if (user && requiredRoles.length === 0) {
-          return true; // Se não houver restrição de roles, permite acesso
-        } else if (user && requiredRoles.includes(user.role)) {
-          return true;
+  return authService.currentUser$.pipe(
+    take(1),
+    map((user) => {
+      if (!user) return false;
+
+      // Se não houver roles definidas na rota, permite acesso (ou bloqueia, dependendo da estratégia. Aqui permitimos).
+      if (!requiredRoles || requiredRoles.length === 0) {
+        return true;
+      }
+
+      const hasPermission = requiredRoles.includes(user.role as Role);
+
+      if (!hasPermission) {
+        toast.error(
+          'Acesso negado: Você não tem permissão para acessar esta página.'
+        );
+
+        // Redireciona para a home adequada
+        if (user.role === Role.CLIENT) {
+          router.navigate(['/portal/home']);
+        } else {
+          router.navigate(['/home']);
         }
-        return false; // Se não atender à condição, retorna false
-      }),
-      tap(hasAccess => {
-        if (!hasAccess) {
-          this.router.navigate(['/home']); // Redireciona se não tiver permissão
-        }
-      })
-    );
-  }
-}
+        return false;
+      }
+
+      return true;
+    })
+  );
+};

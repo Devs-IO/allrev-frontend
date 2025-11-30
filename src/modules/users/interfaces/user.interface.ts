@@ -12,6 +12,10 @@ export interface User {
   isActive: boolean;
   role: Role;
   isAdmin: boolean;
+
+  // Propriedade que estava faltando:
+  mustChangePassword?: boolean;
+
   // Mantido para compatibilidade antiga
   tenantIds?: string[];
   // Novo formato detalhado vindo do backend

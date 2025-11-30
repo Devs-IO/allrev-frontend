@@ -1,10 +1,13 @@
 import {
   ApplicationConfig,
   LOCALE_ID,
-  importProvidersFrom,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withViewTransitions,
+} from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
@@ -17,8 +20,10 @@ registerLocaleData(localePt);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
-    // Interceptors order matters: JWT first, then error handler
+
+    // Router otimizado com InputBinding e ViewTransitions
+    provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
+
     provideHttpClient(withInterceptors([jwtInterceptor, errorInterceptor])),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
   ],

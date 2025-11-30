@@ -1,45 +1,62 @@
-import { Injectable } from '@angular/core';
+import { inject } from '@angular/core';
 import {
-  ActivatedRouteSnapshot,
-  CanActivate,
+  CanActivateFn,
   Router,
-  RouterStateSnapshot,
   UrlTree,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
 } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { map, take } from 'rxjs/operators';
+import { Role } from '../enum/roles.enum';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
+export const authGuard: CanActivateFn = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): boolean | UrlTree {
-    const targetUrl = state.url || '';
-    const isAuth = this.authService.isAuthenticated();
-    if (!isAuth) {
-      // allow access to /login when not authenticated, block others
-      if (targetUrl.startsWith('/login')) return true;
-      return this.router.createUrlTree(['/login']);
+  // Verifica se está autenticado
+  if (!authService.isAuthenticated()) {
+    // Se tentar acessar área de cliente sem logar, manda pro login do cliente
+    if (state.url.includes('/portal')) {
+      return router.createUrlTree(['/portal/login']);
     }
-
-    // Enforce password change if required
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    const mustChange = user?.mustChangePassword === true;
-    const onChangePasswordRoute = targetUrl.startsWith('/change-password');
-    if (mustChange && !onChangePasswordRoute) {
-      return this.router.createUrlTree(['/change-password']);
-    }
-
-    // If authenticated and trying to access /login, send to home
-    if (targetUrl.startsWith('/login')) {
-      return this.router.createUrlTree(['/home']);
-    }
-
-    return true;
+    // Padrão: manda pro login administrativo
+    return router.createUrlTree(['/login']);
   }
-}
+
+  return authService.currentUser$.pipe(
+    take(1),
+    map((user) => {
+      // 1. Se não tiver usuário carregado (erro de estado), logout
+      if (!user) {
+        authService.logout();
+        return router.createUrlTree(['/login']);
+      }
+
+      // 2. Troca de senha obrigatória
+      const isChangePasswordRoute = state.url.includes('/change-password');
+      if (user.mustChangePassword && !isChangePasswordRoute) {
+        return router.createUrlTree(['/change-password']);
+      }
+
+      // 3. Redirecionamento de Contexto (Segurança de Navegação)
+      const isClient = user.role === Role.CLIENT;
+      const tryingToAccessPortal = state.url.includes('/portal');
+
+      // Cenário A: Cliente tentando acessar área administrativa
+      if (isClient && !tryingToAccessPortal && !isChangePasswordRoute) {
+        return router.createUrlTree(['/portal/home']);
+      }
+
+      // Cenário B: Admin/Gestor tentando acessar área do portal
+      if (!isClient && tryingToAccessPortal) {
+        return router.createUrlTree(['/home']);
+      }
+
+      return true;
+    })
+  );
+};

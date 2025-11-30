@@ -1,25 +1,52 @@
 <header class="app-header d-flex align-items-center justify-content-between">
   <div class="d-flex align-items-center">
-    <a routerLink="/home" class="logo me-2">
-      <img src="assets/logo_.png" alt="Logo" class="logo me-2" />
+    <a routerLink="/home" class="logo-link me-2">
+      <img src="assets/logo_.png" alt="AllRev Logo" class="logo" />
     </a>
   </div>
 
-  <div class="admin-banner" *ngIf="UserRole === 'admin'">
+  <div class="admin-banner" *ngIf="isAdmin">
     <strong>
       <i class="bi bi-shield-check me-2"></i>
-      Administrador do sistema Allrev
+      Administrador do Sistema
     </strong>
   </div>
 
   <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton"
-      [attr.data-bs-toggle]="'dropdown'" aria-expanded="false">
-      <i class="bi bi-person-circle me-2"></i> {{ userName }}
+    <button
+      class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+      type="button"
+      id="userDropdown"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      <i class="bi bi-person-circle"></i>
+      <span class="d-none d-md-inline">{{ userName }}</span>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-      <li><a class="dropdown-item" routerLink="/profile">Perfil</a></li>
-      <li><button class="dropdown-item" (click)="logout()">Sair</button></li>
+
+    <ul
+      class="dropdown-menu dropdown-menu-end shadow border-0"
+      aria-labelledby="userDropdown"
+    >
+      <li>
+        <a
+          class="dropdown-item d-flex align-items-center gap-2"
+          routerLink="/profile"
+        >
+          <i class="bi bi-person-badge"></i> Meu Perfil
+        </a>
+      </li>
+
+      <li><hr class="dropdown-divider" /></li>
+
+      <li>
+        <button
+          class="dropdown-item d-flex align-items-center gap-2 text-danger"
+          (click)="logout()"
+        >
+          <i class="bi bi-box-arrow-right"></i> Sair
+        </button>
+      </li>
     </ul>
   </div>
 </header>

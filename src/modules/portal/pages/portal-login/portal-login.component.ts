@@ -8,17 +8,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../app/core/services/auth.service'; // Ajuste o caminho se necessário
+import { AuthService } from '../../../../app/core/services/auth.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-portal-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  templateUrl: './portal-login.component.html',
+  styleUrls: ['./portal-login.component.scss'],
 })
-export class LoginComponent implements OnInit {
+export class PortalLoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -35,9 +35,8 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Se já estiver logado, redireciona (Opcional, mas boa prática)
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/home']);
+      this.router.navigate(['/portal/home']);
     }
   }
 
@@ -55,20 +54,16 @@ export class LoginComponent implements OnInit {
         .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (response) => {
-            // A sessão já foi salva pelo AuthService (setSession)
-
-            // Verifica flag de troca de senha (estrutura limpa baseada no AuthResponse)
             const mustChange = response.user?.mustChangePassword === true;
 
             if (mustChange) {
               this.router.navigate(['/change-password']);
             } else {
-              // Redireciona para a home ou dashboard
-              this.router.navigate(['/home']);
+              this.router.navigate(['/portal/home']);
             }
           },
           error: (error) => {
-            console.error('Login error:', error);
+            console.error('Portal login error:', error);
             const backendMsg: string | undefined = error?.error?.message;
 
             if (
@@ -79,7 +74,6 @@ export class LoginComponent implements OnInit {
               return;
             }
 
-            // Tratamento de Status Code
             switch (error.status) {
               case 0:
                 this.errorMessage = 'Erro de conexão. Verifique sua internet.';
