@@ -73,7 +73,7 @@ export const routes: Routes = [
       import('./core/layout/layout/layout.component').then(
         (m) => m.LayoutComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [authGuard, roleGuard],
     // O roleGuard aqui bloqueia clientes de entrarem no layout administrativo
     data: {
       roles: [Role.ADMIN, Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
