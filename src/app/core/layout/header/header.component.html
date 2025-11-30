@@ -5,20 +5,23 @@
     </a>
   </div>
 
-  <div class="admin-banner" *ngIf="isAdmin">
-    <strong>
-      <i class="bi bi-shield-check me-2"></i>
-      Administrador do Sistema
-    </strong>
+  <div class="d-flex flex-column align-items-center">
+    <div class="fw-bold text-dark" *ngIf="tenantName">{{ tenantName }}</div>
+    <div class="admin-banner" *ngIf="isAdmin">
+      <small>
+        <i class="bi bi-shield-check me-1"></i>
+        Administrador do Sistema
+      </small>
+    </div>
   </div>
 
-  <div class="dropdown">
+  <div class="dropdown position-relative">
     <button
       class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
       type="button"
-      id="userDropdown"
-      data-bs-toggle="dropdown"
-      aria-expanded="false"
+      (click)="toggleDropdown()"
+      [class.show]="isDropdownOpen"
+      aria-expanded="{{ isDropdownOpen }}"
     >
       <i class="bi bi-person-circle"></i>
       <span class="d-none d-md-inline">{{ userName }}</span>
@@ -26,12 +29,14 @@
 
     <ul
       class="dropdown-menu dropdown-menu-end shadow border-0"
-      aria-labelledby="userDropdown"
+      [class.show]="isDropdownOpen"
+      style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem"
     >
       <li>
         <a
           class="dropdown-item d-flex align-items-center gap-2"
           routerLink="/profile"
+          (click)="closeDropdown()"
         >
           <i class="bi bi-person-badge"></i> Meu Perfil
         </a>

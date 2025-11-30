@@ -64,7 +64,7 @@ export class UserCreateComponent implements OnInit {
 
   ngOnInit() {
     this.initializeForm();
-    // Ordem importante: carregar roles, depois checar permissões
+    // Carrega roles e verifica permissões em paralelo
     this.loadAvailableRoles();
     this.checkAdminAndTenant();
   }
@@ -106,44 +106,79 @@ export class UserCreateComponent implements OnInit {
   private checkAdminAndTenant() {
     this.authService.currentUser$.subscribe({
       next: (user: any) => {
-        if (!user) return;
+        if (!user) {
+          console.warn('Usuário não carregado ainda');
+          return;
+        }
 
+        console.log('Usuário carregado:', user);
         this.currentUserRole = user.role;
         this.isAdmin = user.role === Role.ADMIN;
-
         const tenantIdControl = this.userForm?.get('tenantId');
 
         if (this.isAdmin) {
-          // Admin: Campo obrigatório e habilitado (deve escolher na lista)
+          console.log('Usuário é ADMIN, carregando lista de empresas...');
           tenantIdControl?.setValidators([Validators.required]);
           tenantIdControl?.enable();
           this.loadTenants();
-        } else if (user.tenantId || user.tenant?.id) {
-          // Gestor/Outros: Campo preenchido e desabilitado
-          const tId = user.tenantId || user.tenant?.id;
-          this.tenantName = user.tenant?.companyName || 'Sua Empresa';
-
-          tenantIdControl?.clearValidators();
-          tenantIdControl?.setValue(tId);
-          tenantIdControl?.disable();
         } else {
-          // Erro de consistência (User sem tenant)
-          this.error =
-            'Usuário não possui empresa associada. Contate o suporte.';
-          tenantIdControl?.disable();
-        }
+          console.log('Usuário é GESTOR/ASSISTENTE, tentando obter empresa...');
+          // Para GESTOR: tenant vem como objeto completo { id, companyName, ... }
+          // Para ASSISTENTE: tenants vem como array [{ tenantId, companyName, role }]
 
+          let tenantId: string | null = null;
+          let tenantName: string | null = null;
+
+          // Prioridade 1: tenant (para gestores - vem do UserTenant com role MANAGER)
+          if (user.tenant?.id) {
+            tenantId = user.tenant.id;
+            tenantName = user.tenant.companyName;
+            console.log('Empresa obtida de user.tenant (GESTOR):', tenantName);
+          }
+          // Prioridade 2: primeiro item de tenants (para assistentes)
+          else if (user.tenants && user.tenants.length > 0) {
+            tenantId = user.tenants[0].tenantId;
+            tenantName = user.tenants[0].companyName;
+            console.log(
+              'Empresa obtida de user.tenants[0] (ASSISTENTE):',
+              tenantName
+            );
+          }
+
+          console.log('TenantId final:', tenantId);
+          console.log('TenantName final:', tenantName);
+
+          if (tenantId && tenantName) {
+            this.tenantName = tenantName;
+            tenantIdControl?.setValue(tenantId);
+            tenantIdControl?.disable();
+            console.log(
+              '✅ Empresa configurada:',
+              tenantName,
+              '(ID:',
+              tenantId,
+              ')'
+            );
+          } else {
+            console.error('❌ TenantId não encontrado no usuário');
+            this.error =
+              'Erro: Empresa do usuário não identificada. Entre em contato com o administrador.';
+          }
+        }
         tenantIdControl?.updateValueAndValidity();
       },
       error: (err) => {
+        console.error('Erro ao carregar dados do usuário:', err);
         this.error = ErrorHelper.getErrorMessage(err);
       },
     });
   }
 
   private loadTenants() {
+    console.log('Carregando empresas...');
     this.tenantsService.getTenants().subscribe({
       next: (tenants: any[]) => {
+        console.log('Empresas carregadas:', tenants);
         this.tenants = tenants;
 
         // UX: Se for Admin e só tiver 1 tenant, seleciona automático
@@ -151,9 +186,11 @@ export class UserCreateComponent implements OnInit {
           const t = tenants[0];
           this.userForm.get('tenantId')?.setValue(t.id);
           this.tenantName = t.companyName;
+          console.log('Auto-selecionado empresa única:', t.companyName);
         }
       },
       error: (err) => {
+        console.error('Erro ao carregar empresas:', err);
         this.error = ErrorHelper.getErrorMessage(err);
         this.tenants = [];
       },

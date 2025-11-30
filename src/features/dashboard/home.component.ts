@@ -1,10 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../app/core/services/auth.service';
 import { Role } from '../admin/users/interfaces/user.enums';
-
-// Core Imports
 
 @Component({
   selector: 'app-home',
@@ -13,41 +12,28 @@ import { Role } from '../admin/users/interfaces/user.enums';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
 
-  // Signals para a View
-  userName = signal<string>('Visitante');
-  userEmail = signal<string>('');
-  userRole = signal<string>('');
+  userName: string = '';
+  tenantName: string = '';
+  isAdmin: boolean = false;
 
-  // Computed helpers (opcional, se quiser lógica derivada)
-  isAdmin = signal<boolean>(false);
+  private userSubscription?: Subscription;
 
   ngOnInit() {
-    // Reatividade instantânea baseada no estado local (sem delay de HTTP)
-    this.authService.currentUser$.subscribe((user) => {
-      if (user) {
-        this.userName.set(user.name);
-        this.userEmail.set(user.email);
-        this.userRole.set(this.translateRole(user.role));
-        this.isAdmin.set(user.role === Role.ADMIN);
+    this.userSubscription = this.authService.currentUser$.subscribe(
+      (user: any) => {
+        if (user) {
+          this.userName = user.name;
+          this.isAdmin = user.role === Role.ADMIN;
+          this.tenantName = user.tenant?.companyName || user.tenantName || '';
+        }
       }
-    });
+    );
   }
 
-  private translateRole(role: string): string {
-    switch (role) {
-      case Role.ADMIN:
-        return 'Administrador';
-      case Role.MANAGER_REVIEWERS:
-        return 'Gestor';
-      case Role.ASSISTANT_REVIEWERS:
-        return 'Assistente';
-      case Role.CLIENT:
-        return 'Cliente';
-      default:
-        return role;
-    }
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
   }
 }

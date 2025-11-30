@@ -45,6 +45,8 @@
   }
 
   .dropdown {
+    position: relative;
+
     .btn-primary {
       background-color: rgba(255, 255, 255, 0.1); // Transparente leve
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -61,10 +63,17 @@
     .dropdown-menu {
       margin-top: 0.5rem;
       border-radius: 0.5rem;
+      display: none;
+      min-width: 200px;
+
+      &.show {
+        display: block;
+      }
 
       .dropdown-item {
         padding: 0.5rem 1rem;
         transition: background-color 0.2s;
+        cursor: pointer;
 
         &:hover {
           background-color: var(--light-color, #f8f9fa);
