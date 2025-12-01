@@ -1,4 +1,10 @@
-export type PaymentMethod = 'pix' | 'transfer' | 'deposit' | 'card' | 'other';
+export type PaymentMethod =
+  | 'pix'
+  | 'transfer'
+  | 'deposit'
+  | 'card'
+  | 'boleto'
+  | 'other';
 export type PaymentTerms = 'ONE' | 'TWO' | 'THREE';
 export type PaymentStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
 export type ItemStatus =
@@ -18,8 +24,9 @@ export interface OrderInstallment {
   amount: number;
   dueDate: string; // YYYY-MM-DD
   paidAt?: string; // ISO
-  channel?: PaymentMethod | string;
+  channel?: string; // string para aceitar valores do back (pix, card, etc)
 }
+
 export interface OrderItemResponsible {
   userId: string;
   name?: string;
@@ -38,15 +45,15 @@ export interface OrderItem {
 
   clientId: string;
   price: number;
-  paymentMethod?: string; // keep string for flexibility
+  paymentMethod?: string;
   clientDeadline: string; // YYYY-MM-DD
 
   itemStatus: ItemStatus | string;
 
   responsible?: OrderItemResponsible;
 
-  serviceStartDate?: string; // YYYY-MM-DD
-  serviceEndDate?: string; // YYYY-MM-DD
+  serviceStartDate?: string;
+  serviceEndDate?: string;
   userStatus?: ItemStatus | string;
   userDescription?: string;
   createdAt: string; // ISO
@@ -76,11 +83,12 @@ export interface OrderResponseDto {
   updatedAt?: string; // ISO
 }
 
+// CORRIGIDO: Removido paymentMethod daqui pois o backend não aceita no item
 export interface CreateOrderItemDto {
   functionalityId: string;
-  clientId?: string; // inherited from order if omitted
-  price: number; // total item price
-  paymentMethod?: string;
+  clientId?: string;
+  price: number;
+  // paymentMethod?: string; <-- REMOVIDO
   clientDeadline: string; // YYYY-MM-DD
   description?: string;
   responsibleUserId?: string;
@@ -88,8 +96,8 @@ export interface CreateOrderItemDto {
 
   assistantAmount?: number;
 
-  serviceStartDate?: string; // YYYY-MM-DD
-  serviceEndDate?: string; // YYYY-MM-DD
+  serviceStartDate?: string;
+  serviceEndDate?: string;
   userStatus?: ItemStatus | string;
   userDescription?: string;
 }
@@ -98,8 +106,16 @@ export interface CreateOrderDto {
   clientId: string;
   contractDate: string; // YYYY-MM-DD
   description?: string;
-  paymentTerms?: PaymentTerms; // default set by backend if omitted
+  paymentTerms?: PaymentTerms;
   items: CreateOrderItemDto[];
 
-  paymentMethod?: PaymentMethod | string;
+  // Parcelas manuais
+  installments: {
+    amount: number;
+    dueDate: string; // YYYY-MM-DD
+    channel?: string; // 'pix' | 'card' etc
+  }[];
+
+  // Pagamento na Raiz
+  paymentMethod?: string;
 }

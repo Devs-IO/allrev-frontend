@@ -1,0 +1,96 @@
+.app-header {
+  background-color: var(--primary-color, #8D201B); // Fallback para a cor da marca
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 64px; // Altura padrão levemente maior para toque
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1030; // Z-index do Bootstrap navbar fixed é 1030
+  padding: 0 1.5rem;
+
+  .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+
+    .logo {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .admin-banner {
+    background-color: #ffc107; // Warning color
+    color: #212529;
+    padding: 0.25rem 1rem;
+    border-radius: 50px; // Pill shape
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    // Esconde em mobile muito pequeno para não quebrar layout
+    @media (max-width: 576px) {
+      display: none;
+    }
+  }
+
+  .dropdown {
+    position: relative;
+
+    .btn-primary {
+      background-color: rgba(255, 255, 255, 0.1); // Transparente leve
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover, &:focus, &.show {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+    }
+
+    .dropdown-menu {
+      margin-top: 0.5rem;
+      border-radius: 0.5rem;
+      display: none;
+      min-width: 200px;
+
+      &.show {
+        display: block;
+      }
+
+      .dropdown-item {
+        padding: 0.5rem 1rem;
+        transition: background-color 0.2s;
+        cursor: pointer;
+
+        &:hover {
+          background-color: var(--light-color, #f8f9fa);
+        }
+
+        &.text-danger:hover {
+          background-color: #fff5f5;
+        }
+      }
+    }
+  }
+}
+
+// Classe auxiliar para o body (controlada pelo TS)
+// Isso ajuda se você quiser mover o conteúdo principal para baixo quando o header é admin
+:host-context(body.admin-logged-in) {
+  .app-header {
+    border-bottom: 3px solid #ffc107; // Indicador visual extra
+  }
+}

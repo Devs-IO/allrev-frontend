@@ -1,0 +1,18 @@
+.background-radial-gradient {
+  background: radial-gradient(50% 50% at 10% 10%, rgba(141,32,27,0.25), transparent 20%),
+    radial-gradient(50% 50% at 90% 90%, rgba(13,110,253,0.12), transparent 20%),
+    #0f1724;
+}
+
+.card.bg-glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px) saturate(120%);
+  border-radius: 12px;
+}
+
+/* Pequenos ajustes de responsividade */
+@media (max-width: 768px) {
+  .background-radial-gradient {
+    padding-top: 32px;
+  }
+}

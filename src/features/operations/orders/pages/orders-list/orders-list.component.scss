@@ -1,0 +1,94 @@
+// Importando variáveis globais se existirem (ajuste o caminho se necessário)
+// @import 'styles/variables';
+
+
+.container { max-width: 1200px; }
+
+// Card and table styles
+.card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: none;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+}
+
+// Estilo base para os badges de status
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px; // Mais arredondado
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #fff; // Cor padrão do texto
+  text-align: center;
+  min-width: 90px; // Largura mínima para alinhamento
+}
+
+// Cores específicas por status (usando cores comuns como exemplo)
+.status-pending {
+  background-color: #ffc107; // Amarelo/Laranja para Pendente
+  color: #333; // Texto escuro para contraste
+}
+
+.status-paid,
+.status-finished {
+  background-color: #28a745; // Verde para Pago/Finalizado
+}
+
+.status-in-progress {
+  background-color: #17a2b8; // Azul/Ciano para Em Progresso
+}
+
+.status-overdue {
+  background-color: #dc3545; // Vermelho para Atrasado
+}
+
+.status-canceled {
+  background-color: #6c757d; // Cinza para Cancelado
+}
+
+// Ajustes para responsividade dos filtros, se necessário
+// Exemplo: fazer filtros ocuparem a linha toda em telas pequenas
+// @media (max-width: 768px) {
+//   mat-form-field {
+//     width: 100%;
+//   }
+// }
+
+// Garante que a tabela não quebre em telas menores
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+
+// Badge estilo "pill" mas com borda suave e fundo transparente (Moderno)
+.badge.border {
+    border-width: 1px !important;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+// Avatar circle para o responsável
+.avatar-circle {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+// Remove bordas grossas das tabelas
+.table > :not(caption) > * > * {
+    border-bottom-width: 1px;
+    box-shadow: none;
+}
+
+// Hover suave na linha inteira
+.table-hover > tbody > tr:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.03); // Ajuste se não tiver a var RGB
+}
+
+.font-monospace {
+    font-family: 'Consolas', 'Monaco', monospace;
+    letter-spacing: -0.5px;
+}

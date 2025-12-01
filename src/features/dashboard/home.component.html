@@ -1,0 +1,70 @@
+<div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold">Bem-vindo, {{ userName }}!</h2>
+      <p class="text-muted" *ngIf="tenantName">{{ tenantName }}</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Card Clientes -->
+    <div class="col-md-6 col-lg-3">
+      <a
+        routerLink="/clients"
+        class="card text-decoration-none h-100 border-0 shadow-sm"
+      >
+        <div class="card-body text-center">
+          <i class="bi bi-people-fill text-primary"></i>
+          <h5 class="card-title mt-3">Clientes</h5>
+          <p class="card-text text-muted">Gerencie seus clientes</p>
+          <button class="btn btn-primary mt-auto">Acessar</button>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card Trabalhos -->
+    <div class="col-md-6 col-lg-3">
+      <a
+        routerLink="/orders"
+        class="card text-decoration-none h-100 border-0 shadow-sm"
+      >
+        <div class="card-body text-center">
+          <i class="bi bi-briefcase-fill text-success"></i>
+          <h5 class="card-title mt-3">Trabalhos</h5>
+          <p class="card-text text-muted">Ordens de serviço</p>
+          <button class="btn btn-primary mt-auto">Acessar</button>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card Funcionalidades -->
+    <div class="col-md-6 col-lg-3">
+      <a
+        routerLink="/functionalities"
+        class="card text-decoration-none h-100 border-0 shadow-sm"
+      >
+        <div class="card-body text-center">
+          <i class="bi bi-gear-fill text-warning"></i>
+          <h5 class="card-title mt-3">Serviços</h5>
+          <p class="card-text text-muted">Catálogo de serviços</p>
+          <button class="btn btn-primary mt-auto">Acessar</button>
+        </div>
+      </a>
+    </div>
+
+    <!-- Card Usuários (apenas admin/gestor) -->
+    <div class="col-md-6 col-lg-3" *ngIf="isAdmin">
+      <a
+        routerLink="/users"
+        class="card text-decoration-none h-100 border-0 shadow-sm"
+      >
+        <div class="card-body text-center">
+          <i class="bi bi-person-badge-fill text-info"></i>
+          <h5 class="card-title mt-3">Usuários</h5>
+          <p class="card-text text-muted">Gerenciar usuários</p>
+          <button class="btn btn-primary mt-auto">Acessar</button>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,57 @@
+<header class="app-header d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center">
+    <a routerLink="/home" class="logo-link me-2">
+      <img src="assets/logo_.png" alt="AllRev Logo" class="logo" />
+    </a>
+  </div>
+
+  <div class="d-flex flex-column align-items-center">
+    <div class="fw-bold text-dark" *ngIf="tenantName">{{ tenantName }}</div>
+    <div class="admin-banner" *ngIf="isAdmin">
+      <small>
+        <i class="bi bi-shield-check me-1"></i>
+        Administrador do Sistema
+      </small>
+    </div>
+  </div>
+
+  <div class="dropdown position-relative">
+    <button
+      class="btn btn-primary dropdown-toggle d-flex align-items-center gap-2"
+      type="button"
+      (click)="toggleDropdown()"
+      [class.show]="isDropdownOpen"
+      [attr.aria-expanded]="isDropdownOpen"
+    >
+      <i class="bi bi-person-circle"></i>
+      <span class="d-none d-md-inline">{{ userName }}</span>
+    </button>
+
+    <ul
+      class="dropdown-menu dropdown-menu-end shadow border-0"
+      [class.show]="isDropdownOpen"
+      style="position: absolute; right: 0; top: 100%; margin-top: 0.5rem"
+    >
+      <li>
+        <a
+          class="dropdown-item d-flex align-items-center gap-2"
+          routerLink="/profile"
+          (click)="closeDropdown()"
+        >
+          <i class="bi bi-person-badge"></i> Meu Perfil
+        </a>
+      </li>
+
+      <li><hr class="dropdown-divider" /></li>
+
+      <li>
+        <button
+          class="dropdown-item d-flex align-items-center gap-2 text-danger"
+          (click)="logout()"
+        >
+          <i class="bi bi-box-arrow-right"></i> Sair
+        </button>
+      </li>
+    </ul>
+  </div>
+</header>

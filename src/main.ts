@@ -1,64 +1,65 @@
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
-  provideHttpClient,
-  withInterceptors,
-  HTTP_INTERCEPTORS,
-} from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+  provideRouter,
+  withComponentInputBinding,
+  withViewTransitions,
+} from '@angular/router';
+import { provideAnimations } from '@angular/platform-browser/animations';
+
+// Auth & JWT
+import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
+
+// State Management (NgRx)
+import { provideStore } from '@ngrx/store';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { provideEffects } from '@ngrx/effects';
+
+// Local Files
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
-import { JwtModule, JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
 import { environment } from './environments/environment';
-import { provideStore } from '@ngrx/store'; // Supondo que você tenha um interceptor
-import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { appReducers } from './app/core/state/app.state';
-import { provideEffects } from '@ngrx/effects';
 import { AuthEffects } from './app/core/state/auth/auth.effects';
-import { AuthInterceptor } from './app/core/interceptors/auth.interceptor';
 
-// Função para fornecer as opções de configuração do JWT
-export function jwtOptionsFactory() {
-  return {
-    tokenGetter: () => localStorage.getItem('token'),
-    allowedDomains: environment.apiUrl,
-    disallowedRoutes: environment.apiUrl + '/auth/login',
-  };
-}
+// Interceptors (Funcionais)
+import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
+import { errorInterceptor } from './app/core/interceptors/error.interceptor';
 
-// Registrar locale pt-BR para formatação dd/MM/yyyy em tela
+// Registrar locale pt-BR
 registerLocaleData(localePt);
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideRouter(routes), // Registrar as rotas
-    provideStore(appReducers), // Configura os reducers
-    provideEffects([AuthEffects]), // Adiciona os efeitos (vazio inicialmente)
-    provideHttpClient(withInterceptors([jwtInterceptor])), // Configurar HttpClient com interceptor
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true,
-    },
-    FormsModule, // Formulários template-driven
-    ReactiveFormsModule, // Formulários reativos
-    {
-      provide: JWT_OPTIONS,
-      useValue: JWT_OPTIONS, // Usar o valor padrão
-      useFactory: jwtOptionsFactory,
-    }, // Configuração do JWT_OPTIONS
-    JwtModule, // Registrar o JwtModule diretamente, sem .forRoot
-    JwtHelperService,
-    provideStore(),
+    // 1. Configuração de Rotas (com bindings modernos e transições)
+    provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
+
+    // 2. Cliente HTTP com Interceptors Funcionais (Ordem importa!)
+    provideHttpClient(
+      withInterceptors([
+        jwtInterceptor, // 1º: Anexa o Token
+        errorInterceptor, // 2º: Trata o Erro (Logout se 401)
+      ])
+    ),
+
+    // 3. State Management (Store & Effects)
+    provideStore(appReducers),
+    provideEffects([AuthEffects]),
     provideStoreDevtools({
-      maxAge: 25, // Limita o histórico de ações
-      //logOnly: !environment.production, // Apenas visualização em produção
+      maxAge: 25,
+      logOnly: environment.production, // Desabilita log em produção para performance
+      autoPause: true,
     }),
-    { provide: LOCALE_ID, useValue: 'pt' },
+
+    // 4. JWT Helper (Apenas o serviço utilitário, pois o interceptor é manual)
+    { provide: JWT_OPTIONS, useValue: JWT_OPTIONS },
+    JwtHelperService,
+
+    // 5. Configurações Globais (Locale e Animações)
+    { provide: LOCALE_ID, useValue: 'pt-BR' },
+    provideAnimations(), // Necessário para Toastr e alguns componentes UI
   ],
 }).catch((err) => console.error(err));

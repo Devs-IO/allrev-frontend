@@ -1,0 +1,103 @@
+// Força a cor Vinho (Brand) se o Bootstrap não estiver pegando a variável global
+.text-brand {
+  color: #57040F !important; // Sua cor primária exata
+}
+
+.bg-brand-subtle {
+  background-color: rgba(87, 4, 15, 0.05); // Fundo bem suave vinho
+}
+
+.card {
+  border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    padding-top: 1.25rem;
+    padding-bottom: 0.75rem;
+
+    h5 {
+      color: #57040F; // Vinho nos títulos de seção
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+// Estilo do Item de Serviço (Repetidor)
+.item-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  // Número do item (bolinha)
+  .item-index {
+    width: 24px;
+    height: 24px;
+    background-color: #57040F;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .btn-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #94a3b8;
+    &:hover { color: #dc3545; }
+  }
+}
+
+// Labels menores para densidade
+.form-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+// Inputs com foco na cor da marca
+.form-control:focus, .form-select:focus {
+  border-color: #57040F;
+  box-shadow: 0 0 0 0.25rem rgba(87, 4, 15, 0.15);
+}
+
+// Tabela de Parcelas Compacta
+.table-installments {
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 600;
+  }
+  td { padding: 0.5rem; vertical-align: middle; }
+  input.form-control {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+    border: 1px solid #e2e8f0;
+  }
+}
