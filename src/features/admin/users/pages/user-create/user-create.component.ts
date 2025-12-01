@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -7,6 +7,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { take } from 'rxjs/operators';
 
 // Serviços de Features (ajuste de caminho relativo)
 import { TenantsService } from '../../../tenants/services/tenants.service';
@@ -104,72 +105,104 @@ export class UserCreateComponent implements OnInit {
   }
 
   private checkAdminAndTenant() {
-    this.authService.currentUser$.subscribe({
+    this.authService.currentUser$.pipe(take(1)).subscribe({
       next: (user: any) => {
         if (!user) {
-          console.warn('Usuário não carregado ainda');
+          console.warn('⚠️ Usuário não carregado ainda');
+          // Tenta pegar do localStorage como fallback
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            console.log('📦 Tentando carregar do localStorage...');
+            const parsedUser = JSON.parse(storedUser);
+            this.processUserData(parsedUser);
+          } else {
+            this.error = 'Usuário não autenticado. Faça login novamente.';
+          }
           return;
         }
 
-        console.log('Usuário carregado:', user);
-        this.currentUserRole = user.role;
-        this.isAdmin = user.role === Role.ADMIN;
-        const tenantIdControl = this.userForm?.get('tenantId');
-
-        if (this.isAdmin) {
-          console.log('Usuário é ADMIN, carregando lista de empresas...');
-          tenantIdControl?.setValidators([Validators.required]);
-          tenantIdControl?.enable();
-          this.loadTenants();
-        } else {
-          console.log('Usuário é GESTOR/ASSISTENTE, tentando obter empresa...');
-          // Para GESTOR: tenant vem como objeto completo { id, companyName, ... }
-          // Para ASSISTENTE: tenants vem como array [{ tenantId, companyName, role }]
-
-          let tenantId: string | null = null;
-          let tenantName: string | null = null;
-
-          // Prioridade 1: tenant (para gestores - vem do UserTenant com role MANAGER)
-          if (user.tenant?.id) {
-            tenantId = user.tenant.id;
-            tenantName = user.tenant.companyName;
-            console.log('Empresa obtida de user.tenant (GESTOR):', tenantName);
-          }
-          // Prioridade 2: primeiro item de tenants (para assistentes)
-          else if (user.tenants && user.tenants.length > 0) {
-            tenantId = user.tenants[0].tenantId;
-            tenantName = user.tenants[0].companyName;
-            console.log(
-              'Empresa obtida de user.tenants[0] (ASSISTENTE):',
-              tenantName
-            );
-          }
-
-          console.log('TenantId final:', tenantId);
-          console.log('TenantName final:', tenantName);
-
-          if (tenantId && tenantName) {
-            this.tenantName = tenantName;
-            tenantIdControl?.setValue(tenantId);
-            tenantIdControl?.disable();
-            console.log(
-              '✅ Empresa configurada:',
-              tenantName,
-              '(ID:',
-              tenantId,
-              ')'
-            );
-          } else {
-            console.error('❌ TenantId não encontrado no usuário');
-            this.error =
-              'Erro: Empresa do usuário não identificada. Entre em contato com o administrador.';
-          }
-        }
-        tenantIdControl?.updateValueAndValidity();
+        console.log('👤 Usuário carregado:', user);
+        this.processUserData(user);
       },
       error: (err) => {
-        console.error('Erro ao carregar dados do usuário:', err);
+        console.error('❌ Erro ao carregar dados do usuário:', err);
         this.error = ErrorHelper.getErrorMessage(err);
+      },
+    });
+  }
+
+  private processUserData(user: any) {
+    this.currentUserRole = user.role;
+    this.isAdmin = user.role === Role.ADMIN;
+    const tenantIdControl = this.userForm?.get('tenantId');
+
+    if (this.isAdmin) {
+      console.log('🔑 Usuário é ADMIN, carregando lista de empresas...');
+      tenantIdControl?.setValidators([Validators.required]);
+      tenantIdControl?.enable();
+      this.loadTenants();
+    } else {
+      console.log('👔 Usuário é GESTOR/ASSISTENTE, tentando obter empresa...');
+      // Para GESTOR: tenant vem como objeto completo { id, companyName, ... }
+      // Para ASSISTENTE: tenants vem como array [{ tenantId, role }]
+
+      let tenantId: string | null = null;
+      let tenantName: string | null = null;
+
+      // Prioridade 1: tenant (para gestores - vem do UserTenant com role MANAGER)
+      if (user.tenant?.id) {
+        tenantId = user.tenant.id;
+        tenantName = user.tenant.companyName;
+        console.log('🏢 Empresa obtida de user.tenant (GESTOR):', tenantName);
+      }
+      // Prioridade 2: buscar no array tenants o vínculo como MANAGER
+      else if (user.tenants && user.tenants.length > 0) {
+        // Procura primeiro o vínculo como manager_reviewers
+        const managerTenant = user.tenants.find(
+          (t: any) => t.role === Role.MANAGER_REVIEWERS
+        );
+
+        if (managerTenant) {
+          tenantId = managerTenant.tenantId;
+          console.log('🏢 TenantId obtido como GESTOR:', tenantId);
+          // Carrega o nome da empresa via API já que não vem no objeto
+          if (tenantId) this.loadTenantName(tenantId);
+        } else {
+          // Se não for gestor, pega o primeiro vínculo (assistente)
+          tenantId = user.tenants[0].tenantId;
+          console.log('🏢 TenantId obtido como ASSISTENTE:', tenantId);
+          if (tenantId) this.loadTenantName(tenantId);
+        }
+      }
+
+      console.log('🆔 TenantId final:', tenantId);
+
+      if (tenantId) {
+        tenantIdControl?.setValue(tenantId);
+        tenantIdControl?.disable();
+        console.log('✅ Empresa configurada (ID:', tenantId, ')');
+      } else {
+        console.error('❌ TenantId não encontrado no usuário');
+        console.error(
+          '📋 Estrutura do usuário:',
+          JSON.stringify(user, null, 2)
+        );
+        this.error =
+          'Erro: Empresa do usuário não identificada. Entre em contato com o administrador.';
+      }
+    }
+    tenantIdControl?.updateValueAndValidity();
+  }
+
+  private loadTenantName(tenantId: string) {
+    this.tenantsService.getTenant(tenantId).subscribe({
+      next: (tenant: any) => {
+        this.tenantName = tenant.companyName;
+        console.log('✅ Nome da empresa carregado:', this.tenantName);
+      },
+      error: (err) => {
+        console.error('⚠️ Erro ao carregar nome da empresa:', err);
+        this.tenantName = 'Sua Empresa';
       },
     });
   }

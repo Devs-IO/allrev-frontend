@@ -21,7 +21,7 @@
       type="button"
       (click)="toggleDropdown()"
       [class.show]="isDropdownOpen"
-      aria-expanded="{{ isDropdownOpen }}"
+      [attr.aria-expanded]="isDropdownOpen"
     >
       <i class="bi bi-person-circle"></i>
       <span class="d-none d-md-inline">{{ userName }}</span>

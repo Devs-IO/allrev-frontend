@@ -1,119 +1,134 @@
 <div class="orders-create container my-4">
-  <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5><i class="bi bi-clipboard-plus"></i> Nova Ordem de Serviço</h5>
+  <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="text-primary">
+        <i class="bi bi-clipboard-plus"></i> Nova Ordem
+      </h3>
       <div class="d-flex gap-2">
         <button
           type="button"
           class="btn btn-outline-secondary"
-          (click)="resetForm()"
+          routerLink="/orders"
         >
-          <i class="bi bi-arrow-counterclockwise"></i> Limpar
+          Cancelar
         </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="orderForm.invalid"
-          (click)="onSubmit()"
-        >
-          <i class="bi bi-save"></i> Salvar
+        <button type="submit" class="btn btn-primary" [disabled]="submitting">
+          <i *ngIf="submitting" class="bi bi-hourglass-split"></i> Salvar
         </button>
       </div>
     </div>
-    <div class="card-body">
-      <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5><i class="bi bi-person"></i> Informações do Cliente</h5>
+
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-light fw-bold">
+        1. Dados do Cliente e Contrato
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Cliente *</label>
+            <select
+              class="form-select"
+              formControlName="clientId"
+              [class.is-invalid]="isInvalid(orderForm.get('clientId'))"
+            >
+              <option [ngValue]="null" disabled>Selecione...</option>
+              <option *ngFor="let client of clients" [value]="client.id">
+                {{ client.name }}
+              </option>
+            </select>
+            <div class="invalid-feedback">Obrigatório</div>
           </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-12 col-md-8">
-                <label class="form-label"
-                  ><i class="bi bi-person"></i> Cliente
-                  <span class="req">*</span></label
-                >
-                <select
-                  class="form-control"
-                  formControlName="clientId"
-                  [class.is-invalid]="invalid('clientId')"
-                >
-                  <option [ngValue]="null" disabled>Selecione o cliente</option>
-                  <option
-                    *ngFor="let client of clients$ | async"
-                    [value]="client.id"
-                  >
-                    {{ client.name }}
-                  </option>
-                </select>
-                <div class="invalid-feedback" *ngIf="invalid('clientId')">
-                  Cliente é obrigatório.
-                </div>
-              </div>
-              <div class="col-12 col-md-4">
-                <label class="form-label"
-                  ><i class="bi bi-calendar-check"></i> Concessão
-                  <span class="req">*</span></label
-                >
-                <input
-                  type="date"
-                  class="form-control"
-                  formControlName="contractDate"
-                  [class.is-invalid]="invalid('contractDate')"
-                />
-              </div>
-            </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Data Contrato *</label>
+            <input
+              type="date"
+              class="form-control"
+              formControlName="contractDate"
+            />
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Descrição Geral *</label>
+            <input
+              type="text"
+              class="form-control"
+              formControlName="description"
+              placeholder="Ex: TCC Completo - João Silva"
+            />
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5><i class="bi bi-tools"></i> Detalhes do Serviço</h5>
-          </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <label class="form-label"
-                  ><i class="bi bi-gear-wide-connected"></i> Serviço
-                  <span class="req">*</span></label
+    <div class="card mb-4 shadow-sm">
+      <div
+        class="card-header bg-light d-flex justify-content-between align-items-center"
+      >
+        <span class="fw-bold">2. Itens do Serviço</span>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary"
+          (click)="addItem()"
+        >
+          <i class="bi bi-plus-lg"></i> Adicionar Item
+        </button>
+      </div>
+
+      <div class="card-body p-0">
+        <div formArrayName="items">
+          <div
+            *ngFor="let item of items.controls; let i = index"
+            [formGroupName]="i"
+            class="border-bottom p-3 position-relative bg-white"
+          >
+            <button
+              *ngIf="items.length > 1"
+              type="button"
+              class="btn-close position-absolute top-0 end-0 m-2"
+              aria-label="Remover"
+              (click)="removeItem(i)"
+            ></button>
+
+            <div class="row g-3 align-items-end">
+              <div
+                class="col-md-1 text-center d-flex flex-column justify-content-center"
+              >
+                <span class="badge bg-secondary rounded-circle">{{
+                  i + 1
+                }}</span>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label small text-muted"
+                  >Serviço / Funcionalidade</label
                 >
                 <select
-                  class="form-control"
+                  class="form-select"
                   formControlName="functionalityId"
-                  [class.is-invalid]="invalid('functionalityId')"
-                  (change)="onServiceSelected($any($event.target).value)"
+                  (change)="onServiceSelected(i, $any($event.target).value)"
                 >
-                  <option [ngValue]="null" disabled>Selecione o serviço</option>
+                  <option value="" disabled>Selecione...</option>
                   <option
-                    *ngFor="let func of functionalities$ | async"
+                    *ngFor="let func of functionalities"
                     [value]="func.id"
                   >
                     {{ func.name }}
                   </option>
                 </select>
-                <div
-                  class="invalid-feedback"
-                  *ngIf="invalid('functionalityId')"
-                >
-                  Serviço é obrigatório.
-                </div>
               </div>
 
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-calendar-x"></i> Prazo (Cliente)
-                  <span class="req">*</span></label
-                >
+              <div class="col-md-2">
+                <label class="form-label small text-muted">Prazo Cliente</label>
                 <input
                   type="date"
                   class="form-control"
                   formControlName="clientDeadline"
-                  [class.is-invalid]="invalid('clientDeadline')"
                 />
               </div>
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-calendar3-week"></i> Prazo (Assist.)</label
+              <div class="col-md-2">
+                <label class="form-label small text-muted"
+                  >Prazo Assistente</label
                 >
                 <input
                   type="date"
@@ -121,161 +136,137 @@
                   formControlName="assistantDeadline"
                 />
               </div>
-              <div class="col-12 col-md-12">
-                <label class="form-label"
-                  ><i class="bi bi-card-text"></i> Detalhes / Observações
-                  <span class="req">*</span></label
-                >
-                <textarea
-                  class="form-control"
-                  formControlName="description"
-                  rows="3"
-                  placeholder="Ex: TCC da Bianca - Formatação ABNT, correção ortográfica..."
-                  [class.is-invalid]="invalid('description')"
-                ></textarea>
-                <div class="invalid-feedback" *ngIf="invalid('description')">
-                  Detalhes são obrigatórios.
-                </div>
-              </div>
-              <div class="col-12 col-md-12">
-                <label class="form-label"
-                  ><i class="bi bi-person-check"></i> Responsável (Assist.)
-                </label>
+
+              <div class="col-md-3">
+                <label class="form-label small text-muted">Responsável</label>
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control bg-light"
                   formControlName="responsibleName"
+                  readonly
+                  placeholder="Automático"
                 />
-                <div class="invalid-feedback" *ngIf="invalid('responsibleId')">
-                  Responsável é obrigatório.
+                <input type="hidden" formControlName="responsibleId" />
+              </div>
+
+              <div class="col-md-1"></div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted"
+                  >Preço Cliente (R$)</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input
+                    type="number"
+                    class="form-control fw-bold"
+                    formControlName="clientPrice"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label small text-muted"
+                  >Custo Assistente (R$)</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    formControlName="assistantPrice"
+                    placeholder="0.00"
+                  />
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+      <div class="card-footer text-end bg-light">
+        <small class="text-muted">Total dos Itens: </small>
+        <span class="h5 ms-2">{{
+          orderForm.get("totalValue")?.value | currency : "BRL"
+        }}</span>
+      </div>
+    </div>
 
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5><i class="bi bi-cash-coin"></i> Financeiro</h5>
+    <div class="card mb-4 shadow-sm border-primary">
+      <div class="card-header bg-primary text-white fw-bold">
+        3. Pagamento e Parcelas
+      </div>
+      <div class="card-body">
+        <div class="row mb-4 align-items-center">
+          <div class="col-auto">
+            <label class="form-label fw-bold">Número de Parcelas:</label>
           </div>
-          <div class="card-body">
-            <div class="row g-3">
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-currency-dollar"></i> Preço (Cliente)
-                  <span class="req">*</span></label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  formControlName="clientPrice"
-                  [class.is-invalid]="invalid('clientPrice')"
-                />
-              </div>
+          <div class="col-auto">
+            <select
+              class="form-select form-select-lg"
+              formControlName="installmentsCount"
+            >
+              <option *ngFor="let opt of installmentsOptions" [value]="opt">
+                {{ opt }}x
+              </option>
+            </select>
+          </div>
+          <div class="col text-muted small">
+            Alterar valores recalcula as próximas parcelas automaticamente.
+          </div>
+        </div>
 
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-wallet2"></i> Valor (Assist.)</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  formControlName="assistantPrice"
-                />
-              </div>
-
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-credit-card"></i> Método Pag.
-                  <span class="req">*</span></label
-                >
-                <select
-                  class="form-control"
-                  formControlName="paymentMethod"
-                  [class.is-invalid]="invalid('paymentMethod')"
-                >
-                  <option *ngFor="let m of paymentMethods" [ngValue]="m">
-                    {{ m }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="col-12 col-md-3">
-                <label class="form-label"
-                  ><i class="bi bi-calendar-month"></i> Parcelamento
-                  <span class="req">*</span></label
-                >
-                <select class="form-control" formControlName="installments">
-                  <option *ngFor="let i of installmentsOptions" [ngValue]="i">
-                    {{ i }}x
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <hr class="my-4" />
-            <h6>
-              <i class="bi bi-card-list"></i> Parcelas (Gerado Automaticamente)
-            </h6>
-
-            <div formArrayName="installmentsArray">
-              <div
-                *ngFor="
-                  let installment of installmentsArray.controls;
-                  let i = index
-                "
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 30%">Valor (R$)</th>
+                <th style="width: 30%">Vencimento</th>
+                <th style="width: 35%">Forma de Pagamento</th>
+              </tr>
+            </thead>
+            <tbody formArrayName="installmentsList">
+              <tr
+                *ngFor="let inst of installmentsList.controls; let i = index"
                 [formGroupName]="i"
-                class="row g-2 mb-2 installment-item align-items-center"
               >
-                <div class="col-12 col-md-2">
-                  <label class="form-label-sm"
-                    ><strong>Parcela {{ i + 1 }}</strong></label
-                  >
-                </div>
-                <div class="col-12 col-md-5">
-                  <div class="input-group">
+                <td class="text-center fw-bold">{{ i + 1 }}</td>
+                <td>
+                  <div class="input-group input-group-sm">
                     <span class="input-group-text">R$</span>
                     <input
                       type="number"
-                      class="form-control"
-                      formControlName="value"
+                      class="form-control fw-bold text-primary"
+                      formControlName="amount"
+                      step="0.01"
                     />
                   </div>
-                </div>
-                <div class="col-12 col-md-5">
-                  <div class="input-group">
-                    <span class="input-group-text"
-                      ><i class="bi bi-calendar"></i
-                    ></span>
-                    <input
-                      type="date"
-                      class="form-control"
-                      formControlName="dueDate"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </td>
+                <td>
+                  <input
+                    type="date"
+                    class="form-control form-control-sm"
+                    formControlName="dueDate"
+                  />
+                </td>
+                <td>
+                  <select
+                    class="form-select form-select-sm"
+                    formControlName="paymentMethod"
+                  >
+                    <option
+                      *ngFor="let method of paymentMethods"
+                      [value]="method"
+                    >
+                      {{ method }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-          <button
-            type="button"
-            class="btn btn-lg btn-outline-secondary"
-            (click)="resetForm()"
-          >
-            Limpar Formulário
-          </button>
-          <button
-            type="submit"
-            class="btn btn-lg btn-primary"
-            [disabled]="orderForm.invalid"
-          >
-            Salvar Ordem de Serviço
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
+  </form>
 </div>
