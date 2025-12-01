@@ -1,8 +1,36 @@
 // Importando variáveis globais se existirem (ajuste o caminho se necessário)
 // @import 'styles/variables';
 
-
 .container { max-width: 1200px; }
+
+// Estilos para os botões de modo de visualização
+.btn-brand {
+  background-color: #57040F !important;
+  color: white !important;
+  border-color: #57040F !important;
+
+  &:hover {
+    background-color: #3e030c !important;
+    border-color: #3e030c !important;
+  }
+}
+
+.btn-outline-brand {
+  color: #57040F !important;
+  border-color: #57040F !important;
+  background-color: transparent !important;
+
+  &:hover {
+    background-color: #57040F !important;
+    color: white !important;
+    border-color: #57040F !important;
+  }
+}
+
+// Cor do título
+.text-brand {
+  color: #57040F !important;
+}
 
 // Card and table styles
 .card {

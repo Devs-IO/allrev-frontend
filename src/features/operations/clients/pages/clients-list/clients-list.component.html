@@ -1,5 +1,5 @@
 <div class="container my-4">
-  <h1 class="mb-4 text-primary">Clientes</h1>
+  <h1 class="mb-4 text-brand"><i class="fas fa-users me-2"></i>Clientes</h1>
 
   <!-- Loading -->
   <div *ngIf="loading">Carregando clientes...</div>
@@ -8,7 +8,10 @@
   <div *ngIf="!loading && error" class="alert alert-danger">{{ error }}</div>
 
   <!-- Tabela -->
-  <div *ngIf="!loading && !error && (clients?.length ?? 0) > 0" class="card shadow-sm">
+  <div
+    *ngIf="!loading && !error && (clients?.length ?? 0) > 0"
+    class="card shadow-sm"
+  >
     <div class="card-body p-0">
       <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -26,10 +29,14 @@
             <tr *ngFor="let client of clients; let i = index">
               <th scope="row">{{ i + 1 }}</th>
               <td>
-                <strong><i class="fas fa-user me-2"></i>{{ client.name }}</strong>
+                <strong
+                  ><i class="fas fa-user me-2"></i>{{ client.name }}</strong
+                >
               </td>
               <td><i class="fas fa-envelope me-1"></i>{{ client.email }}</td>
-              <td><i class="fas fa-phone me-1"></i>{{ client.phone || '-' }}</td>
+              <td>
+                <i class="fas fa-phone me-1"></i>{{ client.phone || "-" }}
+              </td>
               <td>
                 <span *ngIf="client.isActive" class="text-success">
                   <i class="fas fa-check-circle"></i> Ativo
@@ -44,21 +51,24 @@
                     type="button"
                     class="btn btn-outline-primary action-btn"
                     (click)="viewClients(client.id)"
-                    title="Visualizar">
+                    title="Visualizar"
+                  >
                     <i class="fas fa-eye"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-warning action-btn"
                     (click)="editClients(client.id)"
-                    title="Editar">
+                    title="Editar"
+                  >
                     <i class="fas fa-edit"></i>
                   </button>
                   <button
                     type="button"
                     class="btn btn-outline-danger action-btn"
                     (click)="deleteClients(client.id)"
-                    title="Excluir">
+                    title="Excluir"
+                  >
                     <i class="fas fa-trash"></i>
                   </button>
                 </div>
@@ -72,6 +82,7 @@
 
   <!-- Empty state -->
   <div *ngIf="!loading && !error && (clients?.length ?? 0) === 0">
-    Nenhum cliente cadastrado<br/>Clique no menu lateral para cadastrar um novo cliente.
+    Nenhum cliente cadastrado<br />Clique no menu lateral para cadastrar um novo
+    cliente.
   </div>
 </div>

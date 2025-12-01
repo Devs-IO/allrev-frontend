@@ -1,23 +1,21 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-//import { FooterComponent } from '../footer/footer.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, SidebarComponent, /*FooterComponent*/],
+  imports: [CommonModule, RouterModule, HeaderComponent, SidebarComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
 })
 export class LayoutComponent {
+  // Estado que controla se o menu está fechado ou aberto
+  isSidebarCollapsed = false;
 
-  isCollapsed = signal(false); // Estado do menu lateral
-  
   toggleSidebar() {
-    console.log('toggleSidebar', this.isCollapsed());
-    this.isCollapsed.update(state => !state); // Alterna o estado
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
-
 }

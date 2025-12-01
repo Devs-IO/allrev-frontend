@@ -274,4 +274,26 @@ export class OrdersListComponent implements OnInit, OnDestroy {
         return 'bg-warning-subtle text-warning border-warning';
     }
   }
+
+  // Gera cor consistente baseada no nome
+  getAvatarColor(name: string): string {
+    const colors = [
+      '#57040F', // Vinho primário
+      '#8D201B', // Vinho secundário
+      '#be6460', // Vinho terciário
+      '#6B4423', // Marrom
+      '#2C5F2D', // Verde escuro
+      '#1B4965', // Azul escuro
+      '#6B2D5C', // Roxo
+      '#8B4513', // Marrom médio
+    ];
+
+    // Hash simples do nome para escolher cor
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    return colors[Math.abs(hash) % colors.length];
+  }
 }

@@ -125,4 +125,8 @@ export class OrdersService {
       { status }
     );
   }
+
+  getDashboardSummary(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/summary`);
+  }
 }

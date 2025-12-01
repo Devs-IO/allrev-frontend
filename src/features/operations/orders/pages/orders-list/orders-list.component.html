@@ -3,7 +3,9 @@
     class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3"
   >
     <div>
-      <h4 class="mb-1 fw-bold text-primary">Gestão de Ordens</h4>
+      <h5 class="mb-1 fw-bold text-brand">
+        <i class="fas fa-clipboard-list me-2"></i>Gestão de Ordens
+      </h5>
       <p class="text-muted small mb-0">Gerencie vendas e acompanhe serviços</p>
     </div>
 
@@ -12,8 +14,8 @@
         <button
           type="button"
           class="btn btn-sm"
-          [class.btn-primary]="viewMode === 'MANAGERIAL'"
-          [class.btn-outline-primary]="viewMode !== 'MANAGERIAL'"
+          [class.btn-brand]="viewMode === 'MANAGERIAL'"
+          [class.btn-outline-brand]="viewMode !== 'MANAGERIAL'"
           (click)="toggleViewMode('MANAGERIAL')"
         >
           <i class="bi bi-briefcase me-1"></i> Por Cliente (Gerencial)
@@ -21,8 +23,8 @@
         <button
           type="button"
           class="btn btn-sm"
-          [class.btn-primary]="viewMode === 'OPERATIONAL'"
-          [class.btn-outline-primary]="viewMode !== 'OPERATIONAL'"
+          [class.btn-brand]="viewMode === 'OPERATIONAL'"
+          [class.btn-outline-brand]="viewMode !== 'OPERATIONAL'"
           (click)="toggleViewMode('OPERATIONAL')"
         >
           <i class="bi bi-list-check me-1"></i> Por Serviço (Operacional)
@@ -30,7 +32,7 @@
       </div>
 
       <button
-        class="btn btn-sm btn-dark d-flex align-items-center"
+        class="btn btn-sm btn-brand d-flex align-items-center"
         (click)="goToCreateOrder()"
       >
         <i class="bi bi-plus-lg me-1"></i> Nova Ordem
@@ -106,7 +108,7 @@
 
   <div *ngIf="isLoading$ | async" class="text-center py-5">
     <div
-      class="spinner-border text-primary spinner-border-sm"
+      class="spinner-border text-brand spinner-border-sm"
       role="status"
     ></div>
     <div class="small text-muted mt-2">Carregando dados...</div>
@@ -139,7 +141,7 @@
             (click)="viewDetails(order.id)"
             style="cursor: pointer"
           >
-            <td class="ps-3 fw-bold text-primary">{{ order.orderNumber }}</td>
+            <td class="ps-3 fw-bold text-brand">{{ order.orderNumber }}</td>
             <td class="fw-semibold">{{ getClientName(order.client.id) }}</td>
             <td class="text-muted">
               {{ order.contractDate | date : "dd/MM/yy" }}
@@ -233,7 +235,7 @@
             </td>
             <td>
               <div class="d-flex flex-column">
-                <span class="text-primary small fw-bold"
+                <span class="text-brand small fw-bold"
                   >#{{ row.orderNumber }}</span
                 >
                 <span class="text-muted small">{{ row.clientName }}</span>
@@ -242,7 +244,8 @@
             <td>
               <div class="d-flex align-items-center">
                 <div
-                  class="avatar-circle bg-light text-secondary me-2 small fw-bold"
+                  class="avatar-circle me-2 small fw-bold text-white"
+                  [style.background-color]="getAvatarColor(row.responsibleName)"
                   style="
                     width: 24px;
                     height: 24px;

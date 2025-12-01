@@ -1,39 +1,31 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { AuthService } from '../../app/core/services/auth.service';
-import { Role } from '../admin/users/interfaces/user.enums';
+import { RouterLink } from '@angular/router';
+import { OrdersService } from '../operations/orders/services/orders.service';
+import { Observable, shareReplay } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent implements OnInit, OnDestroy {
-  private authService = inject(AuthService);
+export class HomeComponent implements OnInit {
+  stats$!: Observable<any>;
+  currentDate = new Date();
 
-  userName: string = '';
-  tenantName: string = '';
-  isAdmin: boolean = false;
+  constructor(private ordersService: OrdersService) {}
 
-  private userSubscription?: Subscription;
-
-  ngOnInit() {
-    this.userSubscription = this.authService.currentUser$.subscribe(
-      (user: any) => {
-        if (user) {
-          this.userName = user.name;
-          this.isAdmin = user.role === Role.ADMIN;
-          this.tenantName = user.tenant?.companyName || user.tenantName || '';
-        }
-      }
-    );
+  ngOnInit(): void {
+    this.stats$ = this.ordersService.getDashboardSummary().pipe(shareReplay(1));
   }
 
-  ngOnDestroy(): void {
-    this.userSubscription?.unsubscribe();
+  // Helper para saudações baseadas no horário
+  get greeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
   }
 }

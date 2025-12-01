@@ -1,10 +1,8 @@
-<div class="layout">
-  <app-header></app-header>
-  <div class="layout-content" [class.collapsed]="isCollapsed()">
-    <app-sidebar (toggle)="toggleSidebar()"></app-sidebar>
-    <div class="main-content">
-      <router-outlet></router-outlet>
-    </div>
-  </div>
-  <!-- <app-footer></app-footer> -->
-</div>
+<app-header></app-header>
+
+<app-sidebar [isCollapsed]="isSidebarCollapsed" (toggle)="toggleSidebar()">
+</app-sidebar>
+
+<main class="main-content" [class.expanded-content]="isSidebarCollapsed">
+  <router-outlet></router-outlet>
+</main>

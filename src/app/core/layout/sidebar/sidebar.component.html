@@ -1,74 +1,87 @@
-<aside
-  id="sidebarMenu"
-  class="sidebar collapse show"
-  [class.collapsed]="isCollapsed()"
+<nav
+  class="sidebar d-flex flex-column flex-shrink-0"
+  [class.collapsed]="isCollapsed"
 >
-  <!-- 🔹 Botão de Expandir/Retrair -->
-  <div class="toggle-container">
-    <button
-      class="btn toggle-btn"
-      (click)="toggleSidebar()"
-      aria-label="Expandir ou retrair menu lateral"
-      [attr.aria-pressed]="isCollapsed()"
+  <div
+    class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3"
+    style="height: 60px"
+  >
+    <div
+      class="logo-container d-flex align-items-center overflow-hidden"
+      *ngIf="!isCollapsed"
     >
-      <i class="bi bi-list"></i>
+      <span class="fs-5 fw-bold text-white tracking-tight">Allrev</span>
+    </div>
+
+    <button
+      class="btn-toggle text-white border-0 bg-transparent p-0 ms-auto"
+      (click)="toggleSidebar()"
+    >
+      <i
+        class="bi"
+        [class.bi-list]="isCollapsed"
+        [class.bi-chevron-left]="!isCollapsed"
+      ></i>
     </button>
   </div>
 
-  <!-- Menu -->
-  <ul class="menu nav flex-column">
-    <ng-container *ngFor="let item of filteredMenuItems">
+  <hr class="text-white-50 my-0 mx-3" />
+
+  <ul class="nav nav-pills flex-column mb-auto mt-2 px-2">
+    <ng-container *ngFor="let item of filteredMenu; trackBy: trackByFn">
+      <li
+        *ngIf="item.separator"
+        class="border-top border-white-50 my-2 mx-2 opacity-50"
+      ></li>
+
       <li class="nav-item">
         <a
           [routerLink]="item.route"
+          [routerLinkActiveOptions]="{ exact: item.exact || false }"
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="nav-link d-flex justify-content-between align-items-center"
-          (click)="toggleSubmenu(item.menu)"
-          [attr.aria-label]="'Ir para ' + item.menu"
-          [attr.aria-expanded]="item.subRoutes ? isOpen(item.menu) : null"
+          class="nav-link text-white d-flex align-items-center"
+          [title]="isCollapsed ? item.label : ''"
         >
-          <span>
-            <i [class]="item.icon"></i>
-            <span *ngIf="!isCollapsed()">{{ item.menu }}</span>
-          </span>
           <i
-            *ngIf="item.subRoutes"
-            class="bi bi-chevron-down submenu-icon"
-            [class.rotate]="isOpen(item.menu)"
+            [class]="item.icon"
+            class="fs-5 d-flex justify-content-center"
+            [style.min-width]="'24px'"
           ></i>
+
+          <span class="ms-3 text-nowrap" *ngIf="!isCollapsed">{{
+            item.label
+          }}</span>
         </a>
-        <ul
-          *ngIf="item.subRoutes"
-          class="submenu nav flex-column"
-          [class.active]="isOpen(item.menu)"
-        >
-          <li *ngFor="let sub of item.subRoutes">
-            <a
-              [routerLink]="sub.route"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="nav-link"
-              [attr.aria-label]="'Ir para ' + sub.label"
-            >
-              <i [class]="sub.icon + ' me-2'"></i>
-              <span *ngIf="!isCollapsed()">{{ sub.label }}</span>
-            </a>
-          </li>
-        </ul>
       </li>
     </ng-container>
   </ul>
 
-  <!-- Rodapé -->
-  <div class="sidebar-footer">
-    <div class="user-info">
-      <i class="bi bi-person-circle me-2"></i>
-      <span *ngIf="!isCollapsed()">{{ userEmail() || "Carregando..." }}</span>
-    </div>
-    <div class="datetime">
-      <i class="bi bi-clock me-2"></i>
-      <span *ngIf="!isCollapsed()">{{ currentDate().toLocaleString() }}</span>
+  <div class="sidebar-footer mt-auto p-3 border-top border-white-50">
+    <div
+      class="d-flex align-items-center"
+      [class.justify-content-center]="isCollapsed"
+    >
+      <div
+        class="avatar bg-white text-primary rounded-circle fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
+        style="width: 32px; height: 32px"
+      >
+        {{ currentUser?.name?.charAt(0) || "U" }}
+      </div>
+
+      <div class="ms-2 overflow-hidden" *ngIf="!isCollapsed">
+        <div class="text-white fw-bold small text-truncate">
+          {{ currentUser?.name }}
+        </div>
+      </div>
+
+      <button
+        (click)="logout()"
+        class="btn btn-link text-white ms-auto p-0"
+        title="Sair"
+        *ngIf="!isCollapsed"
+      >
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
     </div>
   </div>
-</aside>
+</nav>

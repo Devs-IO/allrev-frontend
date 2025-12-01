@@ -37,3 +37,63 @@
     margin-top: auto; /* Fixar o botão no final do card */
   }
 }
+
+// Variáveis de marca
+$brand-color: #57040F;
+$brand-color-light: lighten($brand-color, 55%);
+
+.text-brand { color: $brand-color !important; }
+.bg-brand { background-color: $brand-color !important; }
+
+.icon-box {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+  }
+}
+
+// Efeito visual nos cards
+.bg-shape {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.card-pattern {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+// Botões de ação rápida
+.card-action {
+  transition: all 0.2s;
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6 !important;
+    .icon-sm {
+      transform: scale(1.1);
+    }
+  }
+}
