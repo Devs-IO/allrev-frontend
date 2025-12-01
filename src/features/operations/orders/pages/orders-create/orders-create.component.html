@@ -1,108 +1,126 @@
-<div class="orders-create container my-4">
+<div class="container-fluid p-3 p-md-4" style="max-width: 1200px">
   <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h3 class="text-primary">
-        <i class="bi bi-clipboard-plus"></i> Nova Ordem
-      </h3>
+    <div
+      class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3"
+    >
+      <div>
+        <h4 class="mb-1 fw-bold text-brand">Nova Ordem de Serviço</h4>
+        <p class="text-muted small mb-0">
+          Cadastre o cliente, defina os serviços e gere as parcelas
+        </p>
+      </div>
+
       <div class="d-flex gap-2">
-        <button
-          type="button"
-          class="btn btn-outline-secondary"
-          routerLink="/orders"
-        >
+        <button type="button" class="btn btn-light border" routerLink="/orders">
           Cancelar
         </button>
-        <button type="submit" class="btn btn-primary" [disabled]="submitting">
-          <i *ngIf="submitting" class="bi bi-hourglass-split"></i> Salvar
+        <button
+          type="submit"
+          class="btn btn-primary bg-brand border-0"
+          [disabled]="submitting"
+          style="background-color: #57040f"
+        >
+          <i
+            *ngIf="submitting"
+            class="spinner-border spinner-border-sm me-1"
+          ></i>
+          <i *ngIf="!submitting" class="bi bi-check2-circle me-1"></i>
+          Salvar Ordem
         </button>
       </div>
     </div>
 
-    <div class="card mb-4 shadow-sm">
-      <div class="card-header bg-light fw-bold">
-        1. Dados do Cliente e Contrato
-      </div>
-      <div class="card-body">
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Cliente *</label>
-            <select
-              class="form-select"
-              formControlName="clientId"
-              [class.is-invalid]="isInvalid(orderForm.get('clientId'))"
-            >
-              <option [ngValue]="null" disabled>Selecione...</option>
-              <option *ngFor="let client of clients" [value]="client.id">
-                {{ client.name }}
-              </option>
-            </select>
-            <div class="invalid-feedback">Obrigatório</div>
+    <div class="row g-4">
+      <div class="col-12 col-xl-8">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5><i class="bi bi-person-lines-fill me-2"></i>Dados Iniciais</h5>
           </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label">Cliente *</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white border-end-0"
+                    ><i class="bi bi-search text-muted"></i
+                  ></span>
+                  <select
+                    class="form-select border-start-0 ps-0"
+                    formControlName="clientId"
+                    [class.is-invalid]="isInvalid(orderForm.get('clientId'))"
+                  >
+                    <option [ngValue]="null" disabled>
+                      Selecione um cliente...
+                    </option>
+                    <option *ngFor="let client of clients" [value]="client.id">
+                      {{ client.name }}
+                    </option>
+                  </select>
+                </div>
+                <div
+                  class="invalid-feedback d-block"
+                  *ngIf="isInvalid(orderForm.get('clientId'))"
+                >
+                  Obrigatório
+                </div>
+              </div>
 
-          <div class="col-md-3">
-            <label class="form-label">Data Contrato *</label>
-            <input
-              type="date"
-              class="form-control"
-              formControlName="contractDate"
-            />
-          </div>
+              <div class="col-md-4">
+                <label class="form-label">Data do Contrato *</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  formControlName="contractDate"
+                />
+              </div>
 
-          <div class="col-md-12">
-            <label class="form-label">Descrição Geral *</label>
-            <input
-              type="text"
-              class="form-control"
-              formControlName="description"
-              placeholder="Ex: TCC Completo - João Silva"
-            />
+              <div class="col-12">
+                <label class="form-label">Descrição / Identificação *</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="description"
+                  placeholder="Ex: TCC Engenharia Civil - Matheus"
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="card mb-4 shadow-sm">
-      <div
-        class="card-header bg-light d-flex justify-content-between align-items-center"
-      >
-        <span class="fw-bold">2. Itens do Serviço</span>
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-primary"
-          (click)="addItem()"
-        >
-          <i class="bi bi-plus-lg"></i> Adicionar Item
-        </button>
-      </div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="text-brand m-0 fw-bold fs-6">
+            <i class="bi bi-list-check me-2"></i>Serviços Contratados
+          </h5>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary"
+            (click)="addItem()"
+          >
+            <i class="bi bi-plus-lg me-1"></i> Adicionar Outro Item
+          </button>
+        </div>
 
-      <div class="card-body p-0">
         <div formArrayName="items">
           <div
             *ngFor="let item of items.controls; let i = index"
             [formGroupName]="i"
-            class="border-bottom p-3 position-relative bg-white"
+            class="item-card"
           >
+            <div class="item-index">{{ i + 1 }}</div>
+
             <button
               *ngIf="items.length > 1"
               type="button"
-              class="btn-close position-absolute top-0 end-0 m-2"
-              aria-label="Remover"
+              class="btn btn-sm btn-remove"
               (click)="removeItem(i)"
-            ></button>
+              title="Remover item"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
 
-            <div class="row g-3 align-items-end">
-              <div
-                class="col-md-1 text-center d-flex flex-column justify-content-center"
-              >
-                <span class="badge bg-secondary rounded-circle">{{
-                  i + 1
-                }}</span>
-              </div>
-
-              <div class="col-md-4">
-                <label class="form-label small text-muted"
-                  >Serviço / Funcionalidade</label
-                >
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Funcionalidade / Serviço</label>
                 <select
                   class="form-select"
                   formControlName="functionalityId"
@@ -118,18 +136,27 @@
                 </select>
               </div>
 
-              <div class="col-md-2">
-                <label class="form-label small text-muted">Prazo Cliente</label>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Responsável (Automático)</label>
+                <input
+                  type="text"
+                  class="form-control bg-light"
+                  formControlName="responsibleName"
+                  readonly
+                  tabindex="-1"
+                />
+              </div>
+
+              <div class="col-6 col-md-3">
+                <label class="form-label text-brand">Prazo Cliente</label>
                 <input
                   type="date"
                   class="form-control"
                   formControlName="clientDeadline"
                 />
               </div>
-              <div class="col-md-2">
-                <label class="form-label small text-muted"
-                  >Prazo Assistente</label
-                >
+              <div class="col-6 col-md-3">
+                <label class="form-label">Prazo Revisor</label>
                 <input
                   type="date"
                   class="form-control"
@@ -137,43 +164,29 @@
                 />
               </div>
 
-              <div class="col-md-3">
-                <label class="form-label small text-muted">Responsável</label>
-                <input
-                  type="text"
-                  class="form-control bg-light"
-                  formControlName="responsibleName"
-                  readonly
-                  placeholder="Automático"
-                />
-                <input type="hidden" formControlName="responsibleId" />
-              </div>
-
-              <div class="col-md-1"></div>
-              <div class="col-md-3">
-                <label class="form-label small text-muted"
-                  >Preço Cliente (R$)</label
+              <div class="col-6 col-md-3">
+                <label class="form-label text-success fw-bold"
+                  >Preço Venda (R$)</label
                 >
                 <div class="input-group">
-                  <span class="input-group-text">R$</span>
+                  <span class="input-group-text px-2 text-success fw-bold"
+                    >R$</span
+                  >
                   <input
                     type="number"
-                    class="form-control fw-bold"
+                    class="form-control fw-bold text-success"
                     formControlName="clientPrice"
                     placeholder="0.00"
                   />
                 </div>
               </div>
-
-              <div class="col-md-3">
-                <label class="form-label small text-muted"
-                  >Custo Assistente (R$)</label
-                >
+              <div class="col-6 col-md-3">
+                <label class="form-label text-danger">Custo Revisor (R$)</label>
                 <div class="input-group">
-                  <span class="input-group-text">R$</span>
+                  <span class="input-group-text px-2 text-danger">R$</span>
                   <input
                     type="number"
-                    class="form-control"
+                    class="form-control text-danger"
                     formControlName="assistantPrice"
                     placeholder="0.00"
                   />
@@ -183,88 +196,101 @@
           </div>
         </div>
       </div>
-      <div class="card-footer text-end bg-light">
-        <small class="text-muted">Total dos Itens: </small>
-        <span class="h5 ms-2">{{
-          orderForm.get("totalValue")?.value | currency : "BRL"
-        }}</span>
-      </div>
-    </div>
 
-    <div class="card mb-4 shadow-sm border-primary">
-      <div class="card-header bg-primary text-white fw-bold">
-        3. Pagamento e Parcelas
-      </div>
-      <div class="card-body">
-        <div class="row mb-4 align-items-center">
-          <div class="col-auto">
-            <label class="form-label fw-bold">Número de Parcelas:</label>
+      <div class="col-12 col-xl-4">
+        <div
+          class="card shadow-sm border-0 sticky-top"
+          style="top: 1rem; z-index: 10"
+        >
+          <div class="card-header bg-brand-subtle">
+            <h5 class="text-brand">
+              <i class="bi bi-wallet2 me-2"></i>Pagamento
+            </h5>
           </div>
-          <div class="col-auto">
-            <select
-              class="form-select form-select-lg"
-              formControlName="installmentsCount"
-            >
-              <option *ngFor="let opt of installmentsOptions" [value]="opt">
-                {{ opt }}x
-              </option>
-            </select>
-          </div>
-          <div class="col text-muted small">
-            Alterar valores recalcula as próximas parcelas automaticamente.
-          </div>
-        </div>
+          <div class="card-body">
+            <div class="text-center py-3 mb-3 border-bottom border-dashed">
+              <div class="text-muted small text-uppercase fw-bold">
+                Valor Total da Ordem
+              </div>
+              <div class="display-6 fw-bold text-brand">
+                {{ orderForm.get("totalValue")?.value | currency : "BRL" }}
+              </div>
+            </div>
 
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 5%">#</th>
-                <th style="width: 30%">Valor (R$)</th>
-                <th style="width: 30%">Vencimento</th>
-                <th style="width: 35%">Forma de Pagamento</th>
-              </tr>
-            </thead>
-            <tbody formArrayName="installmentsList">
-              <tr
-                *ngFor="let inst of installmentsList.controls; let i = index"
-                [formGroupName]="i"
+            <div class="mb-3">
+              <label class="form-label">Quantidade de Parcelas</label>
+              <select
+                class="form-select form-select-lg mb-3"
+                formControlName="installmentsCount"
               >
-                <td class="text-center fw-bold">{{ i + 1 }}</td>
-                <td>
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text">R$</span>
-                    <input
-                      type="number"
-                      class="form-control fw-bold text-primary"
-                      formControlName="amount"
-                      step="0.01"
-                    />
-                  </div>
-                </td>
-                <td>
-                  <input
-                    type="date"
-                    class="form-control form-control-sm"
-                    formControlName="dueDate"
-                  />
-                </td>
-                <td>
-                  <select
-                    class="form-select form-select-sm"
-                    formControlName="paymentMethod"
+                <option *ngFor="let opt of installmentsOptions" [value]="opt">
+                  {{ opt }}x Parcelas
+                </option>
+              </select>
+            </div>
+
+            <div class="table-responsive bg-white rounded border">
+              <table class="table table-sm table-installments mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="text-center" style="width: 30px">#</th>
+                    <th>Valor</th>
+                    <th>Vencimento</th>
+                  </tr>
+                </thead>
+                <tbody formArrayName="installmentsList">
+                  <tr
+                    *ngFor="
+                      let inst of installmentsList.controls;
+                      let i = index
+                    "
+                    [formGroupName]="i"
                   >
-                    <option
-                      *ngFor="let method of paymentMethods"
-                      [value]="method"
-                    >
-                      {{ method }}
-                    </option>
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    <td class="text-center text-muted fw-bold">{{ i + 1 }}</td>
+                    <td>
+                      <input
+                        type="number"
+                        class="form-control form-control-sm fw-bold text-dark"
+                        formControlName="amount"
+                        step="0.01"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="date"
+                        class="form-control form-control-sm text-muted"
+                        formControlName="dueDate"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              class="mt-3"
+              *ngIf="installmentsList.controls.length > 0"
+              [formGroupName]="0"
+            >
+              <p class="small text-muted fst-italic mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                A forma de pagamento pode ser ajustada individualmente na tabela
+                acima se necessário (adicionar coluna se precisar). Por padrão:
+                <strong>PIX</strong> na 1ª e <strong>Boleto/Outros</strong> nas
+                demais.
+              </p>
+            </div>
+          </div>
+          <div class="card-footer bg-light">
+            <button
+              type="submit"
+              class="btn btn-primary w-100 py-2"
+              [disabled]="submitting || orderForm.invalid"
+              style="background-color: #57040f; border: none"
+            >
+              Confirmar e Gerar Ordem
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -2,61 +2,32 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import {
-  Observable,
-  Subject,
-  BehaviorSubject,
-  combineLatest,
-  forkJoin,
-} from 'rxjs';
-import {
-  tap,
-  debounceTime,
-  switchMap,
-  takeUntil,
-  startWith,
-  take,
-} from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Observable, Subject } from 'rxjs';
+import { debounceTime, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 
-// Importa a interface de paginação do serviço
 import {
   OrdersService,
   IListOrdersFilter,
   PaginatedOrders,
 } from '../../services/orders.service';
-
-// Importa a interface de Ordem (IOrder)
 import {
   OrderResponseDto as IOrder,
-  // OrderItemResponsibility removida (não é mais usada diretamente)
+  OrderItem,
 } from '../../interfaces/order.interface';
-
-// Imports para os filtros
 import { ClientsService } from '../../../clients/services/clients.service';
-import { Client } from '../../../clients/interfaces/client.interface';
 import { FunctionalitiesService } from '../../../functionalities/services/functionalities.service';
-import { FunctionalityDto } from '../../../functionalities/interfaces/functionalities.interface';
 import { UsersService } from '../../../../admin/users/services/users.service';
-import { ResponseUserDto } from '../../../../admin/users/types/user.dto';
 
-// Enumerações
-enum PaymentStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  CANCELED = 'CANCELED',
-}
-enum WorkStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  OVERDUE = 'OVERDUE',
-  FINISHED = 'FINISHED',
-  CANCELED = 'CANCELED',
-}
-
-// Interface para paginação Bootstrap (simples)
-interface PageEvent {
-  pageIndex: number; // base 0
-  pageSize: number;
+// Tipos auxiliares para a visão de Serviços
+interface ServiceRow {
+  orderId: string;
+  orderNumber: string;
+  clientName: string;
+  itemName: string; // Nome da funcionalidade
+  responsibleName: string;
+  deadline: string; // Prazo do cliente
+  status: string; // Status do item (trabalho)
+  price: number;
 }
 
 @Component({
@@ -68,37 +39,36 @@ interface PageEvent {
 })
 export class OrdersListComponent implements OnInit, OnDestroy {
   filterForm!: FormGroup;
+
+  // Dados brutos (Ordens)
   orders$ = new BehaviorSubject<IOrder[]>([]);
+
+  // Dados processados para a visão de serviços
+  serviceRows$ = new BehaviorSubject<ServiceRow[]>([]);
+
   isLoading$ = new BehaviorSubject<boolean>(false);
 
-  // Observables para os <select> dos filtros
-  clients$!: Observable<Client[]>;
-  functionalities$!: Observable<FunctionalityDto[]>;
-  users$!: Observable<ResponseUserDto[]>;
+  // Controle de Visualização
+  viewMode: 'MANAGERIAL' | 'OPERATIONAL' = 'MANAGERIAL'; // Gerencial (Cliente) vs Operacional (Serviços)
 
-  // Arrays locais para tradução
-  private clientsList: Client[] = [];
-  private functionalitiesList: FunctionalityDto[] = [];
-  private usersList: ResponseUserDto[] = [];
+  // Filtros (Combos)
+  clients$!: Observable<any[]>;
+  functionalities$!: Observable<any[]>;
+  users$!: Observable<any[]>;
 
-  // Mapeamentos para os selects de status
-  paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
-    key,
-    value,
-  }));
-  workStatusOptions = Object.entries(WorkStatus).map(([key, value]) => ({
-    key,
-    value,
-  }));
+  // Listas locais para tradução rápida
+  clientsList: any[] = [];
+  functionalitiesList: any[] = [];
+  usersList: any[] = [];
 
   // Paginação
   totalOrders = 0;
-  pageSize = 10;
-  currentPage = 0; // base 0 (pageIndex)
+  pageSize = 20; // Aumentei o default para caber mais na tela compacta
+  currentPage = 0;
 
   private destroy$ = new Subject<void>();
   private filtersTrigger$ = new BehaviorSubject<IListOrdersFilter>({
-    page: 1, // API espera base 1
+    page: 1,
     pageSize: this.pageSize,
   });
 
@@ -122,7 +92,10 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // Formulário com os novos campos
+  toggleViewMode(mode: 'MANAGERIAL' | 'OPERATIONAL'): void {
+    this.viewMode = mode;
+  }
+
   private buildFilterForm(): void {
     this.filterForm = this.fb.group({
       clientId: [''],
@@ -135,18 +108,11 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Carrega os dados dos 3 filtros (Clientes, Func, Users) EM PARALELO.
-   * Quando todos estiverem carregados, guarda nas listas locais e
-   * inicia a subscrição principal que busca as Vendas.
-   */
   private loadFilterDataAndSubscribeToOrders(): void {
-    // Usa os métodos corretos dos serviços
     this.clients$ = this.clientsService.getClients();
     this.functionalities$ = this.functionalitiesService.getAll();
-    this.users$ = this.usersService.getUsers(); // Nome 'getUsers' assumido
+    this.users$ = this.usersService.getUsers();
 
-    // Usamos forkJoin para esperar que TODOS os dados dos filtros cheguem
     forkJoin({
       clients: this.clients$.pipe(take(1)),
       functionalities: this.functionalities$.pipe(take(1)),
@@ -154,30 +120,23 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ clients, functionalities, users }) => {
-        // Guardamos os dados nas listas locais
         this.clientsList = clients;
         this.functionalitiesList = functionalities;
         this.usersList = users;
-
-        // Só agora iniciamos a subscrição das VENDAS
         this.setupOrdersSubscription();
       });
   }
 
-  /**
-   * Escuta o 'filtersTrigger$'. Qualquer mudança nele (seja do formulário ou
-   * da paginação) dispara uma nova busca na API.
-   */
   private setupOrdersSubscription(): void {
     this.filtersTrigger$
       .pipe(
         switchMap((filters) => {
           this.isLoading$.next(true);
-          // Combina os filtros do trigger (page/pageSize) com os do formulário
           const formValues = this.filterForm.value;
           const combinedFilters: IListOrdersFilter = {
-            ...filters, // Contém page/pageSize
-            ...formValues, // Contém os filtros do form
+            ...filters,
+            ...formValues,
+            // Limpa strings vazias
             clientId: formValues.clientId || undefined,
             functionalityId: formValues.functionalityId || undefined,
             responsibleId: formValues.responsibleId || undefined,
@@ -186,14 +145,15 @@ export class OrdersListComponent implements OnInit, OnDestroy {
             from: formValues.from || undefined,
             to: formValues.to || undefined,
           };
-
-          // O serviço agora retorna 'PaginatedOrders'
           return this.ordersService.getAllOrders(combinedFilters);
         }),
         tap((response: PaginatedOrders) => {
-          // Extraímos 'data' e 'total' da resposta
           this.orders$.next(response.data);
           this.totalOrders = response.total;
+
+          // Gera a lista "achatada" para a visão operacional
+          this.generateServiceRows(response.data);
+
           this.isLoading$.next(false);
         }),
         takeUntil(this.destroy$)
@@ -201,24 +161,39 @@ export class OrdersListComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  /**
-   * Escuta as mudanças do FORMULÁRIO.
-   * Quando o usuário muda um filtro, atualiza o 'filtersTrigger$',
-   * resetando para a página 1.
-   */
+  // Transforma Ordens (Hierárquico) em Lista de Serviços (Flat)
+  private generateServiceRows(orders: IOrder[]): void {
+    const rows: ServiceRow[] = [];
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        rows.push({
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          clientName: this.getClientName(order.client.id),
+          itemName: this.getFunctionalityName(item.functionality?.id),
+          responsibleName: this.getResponsibleName(item.responsible?.userId), // Ajuste conforme seu DTO exato
+          deadline: item.clientDeadline as unknown as string,
+          status: item.itemStatus,
+          price: item.price,
+        });
+      });
+    });
+    // Ordena por prazo (opcional, mas bom para operacional)
+    rows.sort(
+      (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+    );
+    this.serviceRows$.next(rows);
+  }
+
   private setupFormSubscription(): void {
     this.filterForm.valueChanges
       .pipe(debounceTime(400), takeUntil(this.destroy$))
       .subscribe(() => {
-        this.currentPage = 0; // Reseta o índice da página (base 0)
-        this.filtersTrigger$.next({
-          page: 1, // API espera base 1
-          pageSize: this.pageSize,
-        });
+        this.currentPage = 0;
+        this.filtersTrigger$.next({ page: 1, pageSize: this.pageSize });
       });
   }
 
-  // Reset do formulário atualizado
   clearFilters(): void {
     this.filterForm.reset({
       clientId: '',
@@ -229,10 +204,8 @@ export class OrdersListComponent implements OnInit, OnDestroy {
       paymentStatus: '',
       workStatus: '',
     });
-    // O 'setupFormSubscription' já vai detetar a mudança e recarregar
   }
 
-  // Navegação
   viewDetails(orderId: string): void {
     this.router.navigate(['/orders', orderId]);
   }
@@ -241,101 +214,64 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/orders/create']);
   }
 
-  // Lógica de Paginação
-  handlePageEvent(event: PageEvent): void {
-    this.currentPage = event.pageIndex;
-    this.pageSize = event.pageSize;
-
+  handlePageEvent(pageIndex: number): void {
+    this.currentPage = pageIndex;
     this.filtersTrigger$.next({
-      page: this.currentPage + 1, // API espera base 1
+      page: this.currentPage + 1,
       pageSize: this.pageSize,
     });
   }
 
-  // --- Funções de Tradução (usadas no HTML) ---
-
-  /**
-   * Encontra o nome do Cliente baseado no ID.
-   * Usa a lista 'clientsList' carregada no início.
-   */
-  // CORREÇÃO: Aceita 'string | undefined'
+  // --- Helpers de UI ---
   getClientName(clientId: string | undefined): string {
-    if (!clientId || this.clientsList.length === 0) return 'N/A';
-    const client = this.clientsList.find((c) => c.id === clientId);
-    return client?.name || 'N/A';
+    if (!clientId) return '—';
+    return this.clientsList.find((c) => c.id === clientId)?.name || '—';
   }
 
-  /**
-   * Encontra o nome da Funcionalidade baseado no ID.
-   * Usa a lista 'functionalitiesList' carregada no início.
-   */
-  // CORREÇÃO: Aceita 'string | undefined'
   getFunctionalityName(funcId: string | undefined): string {
-    if (!funcId || this.functionalitiesList.length === 0) return 'N/A';
-    const func = this.functionalitiesList.find((f) => f.id === funcId);
-    return func?.name || 'N/A';
+    if (!funcId) return '—';
+    return this.functionalitiesList.find((f) => f.id === funcId)?.name || '—';
   }
 
-  /**
-   * Encontra o nome do Responsável.
-   * 1. Encontra a Funcionalidade pelo 'funcId'.
-   * 2. Pega o 'responsibleUserId' dessa funcionalidade.
-   * 3. Encontra o nome do Usuário por esse 'responsibleUserId'.
-   */
-  // CORREÇÃO: Aceita 'string | undefined'
-  getResponsibleName(funcId: string | undefined): string {
-    if (
-      !funcId ||
-      this.functionalitiesList.length === 0 ||
-      this.usersList.length === 0
-    ) {
-      return 'N/A';
-    }
-    // 1. Encontra a funcionalidade
-    const func = this.functionalitiesList.find((f) => f.id === funcId);
-    if (!func || !func.responsibleUserId) return 'N/A';
-
-    // 2. Encontra o usuário
-    const user = this.usersList.find((u) => u.id === func.responsibleUserId);
-    return user?.name || 'N/A';
+  getResponsibleName(userId: string | undefined): string {
+    // Tenta achar no userList ou retorna o próprio ID formatado se não achar
+    if (!userId) return '—';
+    const user = this.usersList.find((u) => u.id === userId);
+    return user?.name || 'Externo';
   }
 
-  // Mapeia o status para classes de 'badge' do Bootstrap
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'PAID':
-      case 'FINISHED':
-      case 'COMPLETED':
-        return 'text-bg-success';
-      case 'PENDING':
-      case 'IN_PROGRESS':
-      case 'AWAITING_CLIENT':
-      case 'AWAITING_ADVISOR':
-      case 'PARTIALLY_PAID':
-        return 'text-bg-warning';
-      case 'OVERDUE':
-        return 'text-bg-info';
-      case 'CANCELED':
-        return 'text-bg-danger';
-      default:
-        return 'text-bg-secondary';
-    }
-  }
-
-  // Mapeia o status para texto traduzido
-  translateStatus(status: string): string {
-    const statusMap: { [key: string]: string } = {
+  // Tradução de Status (Simplificada)
+  getStatusLabel(status: string): string {
+    const map: Record<string, string> = {
       PENDING: 'Pendente',
-      PAID: 'Pago',
-      FINISHED: 'Finalizado',
-      COMPLETED: 'Completo',
-      IN_PROGRESS: 'Em Progresso',
-      OVERDUE: 'Atrasado',
-      CANCELED: 'Cancelado',
+      IN_PROGRESS: 'Em Andamento',
       AWAITING_CLIENT: 'Aguard. Cliente',
       AWAITING_ADVISOR: 'Aguard. Revisor',
-      PARTIALLY_PAID: 'Parcial. Pago',
+      FINISHED: 'Finalizado',
+      COMPLETED: 'Concluído',
+      CANCELED: 'Cancelado',
+      OVERDUE: 'Atrasado',
+      PAID: 'Pago',
+      PARTIALLY_PAID: 'Parcial',
     };
-    return statusMap[status] || status;
+    return map[status] || status;
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'COMPLETED':
+      case 'FINISHED':
+      case 'PAID':
+        return 'bg-success-subtle text-success border-success';
+      case 'IN_PROGRESS':
+      case 'PARTIALLY_PAID':
+        return 'bg-info-subtle text-info border-info';
+      case 'OVERDUE':
+        return 'bg-danger-subtle text-danger border-danger';
+      case 'CANCELED':
+        return 'bg-secondary-subtle text-secondary border-secondary';
+      default:
+        return 'bg-warning-subtle text-warning border-warning';
+    }
   }
 }

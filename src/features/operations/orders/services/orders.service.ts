@@ -114,4 +114,15 @@ export class OrdersService {
       { paidAt }
     );
   }
+
+  updateItemStatus(
+    orderId: string,
+    itemId: string,
+    status: string
+  ): Observable<OrderResponseDto> {
+    return this.http.patch<OrderResponseDto>(
+      `${this.baseUrl}/${orderId}/items/${itemId}/status`,
+      { status }
+    );
+  }
 }
