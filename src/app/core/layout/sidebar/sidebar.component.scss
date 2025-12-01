@@ -1,109 +1,91 @@
+// Tenta usar a variável global, se não, usa o Vinho padrão como fallback
+$bg-color: var(--primary-color, #57040F);
+$text-color: #fff;
+$hover-color: rgba(255, 255, 255, 0.1);
+$active-color: rgba(255, 255, 255, 0.2);
+
+:host {
+    display: block;
+}
+
 .sidebar {
-    width: 200px;
-    height: calc(100vh - 60px); // Reduzindo a altura do header
-    top: 60px; // Para não sobrepor o header
     position: fixed;
+    top: 60px; // Assumindo altura do Header
     left: 0;
-    background-color: var(--primary-color);
-    color: white;
-    overflow-y: auto;
+    bottom: 0;
+    z-index: 1000;
+
+    // Configurações de Tamanho e Transição
+    width: 250px; // Largura Expandida
     transition: width 0.3s ease-in-out;
-    overflow: hidden;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column; // Mantém os itens em coluna
-  
-      /* Corrigindo o posicionamento do botão de alternância */
-    .toggle-btn {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.3rem;
-        padding: 12px;
-        cursor: pointer;
-        align-self: flex-end;
 
-        .bi {
-        font-size: 1.5rem;
-        }
-    }
-  
-    .nav-link {
-      display: flex;
-      align-items: center;
-      color: white;
-      padding: 10px;
-      cursor: pointer;
-      transition: background 0.3s;
-  
-      span {
-        margin-left: 10px;
-      }
-      
-      &:hover {
-        background-color: var(--primary-color-dark);
-      }
-    }
+    // COR SÓLIDA DO SISTEMA (Vinho)
+    background-color: $bg-color;
+    color: $text-color;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
 
-    .menu {
-        flex-grow: 1; // Faz com que ocupe o máximo de espaço disponível
-        overflow-y: auto;
-      }
-  
-    .submenu {
-      display: none;
-      padding-left: 20px;
-  
-      &.active {
-        display: block;
-      }
-    }
-  
-    .submenu-icon {
-      transition: transform 0.3s ease-in-out;
-    }
-  
-    .rotate {
-      transform: rotate(180deg);
-    }
-  
+    // Estado Colapsado (Reduzido)
     &.collapsed {
-        width: 80px;
-        transition: width 0.7s ease-in-out;
-        
-        // .submenu li a {
-        //     display: none !important;
-        // }
+        width: 70px; // Largura Reduzida
 
-        .menu li a .submenu-icon {
-            display: none;
+        .nav-link {
+            justify-content: center; // Centraliza ícones
+            padding-left: 0;
+            padding-right: 0;
+
+            span { display: none; } // Garante que texto suma
+        }
+
+        .sidebar-header {
+            justify-content: center;
         }
     }
+}
 
-    /* 🔥 Fixando o Footer no final do Sidebar */
-    .sidebar-footer {
-        background: var(--primary-color-dark);
-        text-align: center;
-        font-size: 1rem;
-        padding: 10px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: auto; // Empurra o footer para o final
+// Estilos dos Links
+.nav-link {
+    color: rgba(255, 255, 255, 0.8) !important; // Branco levemente transparente para itens inativos
+    margin-bottom: 4px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    height: 44px; // Altura fixa para consistência
 
-        .user-info,
-        .datetime {
-        display: flex;
-        align-items: center;
-        font-size: 0.8rem;
-        }
-
-        i {
-        font-size: 1rem;
-        margin-right: 8px;
-        margin-left: 8px;
-        }
+    &:hover {
+        background-color: $hover-color;
+        color: #fff !important;
     }
-  }
-  
+
+    &.active {
+        background-color: $active-color;
+        color: #fff !important;
+        font-weight: 600;
+        box-shadow: inset 3px 0 0 #fff; // Detalhe visual de ativo na esquerda
+    }
+}
+
+// Botão de Toggle
+.btn-toggle {
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.8;
+    &:hover { opacity: 1; }
+}
+
+// Ajustes responsivos (Opcional: em mobile pode cobrir a tela ou virar gaveta)
+@media (max-width: 768px) {
+    .sidebar {
+        // Em mobile, pode começar colapsado ou usar lógica de overlay
+        // Aqui mantemos o comportamento padrão, mas o usuário pode colapsar manualmente
+    }
+}
+
+// Garante que o conteúdo não vaze
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.text-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

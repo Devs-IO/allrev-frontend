@@ -1,5 +1,5 @@
 <div class="container my-4">
-  <h1 class="mb-4 text-primary">Usuários</h1>
+  <h1 class="mb-4 text-brand"><i class="fas fa-user-cog me-2"></i>Usuários</h1>
 
   <!-- Modal de Confirmação - Editar -->
   <app-confirmation-modal
@@ -13,7 +13,8 @@
       secondary: selectedUser?.email
     }"
     (confirmed)="confirmEdit()"
-    (cancelled)="closeModals()">
+    (cancelled)="closeModals()"
+  >
   </app-confirmation-modal>
 
   <!-- Modal de Confirmação - Excluir -->
@@ -28,7 +29,8 @@
       secondary: selectedUser?.email
     }"
     (confirmed)="confirmDelete()"
-    (cancelled)="closeModals()">
+    (cancelled)="closeModals()"
+  >
   </app-confirmation-modal>
 
   <!-- Loading -->
@@ -55,23 +57,62 @@
               <th scope="col">#</th>
               <th scope="col" (click)="sortBy('name')" style="cursor: pointer">
                 Nome
-                <i *ngIf="sortColumn === 'name'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'name'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
               <th scope="col" (click)="sortBy('email')" style="cursor: pointer">
                 Email
-                <i *ngIf="sortColumn === 'email'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'email'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
               <th scope="col" (click)="sortBy('phone')" style="cursor: pointer">
                 Telefone
-                <i *ngIf="sortColumn === 'phone'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'phone'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
               <th scope="col" (click)="sortBy('role')" style="cursor: pointer">
                 Função
-                <i *ngIf="sortColumn === 'role'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'role'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
-              <th scope="col" (click)="sortBy('isActive')" style="cursor: pointer">
+              <th
+                scope="col"
+                (click)="sortBy('isActive')"
+                style="cursor: pointer"
+              >
                 Status
-                <i *ngIf="sortColumn === 'isActive'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'isActive'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
               <th scope="col" *ngIf="isAdmin">Empresa</th>
               <th scope="col">Ações</th>
@@ -86,7 +127,9 @@
               <td>{{ user.email }}</td>
               <td>{{ user.phone }}</td>
               <td>
-                <span class="badge bg-secondary">{{ translateRole(user.role) }}</span>
+                <span class="badge bg-secondary">{{
+                  translateRole(user.role)
+                }}</span>
               </td>
               <td>
                 <span *ngIf="user.isActive" class="text-success">
@@ -97,7 +140,7 @@
                 </span>
               </td>
               <td *ngIf="isAdmin">
-                {{ user.tenant?.companyName || '-' }}
+                {{ user.tenant?.companyName || "-" }}
               </td>
               <td>
                 <div class="btn-group" role="group">
@@ -105,7 +148,8 @@
                     type="button"
                     class="btn btn-outline-primary action-btn"
                     (click)="viewUser(user.id)"
-                    title="Visualizar">
+                    title="Visualizar"
+                  >
                     <i class="fas fa-eye"></i>
                   </button>
                   <ng-container *ngIf="user.id !== loggedUserId">
@@ -114,23 +158,28 @@
                       class="btn btn-outline-warning action-btn"
                       (click)="editUser(user.id)"
                       [disabled]="!isAdmin"
-                      title="Editar">
+                      title="Editar"
+                    >
                       <i class="fas fa-edit"></i>
                     </button>
                     <!-- Botão de excluir habilitado apenas para admin e não-admin fica desabilitado -->
-                    <button *ngIf="user.role !== 'admin'"
+                    <button
+                      *ngIf="user.role !== 'admin'"
                       type="button"
                       class="btn btn-outline-danger action-btn"
                       (click)="deleteUser(user.id)"
                       [disabled]="!isAdmin"
-                      title="Excluir">
+                      title="Excluir"
+                    >
                       <i class="fas fa-trash"></i>
                     </button>
-                    <button *ngIf="user.role === 'admin'"
+                    <button
+                      *ngIf="user.role === 'admin'"
                       type="button"
                       class="btn btn-outline-danger action-btn"
                       title="Exclusão desabilitada para administradores"
-                      disabled>
+                      disabled
+                    >
                       <i class="fas fa-ban"></i>
                     </button>
                   </ng-container>
@@ -144,9 +193,14 @@
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!loading && !error && users().length === 0" class="text-center py-5">
+  <div
+    *ngIf="!loading && !error && users().length === 0"
+    class="text-center py-5"
+  >
     <i class="fas fa-users fa-3x text-muted mb-3"></i>
     <h5 class="text-muted">Nenhum usuário cadastrado</h5>
-    <p class="text-muted">Clique no menu lateral para cadastrar um novo usuário.</p>
+    <p class="text-muted">
+      Clique no menu lateral para cadastrar um novo usuário.
+    </p>
   </div>
 </div>

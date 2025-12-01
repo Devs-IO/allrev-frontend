@@ -1,33 +1,24 @@
-.layout-content {
-  transition: all 0.7s ease-in-out;
-  position: relative;
-  top: 60px; // Ajusta conforme o header fixo
-  background-color: var(--background-color);
+.main-content {
+  margin-top: 60px; // Altura do Header
+  margin-left: 250px; // Largura do Menu Aberto
+  transition: margin-left 0.3s ease-in-out;
+  min-height: calc(100vh - 60px);
+  background-color: var(--background-color, #f8f9fa);
 
-  app-sidebar {
-    flex-shrink: 0; // Sidebar não reduz além do tamanho definido
+  // Quando o menu fecha, a margem diminui
+  &.expanded-content {
+    margin-left: 70px; // Largura do Menu Fechado
   }
+}
 
+// Mobile
+@media (max-width: 768px) {
   .main-content {
-    transition: all 0.7s ease-in-out;
-    flex-grow: 1; // Garante que ocupe todo o espaço disponível
-    overflow: auto; // Evita que conteúdo fique escondido
-    height: calc(100vh - 60px); // Considerando o header fixo
-    //width: calc(100% - 40px); // Ajusta conforme a sidebar aberta
-    margin-left: 200px; // Ajusta conforme a sidebar aberta
-    // background-color: hotpink//var(--background-color);
-  }
+    margin-left: 0;
+    padding-bottom: 60px; // Espaço para menu bottom se houver
 
-  // (isCollapsed is true) Sidebar Fechada
-  &.collapsed {
-    .main-content {
-      transition: all 0.7s ease-in-out;
-      flex-grow: 1; // Garante que ocupe todo o espaço disponível
-      overflow: auto; // Evita que conteúdo fique escondido
-      height: calc(100vh - 60px); // Considerando o header fixo
-      //width: calc(100% - 40px);
-      margin-left: 80px;
-      // background-color: aqua;
+    &.expanded-content {
+        margin-left: 0;
     }
   }
 }
