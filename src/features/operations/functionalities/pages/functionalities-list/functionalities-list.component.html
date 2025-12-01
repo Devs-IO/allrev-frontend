@@ -1,7 +1,12 @@
 <div class="container my-4">
-  <h1 class="mb-4 text-primary">
-    <i class="fas fa-cogs me-2"></i>Serviços e Funcionalidades
-  </h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0 text-brand">
+      <i class="fas fa-cogs me-2"></i>Serviços e Funcionalidades
+    </h1>
+    <button class="btn btn-outline-brand" routerLink="/functionalities/create">
+      <i class="bi bi-plus-lg me-1"></i> Novo Serviço
+    </button>
+  </div>
 
   <!-- Loading -->
   <div *ngIf="loading" class="text-center py-5">

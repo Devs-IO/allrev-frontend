@@ -149,7 +149,7 @@
             <td>
               <div class="d-flex align-items-center">
                 <span class="text-truncate" style="max-width: 150px">
-                  {{ getFunctionalityName(order.items[0]?.functionality?.id) }}
+                  {{ getFunctionalityName(order.items[0].functionality.id) }}
                 </span>
                 <span
                   *ngIf="order.items.length > 1"

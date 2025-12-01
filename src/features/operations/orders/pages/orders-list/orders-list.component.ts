@@ -2,31 +2,37 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, forkJoin, Observable, Subject } from 'rxjs';
-import { debounceTime, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Observable, Subject, of } from 'rxjs';
+import {
+  debounceTime,
+  switchMap,
+  take,
+  takeUntil,
+  tap,
+  catchError,
+} from 'rxjs/operators';
 
 import {
   OrdersService,
   IListOrdersFilter,
   PaginatedOrders,
 } from '../../services/orders.service';
-import {
-  OrderResponseDto as IOrder,
-  OrderItem,
-} from '../../interfaces/order.interface';
+import { OrderResponseDto as IOrder } from '../../interfaces/order.interface';
 import { ClientsService } from '../../../clients/services/clients.service';
 import { FunctionalitiesService } from '../../../functionalities/services/functionalities.service';
 import { UsersService } from '../../../../admin/users/services/users.service';
+import { AuthService } from '../../../../../app/core/services/auth.service';
+import { Role } from '../../../../../app/core/enum/roles.enum';
 
-// Tipos auxiliares para a visão de Serviços
+// Tipos auxiliares
 interface ServiceRow {
   orderId: string;
   orderNumber: string;
   clientName: string;
-  itemName: string; // Nome da funcionalidade
+  itemName: string;
   responsibleName: string;
-  deadline: string; // Prazo do cliente
-  status: string; // Status do item (trabalho)
+  deadline: string;
+  status: string;
   price: number;
 }
 
@@ -40,30 +46,28 @@ interface ServiceRow {
 export class OrdersListComponent implements OnInit, OnDestroy {
   filterForm!: FormGroup;
 
-  // Dados brutos (Ordens)
+  // Dados
   orders$ = new BehaviorSubject<IOrder[]>([]);
-
-  // Dados processados para a visão de serviços
   serviceRows$ = new BehaviorSubject<ServiceRow[]>([]);
-
   isLoading$ = new BehaviorSubject<boolean>(false);
 
-  // Controle de Visualização
-  viewMode: 'MANAGERIAL' | 'OPERATIONAL' = 'MANAGERIAL'; // Gerencial (Cliente) vs Operacional (Serviços)
+  // Controle de Permissão
+  isManager = false;
+  viewMode: 'MANAGERIAL' | 'OPERATIONAL' = 'MANAGERIAL';
 
   // Filtros (Combos)
   clients$!: Observable<any[]>;
   functionalities$!: Observable<any[]>;
   users$!: Observable<any[]>;
 
-  // Listas locais para tradução rápida
+  // Listas locais
   clientsList: any[] = [];
   functionalitiesList: any[] = [];
   usersList: any[] = [];
 
   // Paginação
   totalOrders = 0;
-  pageSize = 20; // Aumentei o default para caber mais na tela compacta
+  pageSize = 20;
   currentPage = 0;
 
   private destroy$ = new Subject<void>();
@@ -72,16 +76,33 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     pageSize: this.pageSize,
   });
 
+  // Voltamos ao padrão CONSTRUCTOR (Original)
   constructor(
     private fb: FormBuilder,
     private ordersService: OrdersService,
     private clientsService: ClientsService,
     private functionalitiesService: FunctionalitiesService,
     private usersService: UsersService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    // 1. Identificar Perfil (Correção do Erro 401)
+    this.authService
+      .getUserCached()
+      .pipe(take(1))
+      .subscribe((user) => {
+        this.isManager = user
+          ? [Role.MANAGER_REVIEWERS, Role.ADMIN].includes(user.role)
+          : false;
+
+        // Se for assistente, força o modo Operacional
+        if (!this.isManager) {
+          this.viewMode = 'OPERATIONAL';
+        }
+      });
+
     this.buildFilterForm();
     this.loadFilterDataAndSubscribeToOrders();
     this.setupFormSubscription();
@@ -109,9 +130,21 @@ export class OrdersListComponent implements OnInit, OnDestroy {
   }
 
   private loadFilterDataAndSubscribeToOrders(): void {
-    this.clients$ = this.clientsService.getClients();
-    this.functionalities$ = this.functionalitiesService.getAll();
-    this.users$ = this.usersService.getUsers();
+    // Carrega filtros básicos com tratamento de erro
+    this.clients$ = this.clientsService
+      .getClients()
+      .pipe(catchError(() => of([])));
+    this.functionalities$ = this.functionalitiesService
+      .getAll()
+      .pipe(catchError(() => of([])));
+
+    // --- LÓGICA DE PROTEÇÃO DO ASSISTENTE ---
+    // Se for Gerente, carrega usuários. Se for Assistente, retorna lista vazia para não dar 401.
+    if (this.isManager) {
+      this.users$ = this.usersService.getUsers().pipe(catchError(() => of([])));
+    } else {
+      this.users$ = of([]);
+    }
 
     forkJoin({
       clients: this.clients$.pipe(take(1)),
@@ -136,7 +169,6 @@ export class OrdersListComponent implements OnInit, OnDestroy {
           const combinedFilters: IListOrdersFilter = {
             ...filters,
             ...formValues,
-            // Limpa strings vazias
             clientId: formValues.clientId || undefined,
             functionalityId: formValues.functionalityId || undefined,
             responsibleId: formValues.responsibleId || undefined,
@@ -145,15 +177,18 @@ export class OrdersListComponent implements OnInit, OnDestroy {
             from: formValues.from || undefined,
             to: formValues.to || undefined,
           };
-          return this.ordersService.getAllOrders(combinedFilters);
+          return this.ordersService.getAllOrders(combinedFilters).pipe(
+            catchError((err) => {
+              console.error('Erro ao buscar ordens', err);
+              this.isLoading$.next(false);
+              return of({ data: [], total: 0, page: 1, pageSize: 20 });
+            })
+          );
         }),
         tap((response: PaginatedOrders) => {
           this.orders$.next(response.data);
           this.totalOrders = response.total;
-
-          // Gera a lista "achatada" para a visão operacional
           this.generateServiceRows(response.data);
-
           this.isLoading$.next(false);
         }),
         takeUntil(this.destroy$)
@@ -161,7 +196,6 @@ export class OrdersListComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  // Transforma Ordens (Hierárquico) em Lista de Serviços (Flat)
   private generateServiceRows(orders: IOrder[]): void {
     const rows: ServiceRow[] = [];
     orders.forEach((order) => {
@@ -171,14 +205,14 @@ export class OrdersListComponent implements OnInit, OnDestroy {
           orderNumber: order.orderNumber,
           clientName: this.getClientName(order.client.id),
           itemName: this.getFunctionalityName(item.functionality?.id),
-          responsibleName: this.getResponsibleName(item.responsible?.userId), // Ajuste conforme seu DTO exato
+          responsibleName: this.getResponsibleName(item.responsible?.userId),
           deadline: item.clientDeadline as unknown as string,
           status: item.itemStatus,
           price: item.price,
         });
       });
     });
-    // Ordena por prazo (opcional, mas bom para operacional)
+
     rows.sort(
       (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
     );
@@ -223,6 +257,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
   }
 
   // --- Helpers de UI ---
+
   getClientName(clientId: string | undefined): string {
     if (!clientId) return '—';
     return this.clientsList.find((c) => c.id === clientId)?.name || '—';
@@ -234,13 +269,11 @@ export class OrdersListComponent implements OnInit, OnDestroy {
   }
 
   getResponsibleName(userId: string | undefined): string {
-    // Tenta achar no userList ou retorna o próprio ID formatado se não achar
     if (!userId) return '—';
     const user = this.usersList.find((u) => u.id === userId);
     return user?.name || 'Externo';
   }
 
-  // Tradução de Status (Simplificada)
   getStatusLabel(status: string): string {
     const map: Record<string, string> = {
       PENDING: 'Pendente',
@@ -275,7 +308,7 @@ export class OrdersListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Gera cor consistente baseada no nome
+  // --- RESTAURADO: Gerador de cor para Avatar ---
   getAvatarColor(name: string): string {
     const colors = [
       '#57040F', // Vinho primário
@@ -288,10 +321,11 @@ export class OrdersListComponent implements OnInit, OnDestroy {
       '#8B4513', // Marrom médio
     ];
 
-    // Hash simples do nome para escolher cor
     let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    if (name) {
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
     }
 
     return colors[Math.abs(hash) % colors.length];

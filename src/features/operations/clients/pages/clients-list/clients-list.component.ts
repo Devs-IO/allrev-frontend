@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ClientsService } from '../../services/clients.service';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Client } from '../../interfaces/client.interface';
 import { finalize, take } from 'rxjs/operators';
 
@@ -10,7 +10,7 @@ import { finalize, take } from 'rxjs/operators';
   templateUrl: './clients-list.component.html',
   styleUrls: ['./clients-list.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
 })
 export class ClientsListComponent implements OnInit {
   // Estados: dados, loading e erro
