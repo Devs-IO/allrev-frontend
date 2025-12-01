@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { UsersService } from '../../services/users.service';
 import { ResponseUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../../app/core/services/auth.service';
@@ -11,7 +11,7 @@ import { ConfirmationModalComponent } from '../../../../../app/shared/components
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, ConfirmationModalComponent],
+  imports: [CommonModule, RouterModule, ConfirmationModalComponent],
 })
 export class UsersListComponent implements OnInit {
   users: WritableSignal<ResponseUserDto[]> = signal<ResponseUserDto[]>([]);

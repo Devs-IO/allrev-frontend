@@ -1,5 +1,12 @@
 <div class="container my-4">
-  <h1 class="mb-4 text-brand"><i class="fas fa-user-cog me-2"></i>Usuários</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0 text-brand">
+      <i class="fas fa-user-cog me-2"></i>Usuários
+    </h1>
+    <button class="btn btn-outline-brand" routerLink="/users/create">
+      <i class="bi bi-plus-lg me-1"></i> Novo Usuário
+    </button>
+  </div>
 
   <!-- Modal de Confirmação - Editar -->
   <app-confirmation-modal

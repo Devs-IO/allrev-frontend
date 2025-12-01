@@ -240,6 +240,6 @@ export class AuthService {
   }
 
   changePassword(data: any) {
-    return this.http.post(`${this.apiUrl}/auth/change-password`, data);
+    return this.http.put(`${this.apiUrl}/auth/change-password`, data);
   }
 }

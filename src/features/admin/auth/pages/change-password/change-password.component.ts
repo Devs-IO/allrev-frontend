@@ -52,33 +52,29 @@ export class ChangePasswordComponent {
     this.error = null;
     this.success = false;
 
-    // Prepara o payload correto (Objeto ao invés de string simples)
+    // --- CORREÇÃO AQUI ---
+    // O backend espera 'newPassword', não 'password'
     const payload = {
-      password: this.form.value.password,
-      confirmPassword: this.form.value.confirmPassword, // Enviando ambos caso o DTO exija validação no back
+      newPassword: this.form.value.password,
     };
+    // ---------------------
 
     this.authService.changePassword(payload).subscribe({
       next: () => {
-        this.loading = false;
         this.success = true;
+        this.loading = false;
         this.toast.success('Senha alterada com sucesso! Redirecionando...');
 
-        setTimeout(
-          () => this.router.navigate(['/home']), // Redireciona para Home após trocar
-          this.SUCCESS_REDIRECT_DELAY_MS
-        );
+        // Redireciona para o login após alterar a senha
+        setTimeout(() => {
+          this.authService.logout();
+          this.router.navigate(['/auth/login']);
+        }, this.SUCCESS_REDIRECT_DELAY_MS);
       },
       error: (err) => {
         this.loading = false;
-        console.error(err);
-        // Tratamento de erro aprimorado
-        const msg = err?.error?.message;
-        if (Array.isArray(msg)) {
-          this.error = msg.join(', '); // Se for erro de validação (array de strings)
-        } else {
-          this.error = msg || 'Erro ao alterar a senha. Tente novamente.';
-        }
+        this.error = err?.error?.message || 'Erro ao alterar senha.';
+        this.toast.error(this.error?.toString() || 'Erro ao alterar senha.');
       },
     });
   }

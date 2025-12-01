@@ -1,167 +1,393 @@
 <div class="container-fluid p-3" style="max-width: 1400px">
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h4 class="fw-bold text-brand mb-0">Dashboard</h4>
-      <p class="text-muted small mb-0">
-        Visão geral do dia {{ currentDate | date : "dd/MM" }}
+      <h3 class="fw-bold text-brand mb-1">{{ greeting }}!</h3>
+      <p class="text-muted mb-0" *ngIf="isManager">
+        Visão estratégica do negócio
       </p>
+      <p class="text-muted mb-0" *ngIf="!isManager">
+        Vamos produzir? Aqui estão suas prioridades.
+      </p>
+    </div>
+    <div class="d-none d-md-block text-end">
+      <span class="fs-5 text-dark fw-semibold">{{
+        currentDate | date : "dd/MM/yyyy"
+      }}</span>
     </div>
   </div>
 
-  <ng-container *ngIf="stats$ | async as stats; else loading">
-    <div class="row g-3 mb-3">
-      <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
-          <div class="card-body p-3 position-relative">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="text-uppercase text-muted fw-bold small">Receita</div>
+  <ng-container *ngIf="isManager">
+    <ng-container *ngIf="stats$ | async as stats; else loading">
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
+            <div class="card-body p-4 position-relative">
               <div
-                class="icon-box-sm bg-primary-subtle text-primary rounded-circle"
+                class="d-flex justify-content-between align-items-start mb-4"
               >
-                <i class="bi bi-graph-up-arrow"></i>
-              </div>
-            </div>
-            <h3 class="text-dark fw-bold mb-0">
-              {{ stats.revenue | currency : "BRL" }}
-            </h3>
-            <div class="bg-shape bg-primary"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
-          <div class="card-body p-3 position-relative">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="text-uppercase text-muted fw-bold small">Custos</div>
-              <div
-                class="icon-box-sm bg-danger-subtle text-danger rounded-circle"
-              >
-                <i class="bi bi-people-fill"></i>
-              </div>
-            </div>
-            <h3 class="text-danger fw-bold mb-0">
-              {{ stats.cost | currency : "BRL" }}
-            </h3>
-            <div class="bg-shape bg-danger"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <div
-          class="card border-0 shadow h-100 overflow-hidden card-hover bg-brand text-white position-relative"
-        >
-          <div class="card-body p-3 position-relative z-1">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="text-uppercase text-white-50 fw-bold small">
-                Lucro Real
-              </div>
-              <div
-                class="icon-box-sm bg-white text-brand rounded-circle shadow-sm"
-              >
-                <i class="bi bi-wallet2"></i>
-              </div>
-            </div>
-            <h3 class="text-white fw-bold mb-0">
-              {{ stats.netProfit | currency : "BRL" }}
-            </h3>
-            <small class="text-white-50"
-              >Margem: {{ stats.margin | number : "1.0-1" }}%</small
-            >
-          </div>
-          <div class="card-pattern"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-3">
-            <h6 class="fw-bold text-brand mb-3">Acesso Rápido</h6>
-            <div class="row g-2">
-              <div class="col-4">
-                <a
-                  routerLink="/orders/create"
-                  class="btn btn-outline-light w-100 p-2 text-center border d-flex flex-column align-items-center gap-1 card-action"
-                >
-                  <i class="bi bi-plus-lg fs-5 text-brand"></i>
-                  <span class="fw-bold text-dark small">Nova Ordem</span>
-                </a>
-              </div>
-              <div class="col-4">
-                <a
-                  routerLink="/orders"
-                  class="btn btn-outline-light w-100 p-2 text-center border d-flex flex-column align-items-center gap-1 card-action"
-                >
-                  <i class="bi bi-list-ul fs-5 text-primary"></i>
-                  <span class="fw-bold text-dark small">Ordens</span>
-                </a>
-              </div>
-              <div class="col-4">
-                <a
-                  routerLink="/clients"
-                  class="btn btn-outline-light w-100 p-2 text-center border d-flex flex-column align-items-center gap-1 card-action"
-                >
-                  <i class="bi bi-people fs-5 text-info"></i>
-                  <span class="fw-bold text-dark small">Clientes</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-3">
-            <h6 class="fw-bold text-dark mb-3">Status</h6>
-            <div class="d-flex flex-column gap-2">
-              <div
-                class="d-flex justify-content-between align-items-center p-2 rounded"
-                [class.bg-danger-subtle]="stats.overdueItemsCount > 0"
-                style="border: 1px solid #eee"
-              >
-                <div class="d-flex align-items-center gap-2">
-                  <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-                  <span class="small fw-bold">Atrasados</span>
+                <div>
+                  <div class="text-uppercase text-muted fw-bold small mb-1">
+                    Receita Total
+                  </div>
+                  <h2 class="text-dark fw-bold mb-0">
+                    {{ stats.revenue | currency : "BRL" }}
+                  </h2>
                 </div>
-                <span
-                  class="badge rounded-pill"
-                  [ngClass]="
-                    stats.overdueItemsCount > 0 ? 'bg-danger' : 'bg-secondary'
-                  "
+                <div
+                  class="icon-box bg-primary-subtle text-primary rounded-circle"
                 >
-                  {{ stats.overdueItemsCount }}
-                </span>
-              </div>
-
-              <div
-                class="d-flex justify-content-between align-items-center p-2 rounded"
-                style="border: 1px solid #eee"
-              >
-                <div class="d-flex align-items-center gap-2">
-                  <i class="bi bi-hourglass-split text-primary"></i>
-                  <span class="small fw-bold">Em Andamento</span>
+                  <i class="bi bi-graph-up-arrow fs-4"></i>
                 </div>
-                <span class="badge bg-primary rounded-pill">{{
-                  stats.activeOrdersCount
-                }}</span>
+              </div>
+              <div class="d-flex align-items-center small text-muted">
+                <i class="bi bi-info-circle me-1"></i> Valor bruto de contratos
+                ativos
+              </div>
+              <div class="bg-shape bg-primary"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="card border-0 shadow-sm h-100 overflow-hidden card-hover">
+            <div class="card-body p-4 position-relative">
+              <div
+                class="d-flex justify-content-between align-items-start mb-4"
+              >
+                <div>
+                  <div class="text-uppercase text-muted fw-bold small mb-1">
+                    Custo Operacional
+                  </div>
+                  <h2 class="text-danger fw-bold mb-0">
+                    {{ stats.cost | currency : "BRL" }}
+                  </h2>
+                </div>
+                <div
+                  class="icon-box bg-danger-subtle text-danger rounded-circle"
+                >
+                  <i class="bi bi-people-fill fs-4"></i>
+                </div>
+              </div>
+              <div class="d-flex align-items-center small text-muted">
+                <i class="bi bi-arrow-down-right text-danger me-1"></i>
+                Pagamentos a parceiros
+              </div>
+              <div class="bg-shape bg-danger"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div
+            class="card border-0 shadow h-100 overflow-hidden card-hover bg-brand text-white position-relative"
+          >
+            <div class="card-body p-4 position-relative z-1">
+              <div
+                class="d-flex justify-content-between align-items-start mb-4"
+              >
+                <div>
+                  <div class="text-uppercase text-white-50 fw-bold small mb-1">
+                    Lucro Líquido Real
+                  </div>
+                  <h2 class="text-white fw-bold mb-0">
+                    {{ stats.netProfit | currency : "BRL" }}
+                  </h2>
+                </div>
+                <div
+                  class="icon-box bg-white text-brand rounded-circle shadow-sm"
+                >
+                  <i class="bi bi-wallet2 fs-4"></i>
+                </div>
+              </div>
+              <div class="d-flex align-items-center small text-white-50">
+                <i class="bi bi-pie-chart-fill me-1"></i> Margem:
+                <span class="text-white fw-bold ms-1"
+                  >{{ stats.margin | number : "1.0-1" }}%</span
+                >
+              </div>
+            </div>
+            <div class="card-pattern"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-8">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white pt-4 pb-0 border-0">
+              <h5 class="fw-bold text-brand">Acesso Rápido</h5>
+            </div>
+            <div class="card-body p-4">
+              <div class="row g-3">
+                <div class="col-6 col-sm-4">
+                  <a
+                    routerLink="/orders/create"
+                    class="btn btn-outline-light w-100 h-100 p-3 text-start border d-flex flex-column gap-2 card-action"
+                  >
+                    <div
+                      class="icon-sm bg-brand text-white rounded-circle d-flex align-items-center justify-content-center"
+                    >
+                      <i class="bi bi-plus-lg"></i>
+                    </div>
+                    <span class="fw-bold text-dark">Nova Ordem</span>
+                    <small class="text-muted">Cadastrar venda</small>
+                  </a>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <a
+                    routerLink="/orders"
+                    class="btn btn-outline-light w-100 h-100 p-3 text-start border d-flex flex-column gap-2 card-action"
+                  >
+                    <div
+                      class="icon-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                    >
+                      <i class="bi bi-list-ul"></i>
+                    </div>
+                    <span class="fw-bold text-dark">Listar Ordens</span>
+                    <small class="text-muted">Ver todas</small>
+                  </a>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <a
+                    routerLink="/clients"
+                    class="btn btn-outline-light w-100 h-100 p-3 text-start border d-flex flex-column gap-2 card-action"
+                  >
+                    <div
+                      class="icon-sm bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center"
+                    >
+                      <i class="bi bi-people"></i>
+                    </div>
+                    <span class="fw-bold text-dark">Clientes</span>
+                    <small class="text-muted">Base de contatos</small>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white pt-4 pb-0 border-0">
+              <h5 class="fw-bold text-dark">Atenção</h5>
+            </div>
+            <div class="card-body p-4">
+              <div class="list-group list-group-flush">
+                <div
+                  class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center"
+                  [class.bg-danger-subtle]="stats.overdueItemsCount > 0"
+                  [class.rounded]="stats.overdueItemsCount > 0"
+                  [class.p-2]="stats.overdueItemsCount > 0"
+                >
+                  <div class="d-flex align-items-center gap-3">
+                    <i
+                      class="bi bi-exclamation-triangle-fill text-danger fs-5"
+                    ></i>
+                    <div class="d-flex flex-column">
+                      <span
+                        class="fw-bold"
+                        [class.text-danger]="stats.overdueItemsCount > 0"
+                        >Itens Atrasados</span
+                      >
+                      <small class="text-muted">Prazos vencidos</small>
+                    </div>
+                  </div>
+                  <span
+                    class="badge rounded-pill fs-6"
+                    [ngClass]="
+                      stats.overdueItemsCount > 0 ? 'bg-danger' : 'bg-secondary'
+                    "
+                  >
+                    {{ stats.overdueItemsCount }}
+                  </span>
+                </div>
+                <div
+                  class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center"
+                >
+                  <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-hourglass-split text-primary fs-5"></i>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">Em Andamento</span>
+                      <small class="text-muted">Ordens ativas</small>
+                    </div>
+                  </div>
+                  <span class="badge bg-primary rounded-pill fs-6">{{
+                    stats.activeOrdersCount
+                  }}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="!isManager">
+    <ng-container *ngIf="assistantStats$ | async as stats; else loading">
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <div
+            class="card border-0 shadow-sm h-100 bg-white border-start border-4 border-warning"
+          >
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="text-muted small fw-bold text-uppercase">
+                    Aguardando Início
+                  </div>
+                  <h2 class="mb-0 fw-bold text-warning">
+                    {{ stats.pendingCount }}
+                  </h2>
+                </div>
+                <div
+                  class="icon-box bg-warning-subtle text-warning rounded-circle"
+                >
+                  <i class="bi bi-hourglass-split fs-4"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div
+            class="card border-0 shadow-sm h-100 bg-white border-start border-4 border-primary"
+          >
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="text-muted small fw-bold text-uppercase">
+                    Em Andamento
+                  </div>
+                  <h2 class="mb-0 fw-bold text-primary">
+                    {{ stats.inProgressCount }}
+                  </h2>
+                </div>
+                <div
+                  class="icon-box bg-primary-subtle text-primary rounded-circle"
+                >
+                  <i class="bi bi-play-circle-fill fs-4"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div
+            class="card border-0 shadow-sm h-100 bg-white border-start border-4 border-success"
+          >
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="text-muted small fw-bold text-uppercase">
+                    Entregues (Mês)
+                  </div>
+                  <h2 class="mb-0 fw-bold text-success">
+                    {{ stats.completedThisMonth }}
+                  </h2>
+                </div>
+                <div
+                  class="icon-box bg-success-subtle text-success rounded-circle"
+                >
+                  <i class="bi bi-check-circle-fill fs-4"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-12 col-lg-8">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 border-0">
+              <h5 class="card-title fw-bold text-brand m-0">
+                <i class="bi bi-calendar-event me-2"></i>Próximos Prazos
+              </h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-3">Serviço</th>
+                    <th>Cliente</th>
+                    <th>Prazo Entrega</th>
+                    <th class="text-end pe-3">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngIf="stats.nextDeadlines.length === 0">
+                    <td colspan="4" class="text-center py-4 text-muted">
+                      Nenhuma tarefa com prazo próximo.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer bg-white border-0 text-center py-3">
+              <a
+                routerLink="/orders"
+                class="btn btn-link text-brand text-decoration-none fw-bold"
+              >
+                Ver todas as tarefas <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <div class="card border-0 shadow-sm mb-3 bg-brand text-white">
+            <div class="card-body p-4 position-relative overflow-hidden">
+              <h5 class="fw-bold z-1 position-relative">Precisa de Ajuda?</h5>
+              <p class="small text-white-50 z-1 position-relative mb-3">
+                Dúvidas sobre o sistema ou sobre uma ordem específica?
+              </p>
+              <button
+                class="btn btn-light text-brand fw-bold w-100 z-1 position-relative"
+              >
+                <i class="bi bi-whatsapp me-2"></i> Falar com Suporte
+              </button>
+              <i
+                class="bi bi-chat-dots position-absolute text-white"
+                style="
+                  opacity: 0.1;
+                  font-size: 8rem;
+                  right: -20px;
+                  bottom: -30px;
+                "
+              ></i>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="fw-bold text-dark mb-3">Minha Carteira</h6>
+              <div
+                class="d-flex justify-content-between align-items-center mb-2"
+              >
+                <span class="text-muted">A Receber</span>
+                <span class="fw-bold text-success">--</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Recebido (Mês)</span>
+                <span class="fw-bold text-dark">--</span>
+              </div>
+              <hr class="my-2" />
+              <small class="text-muted fst-italic" style="font-size: 0.75rem"
+                >* Valores confirmados pelo gestor.</small
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
   </ng-container>
 
   <ng-template #loading>
     <div class="d-flex justify-content-center py-5">
-      <div
-        class="spinner-border text-brand spinner-border-sm"
-        role="status"
-      ></div>
+      <div class="spinner-border text-brand" role="status"></div>
     </div>
   </ng-template>
 </div>
