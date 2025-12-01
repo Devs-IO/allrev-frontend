@@ -56,7 +56,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     'Cheque',
     'Outro',
   ];
-  installmentsOptions: number[] = [1, 2, 3];
+  installmentsOptions: number[] = [1, 2, 3, 4, 5, 6, 10, 12];
 
   loading = false;
   submitting = false;
@@ -445,52 +445,94 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     this.submitting = true;
     const formVal = this.orderForm.getRawValue();
 
-    // Mapeamento para DTO (Backend suporta items array)
-    const payload: any = {
-      clientId: formVal.clientId,
-      contractDate: new Date(formVal.contractDate).toISOString(),
-      description: formVal.description,
+    // 1. Definição do Método de Pagamento Principal (Raiz)
+    // Pega o da primeira parcela ou padrão 'PIX'
+    const rawPaymentMethod =
+      formVal.installmentsList[0]?.paymentMethod || 'PIX';
+    const cleanPaymentMethod = this.mapToBackendPaymentMethod(rawPaymentMethod);
 
-      // Items mapeados
-      items: formVal.items.map((item: any) => ({
+    // 2. Mapeamento dos Items
+    const itemsPayload = formVal.items.map((item: any) => {
+      const payloadItem: any = {
         functionalityId: item.functionalityId,
         price: parseFloat(item.clientPrice),
         clientDeadline: new Date(item.clientDeadline).toISOString(),
-        responsibleUserId: item.responsibleId,
-        assistantDeadline: item.assistantDeadline
-          ? new Date(item.assistantDeadline).toISOString()
-          : null,
         assistantAmount: parseFloat(item.assistantPrice || 0),
-        // Adicionamos o método de pagamento da primeira parcela como referência no item ou null
-        paymentMethod: formVal.installmentsList[0]?.paymentMethod || 'PIX',
-      })),
+      };
 
-      // ENVIANDO AS PARCELAS PERSONALIZADAS
-      // Como o usuário pediu explicitamente para customizar valores e métodos (Pix, Cheque),
-      // enviamos a propriedade 'installments' forçada no payload.
-      // Se o DTO oficial não tiver, o Backend precisará aceitar esse JSON extra ou o DTO deve ser ajustado.
-      installments: formVal.installmentsList.map((inst: any, idx: number) => ({
-        sequence: idx + 1,
-        amount: parseFloat(inst.amount),
-        dueDate: new Date(inst.dueDate).toISOString(),
-        channel: inst.paymentMethod, // Mapeia para o enum ou string do back
-      })),
+      if (item.assistantDeadline) {
+        payloadItem.assistantDeadline = new Date(
+          item.assistantDeadline
+        ).toISOString();
+      }
 
-      // Fallback para o campo raiz se necessário
-      paymentMethod: formVal.installmentsList[0]?.paymentMethod || 'PIX',
+      // IMPORTANTE: Só envia responsibleUserId se tiver valor real (evita erro de UUID)
+      if (item.responsibleId && item.responsibleId.length > 5) {
+        payloadItem.responsibleUserId = item.responsibleId;
+      }
+
+      return payloadItem;
+    });
+
+    // 3. Mapeamento das Parcelas
+    // Remove sequence e traduz channel
+    const installmentsPayload = formVal.installmentsList.map((inst: any) => ({
+      amount: parseFloat(inst.amount),
+      dueDate: new Date(inst.dueDate).toISOString(),
+      channel: this.mapToBackendChannel(inst.paymentMethod),
+    }));
+
+    // 4. Montagem Final do Payload
+    const payload: CreateOrderDto = {
+      clientId: formVal.clientId,
+      contractDate: new Date(formVal.contractDate).toISOString(),
+      description: formVal.description,
+      paymentMethod: cleanPaymentMethod as any,
+      items: itemsPayload,
+      installments: installmentsPayload,
     };
 
-    this.ordersService.create(payload as CreateOrderDto).subscribe({
+    console.log('Payload Enviado:', payload);
+
+    this.ordersService.create(payload).subscribe({
       next: () => {
         this.toastService.success('Ordem de serviço criada com sucesso!');
         this.router.navigate(['/orders']);
       },
       error: (err) => {
-        console.error(err);
-        this.toastService.error('Erro ao processar pedido.');
+        console.error('Erro Backend:', err);
+        // Tratamento para array de mensagens do class-validator
+        const msg = err.error?.message || 'Erro ao processar pedido.';
+        this.toastService.error(Array.isArray(msg) ? msg.join('\n') : msg);
         this.submitting = false;
       },
     });
+  }
+
+  // --- Helpers de Tradução (UI -> DTO) ---
+
+  private mapToBackendPaymentMethod(uiMethod: string): string {
+    const map: Record<string, string> = {
+      PIX: 'pix',
+      Cartão: 'card',
+      Dinheiro: 'deposit',
+      Transferência: 'transfer',
+      Cheque: 'other',
+      Outro: 'other',
+    };
+    return map[uiMethod] || 'other';
+  }
+
+  private mapToBackendChannel(uiMethod: string): string {
+    const map: Record<string, string> = {
+      PIX: 'pix',
+      Cartão: 'card',
+      Dinheiro: 'deposit',
+      Transferência: 'transfer',
+      Cheque: 'boleto', // Boleto é mais próximo de documento em papel/cheque
+      Outro: 'other',
+    };
+    return map[uiMethod] || 'other';
   }
 
   // Helpers de Template

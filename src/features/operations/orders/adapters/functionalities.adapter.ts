@@ -1,10 +1,6 @@
-// Adapter to keep legacy functionalities screens working while consuming new /orders APIs
-// Provides mapping helpers to convert between legacy ServiceOrder DTOs and new Orders DTOs
-
 import {
   CreateServiceOrderDto,
   ServiceOrderItemDto,
-  ServiceOrderResponseDto,
 } from '../../functionalities/interfaces/service-order.interface';
 import {
   CreateOrderDto,
@@ -15,24 +11,57 @@ import { ServiceOrderResponse } from '../../functionalities/interfaces/order-lis
 import { FunctionalitiesClientsStatus } from '../../functionalities/interfaces/status.enums';
 
 export class FunctionalitiesOrdersAdapter {
+  // --- Helpers de Tradução (UI Legacy -> Backend DTO) ---
+
+  private static mapToBackendEnum(value: string): string {
+    const map: Record<string, string> = {
+      PIX: 'pix',
+      Cartão: 'card',
+      Dinheiro: 'deposit',
+      Transferência: 'transfer',
+      Cheque: 'boleto',
+      Outro: 'other',
+      // Mapeamentos diretos caso já venha minúsculo
+      pix: 'pix',
+      card: 'card',
+      deposit: 'deposit',
+      transfer: 'transfer',
+      boleto: 'boleto',
+      other: 'other',
+    };
+    return map[value] || 'other';
+  }
+
   // Map legacy CreateServiceOrderDto -> CreateOrderDto
   static toCreateOrderDto(input: CreateServiceOrderDto): CreateOrderDto {
+    // 1. Identifica o método de pagamento raiz (baseado no primeiro serviço ou padrão)
+    const rawPaymentMethod = input.services?.[0]?.paymentMethod || 'PIX';
+    const rootPaymentMethod = this.mapToBackendEnum(rawPaymentMethod);
+
+    // 2. Mapeia os Itens (Removendo paymentMethod interno)
     const items: CreateOrderItemDto[] = (input.services || []).map(
       (s: ServiceOrderItemDto) => ({
         functionalityId: s.functionalityId,
         // clientId inherited from order
         price: Number(s.totalPrice) || 0,
-        paymentMethod: s.paymentMethod,
+        // paymentMethod: REMOVIDO (Não aceito pelo backend dentro do item)
         clientDeadline: s.clientDeadline,
         description: s.description,
-        responsibleUserId: s.responsibleUserId,
+
+        // Garante envio seguro de UUID ou undefined
+        responsibleUserId:
+          s.responsibleUserId && s.responsibleUserId.length > 5
+            ? s.responsibleUserId
+            : undefined,
+
         assistantDeadline: s.assistantDeadline,
-        amountForAssistant:
+        assistantAmount:
           s.price !== undefined
             ? Number(s.price)
             : s.assistantAmount !== undefined
             ? Number(s.assistantAmount)
             : undefined,
+
         serviceStartDate: s.serviceStartDate,
         serviceEndDate: s.serviceEndDate,
         userStatus: s.userStatus as any,
@@ -40,24 +69,32 @@ export class FunctionalitiesOrdersAdapter {
       })
     );
 
+    // 3. Mapeia Parcelas (Convertendo channel para minúsculo)
+    const installments =
+      input.installments?.map((inst) => ({
+        amount: inst.amount,
+        dueDate: inst.dueDate,
+        channel: this.mapToBackendEnum(inst.channel as string),
+      })) || [];
+
     const dto: CreateOrderDto = {
       clientId: input.clientId,
       contractDate: input.contractDate,
       description: input.description,
-      // paymentTerms left undefined -> backend defaults or rules apply
-      items,
+      paymentMethod: rootPaymentMethod, // Novo campo obrigatório na raiz
+      installments: installments,
+      items: items,
     };
     return dto;
   }
 
   // Map new OrderResponseDto -> legacy ServiceOrderResponseDto (for old UI)
-  static toLegacyServiceOrderResponse(
-    order: OrderResponseDto
-  ): ServiceOrderResponseDto {
+  static toLegacyServiceOrderResponse(order: OrderResponseDto): any {
+    // Retorno any temporário para flexibilizar compatibilidade
     return {
       clientId: order.clientId,
       clientName: order.client?.name || '',
-      clientEmail: '', // not available in new model
+      clientEmail: '',
       totalAmount: order.amountTotal,
       totalAssistantAmount:
         order.items?.reduce(
@@ -70,10 +107,10 @@ export class FunctionalitiesOrdersAdapter {
         functionalityId: it.functionality.id,
         functionalityName: it.functionality.name || '',
         totalPrice: it.price,
-        paymentMethod: it.paymentMethod || '',
+        paymentMethod: it.paymentMethod || '', // Backend pode não retornar, manter fallback
         clientDeadline: it.clientDeadline,
         contractDate: order.contractDate,
-        status: 'PENDING_PAYMENT' as any, // legacy UI status; backend determines aggregate status elsewhere
+        status: 'PENDING_PAYMENT' as any,
         paidAt:
           order.paymentStatus === 'PAID'
             ? order.updatedAt || order.createdAt
@@ -105,7 +142,7 @@ export class FunctionalitiesOrdersAdapter {
         .map((i) => i.clientDeadline)
         .filter(Boolean)
         .sort()
-        .slice(-1)[0] || order.contractDate; // choose latest client deadline
+        .slice(-1)[0] || order.contractDate;
 
     const totalAssistant =
       (order.items || []).reduce(
@@ -134,7 +171,7 @@ export class FunctionalitiesOrdersAdapter {
       orderId: order.id,
       clientId: order.clientId,
       clientName: order.client?.name || '',
-      clientEmail: '', // not available in new model
+      clientEmail: '',
       clientInstitution: undefined,
       deadline: aggDeadline,
       contractDate: order.contractDate,

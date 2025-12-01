@@ -29,6 +29,11 @@ export interface CreateServiceOrderDto {
   contractDate: string; // YYYY-MM-DD
   services: ServiceOrderItemDto[];
   description?: string;
+  installments?: {
+    amount: number;
+    dueDate: string;
+    channel: string;
+  }[];
 }
 
 export interface ServiceOrderItemResponseDto {
