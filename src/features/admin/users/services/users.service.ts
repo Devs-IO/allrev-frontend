@@ -19,12 +19,25 @@ export class UsersService {
       take(1),
       switchMap((user: User | null) => {
         if (!user) {
+          console.error('Usuário não autenticado');
           return throwError(() => new Error('Usuário não autenticado.'));
         }
 
-        if (user.role === Role.ADMIN) {
+        const userRole = String(user.role).toLowerCase();
+        const isAdmin = userRole === 'admin';
+
+        console.log(
+          'UsersService.getUsers() - user.role:',
+          user.role,
+          'isAdmin:',
+          isAdmin
+        );
+
+        if (isAdmin) {
+          console.log('Chamando GET /users/all para ADMIN');
           return this.http.get<ResponseUserDto[]>(`${this.apiUrl}/users/all`);
         } else {
+          console.log('Chamando GET /users/children para MANAGER');
           return this.http.get<ResponseUserDto[]>(
             `${this.apiUrl}/users/children`
           );
@@ -41,6 +54,20 @@ export class UsersService {
     return this.http.get<ResponseUserDto>(`${this.apiUrl}/users/${id}`);
   }
 
+  deleteUser(id: string): Observable<any> {
+    return this.authService.currentUser$.pipe(
+      take(1),
+      switchMap((user) => {
+        // Se for Gestor, chama rota de remover assistente
+        if (user?.role === Role.MANAGER_REVIEWERS) {
+          return this.http.delete(`${this.apiUrl}/users/assistants/${id}`);
+        }
+        // Se for Admin, chama rota de remover global
+        return this.http.delete(`${this.apiUrl}/users/${id}`);
+      })
+    );
+  }
+
   createUser(data: CreateUserDto): Observable<ResponseUserDto> {
     return this.http.post<ResponseUserDto>(`${this.apiUrl}/users`, data);
   }
@@ -50,10 +77,6 @@ export class UsersService {
     data: Partial<CreateUserDto>
   ): Observable<ResponseUserDto> {
     return this.http.put<ResponseUserDto>(`${this.apiUrl}/users/${id}`, data);
-  }
-
-  deleteUser(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/users/${id}`);
   }
 
   getAvailableRoles(): Observable<Role[]> {

@@ -20,4 +20,9 @@ export interface User {
   tenantIds?: string[];
   // Novo formato detalhado vindo do backend
   tenants?: UserTenantLink[];
+
+  // Campos de contexto de tenant (vindo do backend)
+  currentTenantIdGerente?: string;
+  currentTenantIdAdmin?: string;
+  currentTenantIdAssistentes?: string[];
 }

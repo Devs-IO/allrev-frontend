@@ -5,13 +5,19 @@ import { UsersService } from '../../services/users.service';
 import { ResponseUserDto } from '../../types/user.dto';
 import { AuthService } from '../../../../../app/core/services/auth.service';
 import { ConfirmationModalComponent } from '../../../../../app/shared/components/confirmation-modal/confirmation-modal.component';
+import { SpinnerComponent } from '../../../../../app/shared/components/spinner/spinner.component';
 
 @Component({
   selector: 'app-users-list',
   templateUrl: './users-list.component.html',
   styleUrls: ['./users-list.component.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, ConfirmationModalComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ConfirmationModalComponent,
+    SpinnerComponent,
+  ],
 })
 export class UsersListComponent implements OnInit {
   users: WritableSignal<ResponseUserDto[]> = signal<ResponseUserDto[]>([]);
@@ -26,6 +32,10 @@ export class UsersListComponent implements OnInit {
   showEditModal = false;
   showDeleteModal = false;
   selectedUser: ResponseUserDto | null = null;
+
+  // Textos dinâmicos para o modal (Diferença Admin vs Gestor)
+  deleteModalTitle = '';
+  deleteModalMessage = '';
 
   constructor(
     private usersService: UsersService,
@@ -57,7 +67,8 @@ export class UsersListComponent implements OnInit {
   loadUsers(): void {
     this.usersService.getUsers().subscribe({
       next: (data: ResponseUserDto[]) => {
-        // Se não for admin, garantir que não apareça um gerente (apenas assistentes) removendo qualquer item cujo role contenha 'manager'
+        // Se não for admin, garantir que não apareça um gerente (apenas assistentes)
+        // removendo qualquer item cujo role contenha 'manager'
         const filtered = this.isAdmin
           ? data
           : data.filter(
@@ -124,21 +135,41 @@ export class UsersListComponent implements OnInit {
 
   deleteUser(id: string): void {
     this.selectedUser = this.users().find((u) => u.id === id) || null;
+
+    // Configura a mensagem correta baseada no perfil
+    if (this.isAdmin) {
+      this.deleteModalTitle = 'Desativar Usuário';
+      this.deleteModalMessage = `Tem certeza que deseja desativar o usuário <strong>${this.selectedUser?.name}</strong> do sistema? Ele perderá acesso globalmente.`;
+    } else {
+      this.deleteModalTitle = 'Remover Assistente';
+      this.deleteModalMessage = `Tem certeza que deseja remover <strong>${this.selectedUser?.name}</strong> da sua equipe? O cadastro dele continuará existindo, mas sem acesso aos dados da sua empresa.`;
+    }
+
     this.showDeleteModal = true;
   }
 
   confirmDelete(): void {
     if (this.selectedUser) {
+      // O Service já decide qual rota chamar (Global ou Contextual) baseado no currentUser
       this.usersService.deleteUser(this.selectedUser.id).subscribe({
         next: () => {
           this.loadUsers();
           this.showDeleteModal = false;
+
+          // Feedback customizado
+          const msg = this.isAdmin
+            ? 'Usuário desativado com sucesso!'
+            : 'Assistente removido da equipe com sucesso!';
+
+          alert(msg);
           this.selectedUser = null;
-          alert('Usuário desativado com sucesso!');
         },
         error: (err) => {
           console.error('Erro ao deletar usuário:', err);
-          alert('Erro ao desativar usuário. Tente novamente.');
+          const errMsg = this.isAdmin
+            ? 'Erro ao desativar usuário. Tente novamente.'
+            : 'Erro ao remover assistente. Tente novamente.';
+          alert(errMsg);
         },
       });
     }
@@ -153,19 +184,23 @@ export class UsersListComponent implements OnInit {
   translateRole(role: string): string {
     switch (role) {
       case 'admin':
+      case 'ADMIN':
         return 'Administrador';
       case 'user':
         return 'Usuário';
       case 'manager_reviewers':
+      case 'MANAGER_REVIEWERS':
         return 'Gestor de Revisores';
       case 'client':
+      case 'CLIENT':
         return 'Cliente';
       case 'assistant_reviewers':
+      case 'ASSISTANT_REVIEWERS':
         return 'Assistente de Revisores';
       case 'none':
         return 'Nenhum';
       default:
-        return 'Desconhecido';
+        return role; // Retorna original se não achar
     }
   }
 }

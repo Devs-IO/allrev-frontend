@@ -1,213 +1,169 @@
-<div class="container my-4">
+<div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0 text-brand">
-      <i class="fas fa-user-cog me-2"></i>Usuários
-    </h1>
-    <button class="btn btn-outline-brand" routerLink="/users/create">
-      <i class="bi bi-plus-lg me-1"></i> Novo Usuário
+    <div>
+      <h2 class="text-primary mb-0">
+        <i class="fas fa-users me-2"></i>
+        Usuários
+      </h2>
+      <p class="text-muted mb-0" *ngIf="isAdmin">
+        Gestão completa de usuários do sistema
+      </p>
+      <p class="text-muted mb-0" *ngIf="!isAdmin">
+        Gestão da sua equipe de assistentes
+      </p>
+    </div>
+
+    <button class="btn btn-primary" [routerLink]="['/users/create']">
+      <i class="fas fa-plus me-2"></i>
+      Novo Usuário
     </button>
   </div>
 
-  <!-- Modal de Confirmação - Editar -->
-  <app-confirmation-modal
-    [show]="showEditModal"
-    type="edit"
-    title="Confirmar Edição"
-    message="Tem certeza que deseja editar este usuário?"
-    confirmText="Sim, Editar"
-    [itemInfo]="{
-      primary: selectedUser?.name,
-      secondary: selectedUser?.email
-    }"
-    (confirmed)="confirmEdit()"
-    (cancelled)="closeModals()"
-  >
-  </app-confirmation-modal>
-
-  <!-- Modal de Confirmação - Excluir -->
-  <app-confirmation-modal
-    [show]="showDeleteModal"
-    type="danger"
-    title="Confirmar Exclusão"
-    message="Tem certeza que deseja excluir este usuário?"
-    confirmText="Sim, Excluir"
-    [itemInfo]="{
-      primary: selectedUser?.name,
-      secondary: selectedUser?.email
-    }"
-    (confirmed)="confirmDelete()"
-    (cancelled)="closeModals()"
-  >
-  </app-confirmation-modal>
-
-  <!-- Loading -->
   <div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Carregando...</span>
-    </div>
-    <p class="mt-2">Carregando usuários...</p>
+    <app-spinner></app-spinner>
+    <p class="mt-2 text-muted">Carregando usuários...</p>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
-    <i class="fas fa-exclamation-triangle me-2"></i>
+  <div *ngIf="error" class="alert alert-danger shadow-sm">
+    <i class="fas fa-exclamation-circle me-2"></i>
     {{ error }}
   </div>
 
-  <!-- Tabela -->
-  <div *ngIf="!loading && !error" class="card shadow-sm">
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col" (click)="sortBy('name')" style="cursor: pointer">
-                Nome
-                <i
-                  *ngIf="sortColumn === 'name'"
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': sortDirection === 'asc',
-                    'fa-arrow-down': sortDirection === 'desc'
-                  }"
-                ></i>
-              </th>
-              <th scope="col" (click)="sortBy('email')" style="cursor: pointer">
-                Email
-                <i
-                  *ngIf="sortColumn === 'email'"
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': sortDirection === 'asc',
-                    'fa-arrow-down': sortDirection === 'desc'
-                  }"
-                ></i>
-              </th>
-              <th scope="col" (click)="sortBy('phone')" style="cursor: pointer">
-                Telefone
-                <i
-                  *ngIf="sortColumn === 'phone'"
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': sortDirection === 'asc',
-                    'fa-arrow-down': sortDirection === 'desc'
-                  }"
-                ></i>
-              </th>
-              <th scope="col" (click)="sortBy('role')" style="cursor: pointer">
-                Função
-                <i
-                  *ngIf="sortColumn === 'role'"
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': sortDirection === 'asc',
-                    'fa-arrow-down': sortDirection === 'desc'
-                  }"
-                ></i>
-              </th>
-              <th
-                scope="col"
-                (click)="sortBy('isActive')"
-                style="cursor: pointer"
-              >
-                Status
-                <i
-                  *ngIf="sortColumn === 'isActive'"
-                  class="fas"
-                  [ngClass]="{
-                    'fa-arrow-up': sortDirection === 'asc',
-                    'fa-arrow-down': sortDirection === 'desc'
-                  }"
-                ></i>
-              </th>
-              <th scope="col" *ngIf="isAdmin">Empresa</th>
-              <th scope="col">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let user of users(); let i = index">
-              <th scope="row">{{ i + 1 }}</th>
-              <td>
-                <strong>{{ user.name }}</strong>
-              </td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.phone }}</td>
-              <td>
-                <span class="badge bg-secondary">{{
-                  translateRole(user.role)
-                }}</span>
-              </td>
-              <td>
-                <span *ngIf="user.isActive" class="text-success">
-                  <i class="fas fa-check-circle"></i> Ativo
-                </span>
-                <span *ngIf="!user.isActive" class="text-danger">
-                  <i class="fas fa-times-circle"></i> Inativo
-                </span>
-              </td>
-              <td *ngIf="isAdmin">
-                {{ user.tenant?.companyName || "-" }}
-              </td>
-              <td>
-                <div class="btn-group" role="group">
-                  <button
-                    type="button"
-                    class="btn btn-outline-primary action-btn"
-                    (click)="viewUser(user.id)"
-                    title="Visualizar"
-                  >
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <ng-container *ngIf="user.id !== loggedUserId">
-                    <button
-                      type="button"
-                      class="btn btn-outline-warning action-btn"
-                      (click)="editUser(user.id)"
-                      [disabled]="!isAdmin"
-                      title="Editar"
-                    >
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <!-- Botão de excluir habilitado apenas para admin e não-admin fica desabilitado -->
-                    <button
-                      *ngIf="user.role !== 'admin'"
-                      type="button"
-                      class="btn btn-outline-danger action-btn"
-                      (click)="deleteUser(user.id)"
-                      [disabled]="!isAdmin"
-                      title="Excluir"
-                    >
-                      <i class="fas fa-trash"></i>
-                    </button>
-                    <button
-                      *ngIf="user.role === 'admin'"
-                      type="button"
-                      class="btn btn-outline-danger action-btn"
-                      title="Exclusão desabilitada para administradores"
-                      disabled
-                    >
-                      <i class="fas fa-ban"></i>
-                    </button>
-                  </ng-container>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Empty state -->
   <div
     *ngIf="!loading && !error && users().length === 0"
-    class="text-center py-5"
+    class="text-center py-5 bg-white rounded shadow-sm"
   >
-    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-    <h5 class="text-muted">Nenhum usuário cadastrado</h5>
-    <p class="text-muted">
-      Clique no menu lateral para cadastrar um novo usuário.
-    </p>
+    <img
+      src="assets/avatar-default.svg"
+      alt="Sem usuários"
+      style="width: 120px; opacity: 0.5"
+    />
+    <h4 class="mt-3 text-muted">Nenhum usuário encontrado</h4>
+    <p class="text-muted">Comece adicionando um novo membro à equipe.</p>
+  </div>
+
+  <div
+    *ngIf="!loading && !error && users().length > 0"
+    class="card shadow-sm border-0 overflow-hidden"
+  >
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th scope="col" class="ps-4" (click)="sortBy('name')" role="button">
+              Nome <i class="fas fa-sort ms-1 text-muted small"></i>
+            </th>
+            <th scope="col" (click)="sortBy('email')" role="button">
+              E-mail <i class="fas fa-sort ms-1 text-muted small"></i>
+            </th>
+            <th scope="col">Função</th>
+            <th scope="col" class="text-center">Status</th>
+            <th scope="col" class="text-end pe-4">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users()">
+            <td class="ps-4">
+              <div class="d-flex align-items-center">
+                <div
+                  class="avatar-circle bg-primary-subtle text-primary me-3 fw-bold"
+                >
+                  {{ user.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <div class="fw-semibold text-dark">{{ user.name }}</div>
+                  <small class="text-muted d-md-none">{{ user.email }}</small>
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <span class="text-muted">{{ user.email }}</span>
+            </td>
+
+            <td>
+              <span
+                class="badge rounded-pill border"
+                [ngClass]="{
+                  'bg-primary-subtle text-primary border-primary-subtle':
+                    user.role === 'admin' || user.role === 'ADMIN',
+                  'bg-warning-subtle text-warning-emphasis border-warning-subtle':
+                    user.role === 'manager_reviewers' ||
+                    user.role === 'MANAGER_REVIEWERS',
+                  'bg-info-subtle text-info-emphasis border-info-subtle':
+                    user.role === 'assistant_reviewers' ||
+                    user.role === 'ASSISTANT_REVIEWERS',
+                  'bg-light text-dark border-secondary-subtle':
+                    user.role === 'client' || user.role === 'CLIENT'
+                }"
+              >
+                {{ translateRole(user.role) }}
+              </span>
+            </td>
+
+            <td class="text-center">
+              <span
+                class="badge"
+                [ngClass]="user.isActive ? 'bg-success' : 'bg-danger'"
+              >
+                {{ user.isActive ? "Ativo" : "Inativo" }}
+              </span>
+            </td>
+
+            <td class="text-end pe-4">
+              <div class="btn-group">
+                <button
+                  class="btn btn-sm btn-light text-primary"
+                  (click)="viewUser(user.id)"
+                  title="Visualizar Detalhes"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+
+                <button
+                  class="btn btn-sm btn-light text-warning-emphasis"
+                  (click)="editUser(user.id)"
+                  title="Editar Usuário"
+                >
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+
+                <button
+                  class="btn btn-sm btn-light text-danger"
+                  (click)="deleteUser(user.id)"
+                  title="Remover/Desativar"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
+
+<app-confirmation-modal
+  [show]="showEditModal"
+  [type]="'edit'"
+  title="Editar Usuário"
+  [message]="
+    'Deseja editar os dados de ' + (selectedUser?.name || 'usuário') + '?'
+  "
+  confirmText="Ir para Edição"
+  (confirmed)="confirmEdit()"
+  (cancelled)="closeModals()"
+>
+</app-confirmation-modal>
+
+<app-confirmation-modal
+  [show]="showDeleteModal"
+  [type]="'danger'"
+  [title]="deleteModalTitle"
+  [message]="deleteModalMessage"
+  [confirmText]="isAdmin ? 'Desativar Usuário' : 'Remover da Equipe'"
+  (confirmed)="confirmDelete()"
+  (cancelled)="closeModals()"
+>
+</app-confirmation-modal>

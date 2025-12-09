@@ -46,8 +46,6 @@ export const routes: Routes = [
   // ==========================================
   {
     path: 'portal',
-    // Futuro: loadComponent: () => import('./modules/portal/layout/portal-layout.component').then(m => m.PortalLayoutComponent),
-    // Por enquanto, usaremos router-outlet direto ou um layout temporário se ainda não existir
     canActivate: [authGuard, roleGuard],
     data: { roles: [Role.CLIENT] },
     children: [
@@ -60,7 +58,6 @@ export const routes: Routes = [
           ),
         title: 'Portal do Cliente',
       },
-      // Futuro: { path: 'orders', ... }
     ],
   },
 
@@ -74,7 +71,6 @@ export const routes: Routes = [
         (m) => m.LayoutComponent
       ),
     canActivate: [authGuard, roleGuard],
-    // O roleGuard aqui bloqueia clientes de entrarem no layout administrativo
     data: {
       roles: [Role.ADMIN, Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
     },
@@ -155,7 +151,7 @@ export const routes: Routes = [
         title: 'Editar Empresa',
       },
 
-      // --- Usuários (Admins vêem tudo, Gestores vêem seus assistentes) ---
+      // --- Usuários ---
       {
         path: 'users',
         canActivate: [roleGuard],
@@ -176,6 +172,17 @@ export const routes: Routes = [
           ).then((m) => m.UserCreateComponent),
         title: 'Novo Usuário',
       },
+      // ✅ NOVA ROTA: Visualizar Usuário (Admin ou Gestor vendo assistente)
+      {
+        path: 'users/:id',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        loadComponent: () =>
+          import(
+            '../features/admin/users/pages/user-view/user-view.component'
+          ).then((m) => m.UserViewComponent),
+        title: 'Detalhes do Usuário',
+      },
       {
         path: 'users/:id/edit',
         canActivate: [roleGuard],
@@ -187,13 +194,13 @@ export const routes: Routes = [
         title: 'Editar Usuário',
       },
 
-      // --- Clientes (Gestão) ---
+      // --- Clientes ---
       {
         path: 'clients',
         canActivate: [roleGuard],
         data: {
           roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
-        }, // Assistente pode ver? Definido como Leitura na matriz
+        },
         loadComponent: () =>
           import(
             '../features/operations/clients/pages/clients-list/clients-list.component'
@@ -203,12 +210,23 @@ export const routes: Routes = [
       {
         path: 'clients/create',
         canActivate: [roleGuard],
-        data: { roles: [Role.MANAGER_REVIEWERS] }, // Assistente não cria
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/clients/pages/clients-create/clients-create.component'
           ).then((m) => m.ClientsCreateComponent),
         title: 'Novo Cliente',
+      },
+      // ✅ NOVA ROTA: Visualizar Cliente (Assistente também precisa ver detalhes)
+      {
+        path: 'clients/:id',
+        canActivate: [roleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS] },
+        loadComponent: () =>
+          import(
+            '../features/operations/clients/pages/clients-view/clients-view.component'
+          ).then((m) => m.ClientsViewComponent),
+        title: 'Detalhes do Cliente',
       },
       {
         path: 'clients/:id/edit',
@@ -235,7 +253,7 @@ export const routes: Routes = [
       {
         path: 'orders/create',
         canActivate: [roleGuard],
-        data: { roles: [Role.MANAGER_REVIEWERS] }, // Assistente cria? Geralmente sim, ajustar se necessário
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/orders/pages/orders-create/orders-create.component'
@@ -253,7 +271,7 @@ export const routes: Routes = [
         title: 'Detalhes do Trabalho',
       },
 
-      // --- Funcionalidades (Catálogo de Serviços) ---
+      // --- Funcionalidades (Catálogo) ---
       {
         path: 'functionalities',
         canActivate: [roleGuard],
@@ -273,6 +291,17 @@ export const routes: Routes = [
             '../features/operations/functionalities/pages/functionalities-create/functionalities-create.component'
           ).then((m) => m.FunctionalitiesCreateComponent),
         title: 'Novo Serviço',
+      },
+      // ✅ Adicionei visualização de Funcionalidade também (geralmente útil)
+      {
+        path: 'functionalities/:id',
+        canActivate: [roleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS] },
+        loadComponent: () =>
+          import(
+            '../features/operations/functionalities/pages/functionalities-view/functionalities-view.component'
+          ).then((m) => m.FunctionalitiesViewComponent),
+        title: 'Detalhes do Serviço',
       },
       {
         path: 'functionalities/:id/edit',
@@ -309,6 +338,6 @@ export const routes: Routes = [
     ],
   },
 
-  // Rota Coringa (404) -> Redireciona para login ou home
+  // Rota Coringa
   { path: '**', redirectTo: 'login' },
 ];

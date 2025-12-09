@@ -35,6 +35,7 @@ export class PortalLoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Verifica se já está logado para redirecionar
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/portal/home']);
     }
@@ -49,37 +50,34 @@ export class PortalLoginComponent implements OnInit {
 
       const { email, password } = this.loginForm.value;
 
+      // ALTERAÇÃO CRÍTICA: Mudamos de .login() para .loginClient()
       this.authService
-        .login(email!, password!)
+        .loginClient({ email: email!, password: password! })
         .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (response) => {
-            const mustChange = response.user?.mustChangePassword === true;
-
-            if (mustChange) {
-              this.router.navigate(['/change-password']);
-            } else {
-              this.router.navigate(['/portal/home']);
-            }
+            // Clientes geralmente não têm fluxo de "Forçar troca de senha" no primeiro acesso
+            // da mesma forma que usuários admin, então redirecionamos direto.
+            this.router.navigate(['/portal/home']);
           },
           error: (error) => {
             console.error('Portal login error:', error);
             const backendMsg: string | undefined = error?.error?.message;
 
+            // Tratamento específico para falhas de autenticação
             if (
-              backendMsg === 'user.not_found' ||
-              backendMsg === 'Unauthorized'
+              backendMsg === 'Credenciais inválidas.' ||
+              backendMsg === 'Unauthorized' ||
+              error.status === 401
             ) {
-              this.errorMessage = 'Usuário não encontrado ou senha inválida.';
+              this.errorMessage = 'E-mail ou senha incorretos.';
               return;
             }
 
+            // Tratamento genérico de erros
             switch (error.status) {
               case 0:
                 this.errorMessage = 'Erro de conexão. Verifique sua internet.';
-                break;
-              case 401:
-                this.errorMessage = 'E-mail ou senha incorretos.';
                 break;
               case 500:
                 this.errorMessage =
@@ -87,7 +85,7 @@ export class PortalLoginComponent implements OnInit {
                 break;
               default:
                 this.errorMessage =
-                  error.error?.message || 'Erro inesperado ao tentar entrar.';
+                  backendMsg || 'Erro inesperado ao tentar entrar.';
             }
           },
         });

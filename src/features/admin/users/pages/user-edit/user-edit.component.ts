@@ -85,19 +85,16 @@ export class UserEditComponent implements OnInit {
 
   private initializeForm() {
     this.userForm = this.fb.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(2),
-          Validators.maxLength(100),
-        ],
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      // EMAIL SEMPRE DESABILITADO NA CRIAÇÃO DO FORM
+      email: [
+        { value: '', disabled: true },
+        [Validators.required, Validators.email],
       ],
-      email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required]],
-      role: [null, Validators.required], // Role é preenchido dinamicamente
-      address: ['', [Validators.required, Validators.minLength(5)]],
-      tenantId: [{ value: '', disabled: true }], // Geralmente desabilitado na edição, salvo se for Admin trocando
+      role: [null, Validators.required],
+      address: ['', [Validators.required]],
+      tenantId: [{ value: '', disabled: true }],
       isActive: [true],
       photo: [''],
     });
@@ -109,12 +106,26 @@ export class UserEditComponent implements OnInit {
         this.currentUserRole = user.role;
         this.isAdmin = user.role === CoreRole.ADMIN;
 
-        // Se for admin, habilita a troca de tenant (opcional, dependendo da regra de negócio)
+        // Regra de Negócio:
+        // Admin pode mudar tenant (se necessário para realocação) e role.
+        // Gestor NÃO pode mudar tenant (fixo no seu), NÃO pode mudar email, nem dados pessoais do assistente.
+
         if (this.isAdmin) {
           this.userForm.get('tenantId')?.enable();
-          this.loadTenants();
+          this.userForm.get('email')?.enable();
+          // Admin pode editar dados pessoais, mas email recomendamos manter travado
+          // Se quiser liberar para admin: this.userForm.get('email')?.enable();
         } else {
+          // Gestor
           this.userForm.get('tenantId')?.disable();
+          this.userForm.get('name')?.disable(); // Gestor não muda nome do assistente
+          this.userForm.get('phone')?.disable(); // Nem telefone
+          this.userForm.get('address')?.disable();
+          this.userForm.get('role')?.disable();
+
+          // O que o gestor PODE fazer?
+          // Geralmente apenas visualizar ou ativar/desativar o vínculo no contexto dele.
+          // Se o gestor não pode editar NADA, deveríamos esconder o botão de editar na View.
         }
       }
     });
