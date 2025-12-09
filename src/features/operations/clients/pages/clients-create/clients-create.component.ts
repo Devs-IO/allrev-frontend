@@ -20,6 +20,9 @@ import { PhoneMaskDirective } from '../../../../../app/shared/directives/phone-m
 export class ClientsCreateComponent {
   formData: Partial<Client> = {
     isActive: true,
+    legalNature: undefined,
+    cpf: undefined,
+    cnpj: undefined,
   };
   error: string | null = null;
   loading = false;

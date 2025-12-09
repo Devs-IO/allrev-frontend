@@ -133,6 +133,7 @@
             <th>Status Geral</th>
             <th class="text-end pe-3">Valor Total</th>
             <th style="width: 50px"></th>
+            <th style="width: 40px"></th>
           </tr>
         </thead>
         <tbody>
@@ -182,9 +183,21 @@
             <td class="text-end">
               <i class="bi bi-chevron-right text-muted small"></i>
             </td>
+            <td class="text-center">
+              <i
+                *ngIf="order.observation || order.note"
+                class="bi bi-info-circle text-muted"
+                style="cursor: help"
+                [title]="
+                  (order.observation
+                    ? 'Observação: ' + order.observation + ' | '
+                    : '') + (order.note ? 'Nota: ' + order.note : '')
+                "
+              ></i>
+            </td>
           </tr>
           <tr *ngIf="(orders$ | async)?.length === 0">
-            <td colspan="8" class="text-center py-4 text-muted">
+            <td colspan="9" class="text-center py-4 text-muted">
               Nenhuma ordem encontrada.
             </td>
           </tr>

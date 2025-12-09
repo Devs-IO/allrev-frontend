@@ -7,6 +7,14 @@ export type PaymentMethod =
   | 'other';
 export type PaymentTerms = 'ONE' | 'TWO' | 'THREE';
 export type PaymentStatus = 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
+export type WorkStatus =
+  | 'PENDING'
+  | 'IN_PROGRESS'
+  | 'AWAITING_CLIENT'
+  | 'AWAITING_ADVISOR'
+  | 'OVERDUE'
+  | 'COMPLETED'
+  | 'CANCELED';
 export type ItemStatus =
   | 'PENDING'
   | 'IN_PROGRESS'
@@ -17,6 +25,8 @@ export type ItemStatus =
   | 'DELIVERED'
   | 'CANCELED';
 
+export type PaymentMethodType = 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'OTHER';
+
 export interface OrderInstallment {
   id: string;
   orderId?: string;
@@ -25,6 +35,8 @@ export interface OrderInstallment {
   dueDate: string; // YYYY-MM-DD
   paidAt?: string; // ISO
   channel?: string; // string para aceitar valores do back (pix, card, etc)
+  paymentMethod?: PaymentMethodType;
+  paymentMethodDescription?: string;
 }
 
 export interface OrderItemResponsible {
@@ -72,6 +84,8 @@ export interface OrderResponseDto {
 
   contractDate: string; // YYYY-MM-DD
   description?: string;
+  observation?: string;
+  note?: string;
   amountTotal: number;
   amountPaid: number;
   paymentTerms: PaymentTerms;
@@ -107,6 +121,7 @@ export interface CreateOrderDto {
   contractDate: string; // YYYY-MM-DD
   description?: string;
   paymentTerms?: PaymentTerms;
+  hasInvoice?: boolean;
   items: CreateOrderItemDto[];
 
   // Parcelas manuais
@@ -114,6 +129,8 @@ export interface CreateOrderDto {
     amount: number;
     dueDate: string; // YYYY-MM-DD
     channel?: string; // 'pix' | 'card' etc
+    paymentMethod?: PaymentMethodType;
+    paymentMethodDescription?: string;
   }[];
 
   // Pagamento na Raiz

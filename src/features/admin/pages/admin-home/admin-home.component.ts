@@ -1,6 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TenantsService } from '../../tenants/services/tenants.service';
+import { UsersService } from '../../users/services/users.service';
+import { OrdersService } from '../../../operations/orders/services/orders.service';
+import { Subject, forkJoin } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-home',
@@ -10,9 +15,13 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./admin-home.component.scss'],
 })
 export class AdminHomeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  private tenantsService = inject(TenantsService);
+  private usersService = inject(UsersService);
+  private ordersService = inject(OrdersService);
+
   currentDate = new Date();
 
-  // Dados placeholder para admin (sem chamada ao backend)
   adminStats = {
     activeTenants: 0,
     totalUsers: 0,
@@ -22,11 +31,37 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit(): void {
-    // Admin não carrega dados de ordens
-    // Apenas exibe placeholders
+    this.loadAdminStats();
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadAdminStats(): void {
+    forkJoin({
+      tenants: this.tenantsService.getTenants(),
+      users: this.usersService.getUsers(),
+      dashboard: this.ordersService.getDashboardSummary(),
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ tenants, users, dashboard }) => {
+          this.adminStats.activeTenants = tenants?.length || 0;
+          this.adminStats.totalUsers = users?.length || 0;
+
+          // Calcula pagamentos atrasados a partir do paymentStats
+          const overdueStats = dashboard?.paymentStats?.find(
+            (stat: any) => stat.status === 'OVERDUE'
+          );
+          this.adminStats.overduePayments = overdueStats?.count || 0;
+        },
+        error: (err) => {
+          console.error('Erro ao carregar estatísticas do admin:', err);
+        },
+      });
+  }
 
   get greeting(): string {
     const hour = new Date().getHours();

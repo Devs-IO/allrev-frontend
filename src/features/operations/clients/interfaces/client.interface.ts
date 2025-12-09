@@ -8,6 +8,9 @@ export interface Client {
   phone?: string;
   observation?: string;
   note?: string;
+  legalNature?: 'PERSON_PHYSICAL' | 'PERSON_LEGAL';
+  cpf?: string;
+  cnpj?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

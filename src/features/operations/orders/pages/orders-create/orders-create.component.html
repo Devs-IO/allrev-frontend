@@ -85,6 +85,24 @@
                   placeholder="Ex: TCC Engenharia Civil - Matheus"
                 />
               </div>
+
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="hasInvoice"
+                    formControlName="hasInvoice"
+                  />
+                  <label class="form-check-label" for="hasInvoice">
+                    <i class="bi bi-receipt me-1"></i>
+                    <strong>Nota Fiscal?</strong>
+                    <span class="small text-muted ms-2">
+                      Marque se a ordem possui nota fiscal
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -224,11 +242,21 @@
               <select
                 class="form-select form-select-lg mb-3"
                 formControlName="installmentsCount"
+                [disabled]="
+                  !canAddInstallments() && installmentsList.length >= 5
+                "
               >
                 <option *ngFor="let opt of installmentsOptions" [value]="opt">
                   {{ opt }}x Parcelas
                 </option>
               </select>
+              <small
+                *ngIf="installmentsList.length >= 5"
+                class="text-danger d-block"
+              >
+                <i class="bi bi-exclamation-circle me-1"></i>
+                Máximo de 5 parcelas permitidas
+              </small>
             </div>
 
             <div class="table-responsive bg-white rounded border">
@@ -238,6 +266,8 @@
                     <th class="text-center" style="width: 30px">#</th>
                     <th>Valor</th>
                     <th>Vencimento</th>
+                    <th>Método de Pagamento</th>
+                    <th style="width: 120px">Descrição</th>
                   </tr>
                 </thead>
                 <tbody formArrayName="installmentsList">
@@ -262,6 +292,26 @@
                         type="date"
                         class="form-control form-control-sm text-muted"
                         formControlName="dueDate"
+                      />
+                    </td>
+                    <td>
+                      <select
+                        class="form-select form-select-sm"
+                        formControlName="paymentMethod"
+                      >
+                        <option value="BOLETO">Boleto</option>
+                        <option value="CREDIT_CARD">Cartão</option>
+                        <option value="PIX">PIX</option>
+                        <option value="OTHER">Outro</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        *ngIf="inst.get('paymentMethod')?.value === 'OTHER'"
+                        type="text"
+                        class="form-control form-control-sm"
+                        formControlName="paymentMethodDescription"
+                        placeholder="Especifique"
                       />
                     </td>
                   </tr>
