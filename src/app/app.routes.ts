@@ -192,7 +192,7 @@ export const routes: Routes = [
         path: 'clients',
         canActivate: [roleGuard],
         data: {
-          roles: [Role.ADMIN, Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
+          roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS],
         }, // Assistente pode ver? Definido como Leitura na matriz
         loadComponent: () =>
           import(
@@ -203,7 +203,7 @@ export const routes: Routes = [
       {
         path: 'clients/create',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] }, // Assistente não cria
+        data: { roles: [Role.MANAGER_REVIEWERS] }, // Assistente não cria
         loadComponent: () =>
           import(
             '../features/operations/clients/pages/clients-create/clients-create.component'
@@ -213,7 +213,7 @@ export const routes: Routes = [
       {
         path: 'clients/:id/edit',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/clients/pages/clients-edit/clients-edit.component'
@@ -224,6 +224,8 @@ export const routes: Routes = [
       // --- Ordens de Serviço (Trabalhos) ---
       {
         path: 'orders',
+        canActivate: [roleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/orders/pages/orders-list/orders-list.component'
@@ -233,7 +235,7 @@ export const routes: Routes = [
       {
         path: 'orders/create',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] }, // Assistente cria? Geralmente sim, ajustar se necessário
+        data: { roles: [Role.MANAGER_REVIEWERS] }, // Assistente cria? Geralmente sim, ajustar se necessário
         loadComponent: () =>
           import(
             '../features/operations/orders/pages/orders-create/orders-create.component'
@@ -242,6 +244,8 @@ export const routes: Routes = [
       },
       {
         path: 'orders/:id',
+        canActivate: [roleGuard],
+        data: { roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/orders/pages/orders-detail/orders-detail.component'
@@ -253,7 +257,7 @@ export const routes: Routes = [
       {
         path: 'functionalities',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/functionalities/pages/functionalities-list/functionalities-list.component'
@@ -263,7 +267,7 @@ export const routes: Routes = [
       {
         path: 'functionalities/create',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/functionalities/pages/functionalities-create/functionalities-create.component'
@@ -273,7 +277,7 @@ export const routes: Routes = [
       {
         path: 'functionalities/:id/edit',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import(
             '../features/operations/functionalities/pages/functionalities-edit/functionalities-edit.component'
@@ -285,7 +289,7 @@ export const routes: Routes = [
       {
         path: 'reports',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import('../features/reports/reports.component').then(
             (m) => m.ReportsComponent
@@ -295,7 +299,7 @@ export const routes: Routes = [
       {
         path: 'settings',
         canActivate: [roleGuard],
-        data: { roles: [Role.ADMIN, Role.MANAGER_REVIEWERS] },
+        data: { roles: [Role.MANAGER_REVIEWERS] },
         loadComponent: () =>
           import('../features/settings/settings.component').then(
             (m) => m.SettingsComponent

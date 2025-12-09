@@ -20,6 +20,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   currentDate = new Date();
   isManager = false;
+  isAdmin = false;
+  adminStats = { activeTenants: 0, totalUsers: 0, overduePayments: 0 };
 
   private userSub!: Subscription;
 
@@ -36,11 +38,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const userRole = user.role;
 
-      // Redireciona ADMIN para dashboard específico
+      // Identifica se é ADMIN
       if (userRole === Role.ADMIN) {
-        this.router.navigate(['/admin/home']);
+        this.isAdmin = true;
+        this.isManager = false;
+        // Admin não carrega dados de dashboard operacional
+        // Valores placeholder para admin
+        this.adminStats = {
+          activeTenants: 0,
+          totalUsers: 0,
+          overduePayments: 0,
+        };
         return;
       }
+
+      this.isAdmin = false;
 
       // Verifica se é Gestor
       this.isManager = userRole === Role.MANAGER_REVIEWERS;

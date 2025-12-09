@@ -1,9 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Observable, Subscription, of } from 'rxjs';
-import { catchError, shareReplay } from 'rxjs/operators';
-import { OrdersService } from '../../../operations/orders/services/orders.service';
 
 @Component({
   selector: 'app-admin-home',
@@ -13,25 +10,20 @@ import { OrdersService } from '../../../operations/orders/services/orders.servic
   styleUrls: ['./admin-home.component.scss'],
 })
 export class AdminHomeComponent implements OnInit, OnDestroy {
-  stats$!: Observable<any>;
   currentDate = new Date();
 
-  constructor(private ordersService: OrdersService) {}
+  // Dados placeholder para admin (sem chamada ao backend)
+  adminStats = {
+    activeTenants: 0,
+    totalUsers: 0,
+    overduePayments: 0,
+  };
+
+  constructor() {}
 
   ngOnInit(): void {
-    // Admin vê dashboard global (todos os tenants)
-    this.stats$ = this.ordersService.getDashboardSummary().pipe(
-      shareReplay(1),
-      catchError((err) => {
-        console.error('Erro ao carregar dashboard admin', err);
-        return of({
-          totalOrders: 0,
-          paymentStats: [],
-          workStats: [],
-          revenue: { total: 0, paid: 0 },
-        });
-      })
-    );
+    // Admin não carrega dados de ordens
+    // Apenas exibe placeholders
   }
 
   ngOnDestroy(): void {}
