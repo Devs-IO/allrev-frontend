@@ -91,6 +91,18 @@ export const routes: Routes = [
         title: 'Dashboard',
       },
 
+      // --- Dashboard Admin (Visão Global) ---
+      {
+        path: 'admin/home',
+        canActivate: [roleGuard],
+        data: { roles: [Role.ADMIN] },
+        loadComponent: () =>
+          import(
+            '../features/admin/pages/admin-home/admin-home.component'
+          ).then((m) => m.AdminHomeComponent),
+        title: 'Dashboard Admin',
+      },
+
       // --- Perfil ---
       {
         path: 'profile',

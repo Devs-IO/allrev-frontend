@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../app/core/services/auth.service';
 import { Observable, Subscription, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
@@ -25,7 +25,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     private ordersService: OrdersService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -34,10 +35,15 @@ export class HomeComponent implements OnInit, OnDestroy {
       if (!user) return;
 
       const userRole = user.role;
-      // Verifica se é Gestor ou Admin
-      this.isManager = [Role.MANAGER_REVIEWERS, Role.ADMIN].includes(
-        userRole as any
-      );
+
+      // Redireciona ADMIN para dashboard específico
+      if (userRole === Role.ADMIN) {
+        this.router.navigate(['/admin/home']);
+        return;
+      }
+
+      // Verifica se é Gestor
+      this.isManager = userRole === Role.MANAGER_REVIEWERS;
 
       if (this.isManager) {
         // --- VISÃO GESTOR (Carrega Dashboard Financeiro) ---

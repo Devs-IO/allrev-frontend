@@ -49,12 +49,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: 'bi bi-grid-1x2-fill',
       route: '/home',
       exact: true,
-      roles: [
-        Role.MANAGER_REVIEWERS,
-        Role.ADMIN,
-        Role.ASSISTANT_REVIEWERS,
-        Role.USER,
-      ],
+      roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS, Role.USER],
+    },
+    {
+      label: 'Painel Admin',
+      icon: 'bi bi-speedometer2',
+      route: '/admin/home',
+      exact: true,
+      roles: [Role.ADMIN],
     },
     {
       label: 'Nova Ordem',
