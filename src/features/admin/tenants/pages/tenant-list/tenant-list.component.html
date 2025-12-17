@@ -1,8 +1,23 @@
 <div class="container my-4">
-  <h1 class="mb-4 text-primary">Empresas</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary mb-0">Empresas</h1>
+    <button
+      class="btn btn-primary"
+      routerLink="/tenants/create"
+      title="Criar nova empresa"
+    >
+      <i class="fas fa-plus me-2"></i>
+      Nova Empresa
+    </button>
+  </div>
 
   <!-- Modal de Confirmação - Editar -->
-  <div *ngIf="showEditModal" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+  <div
+    *ngIf="showEditModal"
+    class="modal fade show d-block"
+    tabindex="-1"
+    style="background: rgba(0, 0, 0, 0.5)"
+  >
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-3 shadow-lg">
         <div class="modal-header bg-warning text-dark">
@@ -10,22 +25,35 @@
             <i class="fas fa-edit me-2"></i>
             Confirmar Edição
           </h5>
-          <button type="button" class="btn-close" (click)="closeModals()"></button>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeModals()"
+          ></button>
         </div>
         <div class="modal-body text-center py-4">
           <i class="fas fa-edit text-warning fa-3x mb-3"></i>
           <h6 class="mb-3">Tem certeza que deseja editar esta empresa?</h6>
           <p class="text-muted mb-0" *ngIf="selectedTenant">
-            <strong>{{ selectedTenant.companyName }}</strong><br>
+            <strong>{{ selectedTenant.companyName }}</strong
+            ><br />
             <small>Código: {{ selectedTenant.code }}</small>
           </p>
         </div>
         <div class="modal-footer border-0 justify-content-center">
-          <button type="button" class="btn btn-outline-secondary px-4" (click)="closeModals()">
+          <button
+            type="button"
+            class="btn btn-outline-secondary px-4"
+            (click)="closeModals()"
+          >
             <i class="fas fa-times me-1"></i>
             Cancelar
           </button>
-          <button type="button" class="btn btn-warning px-4" (click)="confirmEdit()">
+          <button
+            type="button"
+            class="btn btn-warning px-4"
+            (click)="confirmEdit()"
+          >
             <i class="fas fa-edit me-1"></i>
             Sim, Editar
           </button>
@@ -35,7 +63,12 @@
   </div>
 
   <!-- Modal de Confirmação - Excluir -->
-  <div *ngIf="showDeleteModal" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+  <div
+    *ngIf="showDeleteModal"
+    class="modal fade show d-block"
+    tabindex="-1"
+    style="background: rgba(0, 0, 0, 0.5)"
+  >
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-3 shadow-lg">
         <div class="modal-header bg-danger text-white">
@@ -43,18 +76,27 @@
             <i class="fas fa-trash me-2"></i>
             Exclusão Desabilitada
           </h5>
-          <button type="button" class="btn-close btn-close-white" (click)="closeModals()"></button>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            (click)="closeModals()"
+          ></button>
         </div>
         <div class="modal-body text-center py-4">
           <i class="fas fa-ban text-danger fa-3x mb-3"></i>
           <h6 class="mb-3">A exclusão de empresas não é permitida.</h6>
           <div class="alert alert-info" role="alert">
             <i class="fas fa-info-circle me-2"></i>
-            Caso precise desativar uma empresa, use os controles administrativos apropriados.
+            Caso precise desativar uma empresa, use os controles administrativos
+            apropriados.
           </div>
         </div>
         <div class="modal-footer border-0 justify-content-center">
-          <button type="button" class="btn btn-outline-secondary px-4" (click)="closeModals()">
+          <button
+            type="button"
+            class="btn btn-outline-secondary px-4"
+            (click)="closeModals()"
+          >
             <i class="fas fa-times me-1"></i>
             Fechar
           </button>
@@ -87,23 +129,74 @@
               <th scope="col">#</th>
               <th scope="col" (click)="sortBy('code')" style="cursor: pointer">
                 Código
-                <i *ngIf="sortColumn === 'code'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'code'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
-              <th scope="col" (click)="sortBy('companyName')" style="cursor: pointer">
+              <th
+                scope="col"
+                (click)="sortBy('companyName')"
+                style="cursor: pointer"
+              >
                 Nome da Empresa
-                <i *ngIf="sortColumn === 'companyName'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'companyName'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
-              <th scope="col" (click)="sortBy('address')" style="cursor: pointer">
+              <th
+                scope="col"
+                (click)="sortBy('address')"
+                style="cursor: pointer"
+              >
                 Endereço
-                <i *ngIf="sortColumn === 'address'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'address'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
-              <th scope="col" (click)="sortBy('paymentStatus')" style="cursor: pointer">
+              <th
+                scope="col"
+                (click)="sortBy('paymentStatus')"
+                style="cursor: pointer"
+              >
                 Status Pagamento
-                <i *ngIf="sortColumn === 'paymentStatus'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'paymentStatus'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
-              <th scope="col" (click)="sortBy('isActive')" style="cursor: pointer">
+              <th
+                scope="col"
+                (click)="sortBy('isActive')"
+                style="cursor: pointer"
+              >
                 Status
-                <i *ngIf="sortColumn === 'isActive'" class="fas" [ngClass]="{'fa-arrow-up': sortDirection==='asc', 'fa-arrow-down': sortDirection==='desc'}"></i>
+                <i
+                  *ngIf="sortColumn === 'isActive'"
+                  class="fas"
+                  [ngClass]="{
+                    'fa-arrow-up': sortDirection === 'asc',
+                    'fa-arrow-down': sortDirection === 'desc'
+                  }"
+                ></i>
               </th>
               <th scope="col">Ações</th>
             </tr>
@@ -119,13 +212,18 @@
               </td>
               <td>{{ tenant.address }}</td>
               <td>
-                <span class="badge" [ngClass]="{
-                  'bg-success': tenant.paymentStatus === PaymentStatus.PAID,
-                  'bg-warning': tenant.paymentStatus === PaymentStatus.PENDING,
-                  'bg-danger': tenant.paymentStatus === PaymentStatus.OVERDUE,
-                  'bg-secondary': tenant.paymentStatus === PaymentStatus.CANCELLED,
-                  'bg-info': tenant.paymentStatus === PaymentStatus.UNPAID
-                }">
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-success': tenant.paymentStatus === PaymentStatus.PAID,
+                    'bg-warning':
+                      tenant.paymentStatus === PaymentStatus.PENDING,
+                    'bg-danger': tenant.paymentStatus === PaymentStatus.OVERDUE,
+                    'bg-secondary':
+                      tenant.paymentStatus === PaymentStatus.CANCELLED,
+                    'bg-info': tenant.paymentStatus === PaymentStatus.UNPAID
+                  }"
+                >
                   {{ paymentStatusLabels[tenant.paymentStatus] }}
                 </span>
               </td>
@@ -142,19 +240,22 @@
                   <button
                     class="btn btn-outline-primary btn-sm action-btn"
                     (click)="viewTenant(tenant.id)"
-                    title="Visualizar">
+                    title="Visualizar"
+                  >
                     <i class="fas fa-eye"></i>
                   </button>
                   <button
                     class="btn btn-outline-warning btn-sm action-btn"
                     (click)="editTenant(tenant.id)"
-                    title="Editar">
+                    title="Editar"
+                  >
                     <i class="fas fa-edit"></i>
                   </button>
                   <button
                     class="btn btn-outline-danger btn-sm action-btn"
                     title="Exclusão desabilitada"
-                    disabled>
+                    disabled
+                  >
                     <i class="fas fa-ban"></i>
                   </button>
                 </div>
@@ -167,9 +268,14 @@
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!loading && !error && tenants().length === 0" class="text-center py-5">
+  <div
+    *ngIf="!loading && !error && tenants().length === 0"
+    class="text-center py-5"
+  >
     <i class="fas fa-building fa-3x text-muted mb-3"></i>
     <h5 class="text-muted">Nenhuma empresa cadastrada</h5>
-    <p class="text-muted">Clique no menu lateral para cadastrar uma nova empresa.</p>
+    <p class="text-muted">
+      Clique no menu lateral para cadastrar uma nova empresa.
+    </p>
   </div>
 </div>
