@@ -27,6 +27,7 @@ export class UsersListComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
   loggedUserId: string = '';
   isAdmin: boolean = false;
+  selectedRoleFilter: string = ''; // Filtro por tipo de usuário
 
   // Estado para modais de confirmação
   showEditModal = false;
@@ -115,6 +116,51 @@ export class UsersListComponent implements OnInit {
     });
 
     this.users.set(sorted);
+  }
+
+  filterByRole(role: string): void {
+    this.selectedRoleFilter = role;
+  }
+
+  getFilteredUsers(): ResponseUserDto[] {
+    let filtered = this.users();
+
+    if (this.selectedRoleFilter) {
+      filtered = filtered.filter((u) => {
+        const userRole = String(u.role).toUpperCase();
+        return userRole.includes(this.selectedRoleFilter.toUpperCase());
+      });
+    }
+
+    return filtered;
+  }
+
+  isUserUnlinked(user: ResponseUserDto): boolean {
+    return !!(user as any).isUnlinked;
+  }
+
+  isUserInactiveTemporary(user: ResponseUserDto): boolean {
+    return !!(user as any).isInactiveTemporary;
+  }
+
+  getUserStatusClass(user: ResponseUserDto): string {
+    if (user.isActive) {
+      return 'bg-success';
+    } else if (this.isUserInactiveTemporary(user)) {
+      return 'bg-warning';
+    } else {
+      return 'bg-danger';
+    }
+  }
+
+  getUserStatusText(user: ResponseUserDto): string {
+    if (user.isActive) {
+      return 'Ativo';
+    } else if (this.isUserInactiveTemporary(user)) {
+      return 'Inativo Temporário';
+    } else {
+      return 'Inativo';
+    }
   }
 
   viewUser(id: string): void {

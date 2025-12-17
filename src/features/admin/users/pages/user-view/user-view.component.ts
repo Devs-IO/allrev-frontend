@@ -49,6 +49,7 @@ export class UserViewComponent implements OnInit {
   // Dados Específicos por Perfil
   functionalities: AssistantFunctionality[] = []; // Para Gestor ver tarefas
   userTenants: TenantLink[] = []; // Para Admin ver vínculos
+  relatedUsers: any[] = []; // Para Admin ver usuários relacionados (assistentes/gestores)
 
   constructor(
     private route: ActivatedRoute,
@@ -85,9 +86,14 @@ export class UserViewComponent implements OnInit {
 
         // LÓGICA DE DADOS POR PERFIL
 
-        // Se for ADMIN, o backend (findByIdSmart) retorna 'tenants'
+        // Se for ADMIN, o backend (findById) retorna 'tenants' e 'relatedUsers'
         if (this.isAdmin && Array.isArray(data.tenants)) {
           this.userTenants = data.tenants;
+        }
+
+        // Se admin está vendo um user, carregar usuários relacionados
+        if (this.isAdmin && Array.isArray(data.relatedUsers)) {
+          this.relatedUsers = data.relatedUsers;
         }
 
         // Se for GESTOR, o backend retorna 'functionalities' (tarefas do assistente)

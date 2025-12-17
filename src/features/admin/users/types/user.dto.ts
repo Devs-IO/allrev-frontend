@@ -12,6 +12,7 @@ export interface CreateUserDto {
   isActive: boolean;
   tenant?: any; // Ajuste conforme CreateTenantDto
   tenantId?: string;
+  observation?: string; // Observação do gestor sobre o assistente
 }
 
 export interface ResponseUserDto {
@@ -26,6 +27,7 @@ export interface ResponseUserDto {
   isActive: boolean;
   tenantId: string;
   createdAt: Date;
+  observation?: string; // Observação do gestor sobre o assistente (para manager view)
 
   // Dados do tenant agrupados
   tenant?: {

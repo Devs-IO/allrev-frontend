@@ -158,6 +158,140 @@
           </div>
         </div>
       </div>
+
+      <div class="col-12 mb-4" *ngIf="isAdmin && relatedUsers?.length">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-users me-2"></i>
+              {{
+                user.role === "MANAGER_REVIEWERS"
+                  ? "Assistentes Vinculados"
+                  : "Gestores & Tenants"
+              }}
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4" *ngIf="user.role === 'MANAGER_REVIEWERS'">
+                      Nome do Assistente
+                    </th>
+                    <th class="ps-4" *ngIf="user.role !== 'MANAGER_REVIEWERS'">
+                      Empresa (Tenant)
+                    </th>
+                    <th *ngIf="user.role === 'MANAGER_REVIEWERS'">Email</th>
+                    <th *ngIf="user.role === 'MANAGER_REVIEWERS'">Telefone</th>
+                    <th *ngIf="user.role !== 'MANAGER_REVIEWERS'">Papel</th>
+                    <th>Status do Vínculo</th>
+                    <th>Vinculado em</th>
+                    <th class="text-end pe-4">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let related of relatedUsers"
+                    [ngClass]="{
+                      'table-secondary opacity-75':
+                        related.isUnlinked || related.isActive === false
+                    }"
+                  >
+                    <!-- Se é Gestor: mostrar Assistentes -->
+                    <ng-container *ngIf="user.role === 'MANAGER_REVIEWERS'">
+                      <td class="ps-4 fw-medium">
+                        <i
+                          class="fas fa-user-circle me-2"
+                          [ngClass]="{
+                            'text-muted':
+                              related.isUnlinked || related.isActive === false,
+                            'text-info':
+                              !related.isUnlinked && related.isActive !== false
+                          }"
+                        ></i>
+                        {{ related.name }}
+                        <span
+                          *ngIf="related.isUnlinked"
+                          class="badge bg-secondary ms-2 small"
+                          >Desvinculado</span
+                        >
+                        <span
+                          *ngIf="
+                            !related.isUnlinked && related.isActive === false
+                          "
+                          class="badge bg-warning ms-2 small"
+                          >Inativo Temporário</span
+                        >
+                      </td>
+                      <td>{{ related.email }}</td>
+                      <td class="text-muted small">
+                        <i class="fas fa-phone me-1"></i>
+                        {{ related.phone || "-" }}
+                      </td>
+                    </ng-container>
+                    <!-- Se é Assistente: mostrar Gestores/Tenants -->
+                    <ng-container *ngIf="user.role !== 'MANAGER_REVIEWERS'">
+                      <td class="ps-4 fw-medium">
+                        <i class="fas fa-building me-2 text-success"></i>
+                        {{ related.companyName }}
+                      </td>
+                      <td>
+                        <span
+                          class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+                        >
+                          {{ translateRole(related.role) }}
+                        </span>
+                      </td>
+                    </ng-container>
+                    <td>
+                      <span
+                        *ngIf="
+                          !related.isUnlinked && related.isActive !== false
+                        "
+                        class="badge bg-success-subtle text-success border border-success"
+                      >
+                        <i class="fas fa-check-circle me-1"></i>
+                        Ativo
+                      </span>
+                      <span
+                        *ngIf="
+                          !related.isUnlinked && related.isActive === false
+                        "
+                        class="badge bg-warning-subtle text-warning border border-warning"
+                      >
+                        <i class="fas fa-pause-circle me-1"></i>
+                        Inativo Temporário
+                      </span>
+                      <span
+                        *ngIf="related.isUnlinked"
+                        class="badge bg-secondary-subtle text-secondary border border-secondary"
+                      >
+                        <i class="fas fa-unlink me-1"></i>
+                        Desvinculado em
+                        {{ related.unlinkedAt | date : "shortDate" }}
+                      </span>
+                    </td>
+                    <td class="text-muted small">
+                      {{ related.linkedAt | date : "shortDate" }}
+                    </td>
+                    <td class="text-end pe-4">
+                      <button
+                        class="btn btn-sm btn-outline-info"
+                        *ngIf="user.role === 'MANAGER_REVIEWERS'"
+                        [routerLink]="['/users', related.id]"
+                        title="Visualizar assistente"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </ng-container>
 
     <ng-template #managerView>
@@ -189,6 +323,13 @@
                   <li class="list-group-item px-0 border-0">
                     <i class="fas fa-map-marker-alt text-muted me-2"></i>
                     {{ user.address || "Não informado" }}
+                  </li>
+                  <li class="list-group-item px-0 border-0">
+                    <i class="fas fa-sticky-note text-muted me-2"></i>
+                    <span class="text-muted small">Observação:</span>
+                    <p class="mb-0 small">
+                      {{ user.observation || "Nenhuma" }}
+                    </p>
                   </li>
                 </ul>
 

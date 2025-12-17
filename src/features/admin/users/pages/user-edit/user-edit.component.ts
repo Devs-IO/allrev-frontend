@@ -97,6 +97,7 @@ export class UserEditComponent implements OnInit {
       tenantId: [{ value: '', disabled: true }],
       isActive: [true],
       photo: [''],
+      observation: [''],
     });
   }
 
@@ -122,10 +123,7 @@ export class UserEditComponent implements OnInit {
           this.userForm.get('phone')?.disable(); // Nem telefone
           this.userForm.get('address')?.disable();
           this.userForm.get('role')?.disable();
-
-          // O que o gestor PODE fazer?
-          // Geralmente apenas visualizar ou ativar/desativar o vínculo no contexto dele.
-          // Se o gestor não pode editar NADA, deveríamos esconder o botão de editar na View.
+          // Gestor PODE editar observation e isActive (status temporário)
         }
       }
     });
@@ -156,6 +154,7 @@ export class UserEditComponent implements OnInit {
       address: user.address,
       isActive: user.isActive,
       photo: user.photo,
+      observation: user.observation || '',
       tenantId: user.tenant?.id || user.tenantId, // Suporta tanto objeto quanto ID
     });
 
@@ -199,13 +198,22 @@ export class UserEditComponent implements OnInit {
 
     const formValue = this.userForm.getRawValue();
 
-    // Filtra apenas campos alterados se desejar, ou envia tudo (PUT costuma ser tudo)
-    // Aqui enviamos o objeto completo ajustado para o DTO
-    const updateUserDto: Partial<CreateUserDto> = {
-      ...formValue,
-      // Garante que tenantId vá correto se for admin editando
-      tenantId: this.isAdmin ? formValue.tenantId : this.user?.tenantId,
-    };
+    // Filtra campos baseado no perfil
+    let updateUserDto: Partial<CreateUserDto>;
+
+    if (this.isAdmin) {
+      // Admin pode editar tudo
+      updateUserDto = {
+        ...formValue,
+        tenantId: formValue.tenantId,
+      };
+    } else {
+      // Gestor pode editar apenas observation e isActive
+      updateUserDto = {
+        observation: formValue.observation,
+        isActive: formValue.isActive,
+      };
+    }
 
     if (this.user?.id) {
       this.usersService.updateUser(this.user.id, updateUserDto).subscribe({

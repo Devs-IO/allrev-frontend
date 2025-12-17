@@ -1,7 +1,21 @@
 <div class="container my-4">
-  <h2 class="text-primary">
-    <i class="fas fa-user-edit"></i> Editar Usuário
-  </h2>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary mb-0">
+      <i class="fas fa-user-edit"></i> Editar Usuário
+    </h2>
+
+    <!-- Status do Assistente (Gestor) - Topo -->
+    <div *ngIf="!isAdmin && !loading" class="d-flex align-items-center gap-2">
+      <span
+        class="badge"
+        [ngClass]="
+          userForm.get('isActive')?.value ? 'bg-success' : 'bg-warning'
+        "
+      >
+        {{ userForm.get("isActive")?.value ? "Ativo" : "Inativo Temporário" }}
+      </span>
+    </div>
+  </div>
 
   <!-- Error Alert -->
   <div *ngIf="error" class="alert alert-danger">
@@ -18,12 +32,18 @@
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
     </div>
-    <p class="mt-2">{{ loading ? 'Carregando dados...' : 'Salvando alterações...' }}</p>
+    <p class="mt-2">
+      {{ loading ? "Carregando dados..." : "Salvando alterações..." }}
+    </p>
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading && userForm" [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
-
+  <form
+    *ngIf="!loading && userForm"
+    [formGroup]="userForm"
+    (ngSubmit)="onSubmit()"
+    class="user-form"
+  >
     <!-- Dados Pessoais -->
     <div class="card mb-4">
       <div class="card-header">
@@ -57,7 +77,7 @@
               id="createdAt"
               type="text"
               class="form-control"
-              [value]="user?.createdAt | date:'dd/MM/yyyy HH:mm'"
+              [value]="user?.createdAt | date : 'dd/MM/yyyy HH:mm'"
               readonly
               disabled
             />
@@ -78,7 +98,7 @@
               maxlength="100"
             />
             <div *ngIf="getFieldError('name')" class="invalid-feedback">
-              {{ getFieldError('name') }}
+              {{ getFieldError("name") }}
             </div>
           </div>
 
@@ -98,7 +118,7 @@
               readonly
             />
             <div *ngIf="getFieldError('email')" class="invalid-feedback">
-              {{ getFieldError('email') }}
+              {{ getFieldError("email") }}
             </div>
           </div>
 
@@ -118,12 +138,12 @@
               placeholder="(11) 99999-9999"
             />
             <div *ngIf="getFieldError('phone')" class="invalid-feedback">
-              {{ getFieldError('phone') }}
+              {{ getFieldError("phone") }}
             </div>
           </div>
 
-          <!-- Status Ativo -->
-          <div class="col-md-6 mb-3">
+          <!-- Status Ativo (apenas Admin) -->
+          <div class="col-md-6 mb-3" *ngIf="isAdmin">
             <label class="form-label">
               <i class="fas fa-toggle-on"></i> Status do Usuário
             </label>
@@ -136,7 +156,7 @@
                 [disabled]="isEditingAdminUser"
               />
               <label class="form-check-label" for="isActive">
-                {{ userForm.get('isActive')?.value ? 'Ativo' : 'Inativo' }}
+                {{ userForm.get("isActive")?.value ? "Ativo" : "Inativo" }}
               </label>
             </div>
           </div>
@@ -168,7 +188,7 @@
               </option>
             </select>
             <div *ngIf="getFieldError('role')" class="invalid-feedback">
-              {{ getFieldError('role') }}
+              {{ getFieldError("role") }}
             </div>
           </div>
 
@@ -190,7 +210,7 @@
                 </option>
               </select>
               <div *ngIf="getFieldError('tenantId')" class="invalid-feedback">
-                {{ getFieldError('tenantId') }}
+                {{ getFieldError("tenantId") }}
               </div>
             </ng-container>
             <ng-template #tenantReadonly>
@@ -204,72 +224,51 @@
               />
             </ng-template>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Alterar Senha (Opcional) -->
-    <div class="card mb-4">
-      <div class="card-header">
-        <h5><i class="fas fa-key"></i> Alterar Senha (Opcional)</h5>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label for="currentPassword" class="form-label">
-              <i class="fas fa-shield-alt"></i> Senha Atual
+          <!-- Observação (apenas para Gestor) -->
+          <div class="col-md-12 mb-3" *ngIf="!isAdmin">
+            <label for="observation" class="form-label">
+              <i class="fas fa-sticky-note"></i> Observação do Gestor
             </label>
-            <input
-              id="currentPassword"
-              type="password"
+            <textarea
+              id="observation"
               class="form-control"
-              [class.is-invalid]="isFieldInvalid('currentPassword')"
-              formControlName="currentPassword"
-              placeholder="Digite sua senha atual"
-            />
-            <div *ngIf="getFieldError('currentPassword')" class="invalid-feedback">
-              {{ getFieldError('currentPassword') }}
-            </div>
+              formControlName="observation"
+              placeholder="Adicione observações sobre este assistente..."
+              rows="3"
+              maxlength="500"
+            ></textarea>
             <small class="form-text text-muted">
-              Obrigatório para alterar a senha
+              Máximo 500 caracteres. Esta observação é específica da sua relação
+              com este assistente.
             </small>
           </div>
-          <div class="col-md-6 mb-3">
-            <label for="password" class="form-label">
-              <i class="fas fa-lock"></i> Nova Senha
+
+          <!-- Status Temporário (apenas para Gestor) -->
+          <div class="col-md-12 mb-3" *ngIf="!isAdmin">
+            <label class="form-label">
+              <i class="fas fa-pause-circle"></i> Alterar Status (Neste Tenant)
             </label>
-            <div class="input-group">
+            <div class="form-check form-switch">
               <input
-                id="password"
-                type="password"
-                class="form-control"
-                [class.is-invalid]="isFieldInvalid('password')"
-                formControlName="password"
-                placeholder="Digite a nova senha (opcional)"
-                minlength="6"
+                class="form-check-input"
+                type="checkbox"
+                formControlName="isActive"
+                id="isActiveForTenant"
               />
+              <label class="form-check-label" for="isActiveForTenant">
+                {{
+                  userForm.get("isActive")?.value
+                    ? "Ativo para este tenant"
+                    : "Inativo temporário"
+                }}
+              </label>
             </div>
-            <div *ngIf="getFieldError('password')" class="invalid-feedback">
-              {{ getFieldError('password') }}
-            </div>
-            <small class="form-text text-muted">
-              Deixe em branco para manter a senha atual
+            <small class="form-text text-muted d-block mt-2">
+              <i class="fas fa-info-circle"></i>
+              Você pode desativar temporariamente este assistente sem excluir o
+              vínculo. Ele será reativado quando você alterar o status de volta.
             </small>
-          </div>          <div class="col-md-6 mb-3">
-            <label for="confirmPassword" class="form-label">
-              <i class="fas fa-lock"></i> Confirmar Nova Senha
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              class="form-control"
-              [class.is-invalid]="isFieldInvalid('confirmPassword')"
-              formControlName="confirmPassword"
-              placeholder="Confirme a nova senha"
-            />
-            <div *ngIf="getFieldError('confirmPassword')" class="invalid-feedback">
-              {{ getFieldError('confirmPassword') }}
-            </div>
           </div>
         </div>
       </div>
@@ -293,7 +292,7 @@
       >
         <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
         <i class="fas fa-save" *ngIf="!loading"></i>
-        {{ loading ? 'Salvando...' : 'Salvar Alterações' }}
+        {{ loading ? "Salvando..." : "Salvar Alterações" }}
       </button>
     </div>
   </form>
