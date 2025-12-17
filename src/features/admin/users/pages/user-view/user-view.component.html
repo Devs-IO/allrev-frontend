@@ -1,5 +1,4 @@
 <div class="container my-4">
-  <!-- Loading -->
   <div *ngIf="loading" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
@@ -7,241 +6,154 @@
     <p class="mt-2">Carregando dados do usuário...</p>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error" class="alert alert-danger" role="alert">
+  <div *ngIf="error" class="alert alert-danger shadow-sm" role="alert">
     <i class="fas fa-exclamation-triangle me-2"></i>
     {{ error }}
+    <div class="mt-2">
+      <button class="btn btn-sm btn-outline-danger" (click)="goBack()">
+        Voltar para Lista
+      </button>
+    </div>
   </div>
 
-  <!-- User Details -->
-  <div *ngIf="!loading && !error && user" class="row">
-    <!-- Header -->
+  <div
+    *ngIf="!loading && !error && user"
+    class="row animate__animated animate__fadeIn"
+  >
     <div class="col-12 mb-4">
       <div class="d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
+          <div
+            class="avatar-circle bg-primary-subtle text-primary me-3 fw-bold fs-4 d-flex align-items-center justify-content-center"
+            style="width: 56px; height: 56px; border-radius: 50%"
+          >
+            {{ user.name?.charAt(0) | uppercase }}
+          </div>
           <div>
-            <h1 class="mb-1 text-primary">
-              <i class="fas fa-user me-2"></i>
+            <h1 class="h3 mb-0 text-primary fw-bold">
               {{ user.name }}
             </h1>
             <p class="text-muted mb-0">
-              <i class="fas fa-envelope me-1"></i>
-              {{ user.email }}
+              <i class="fas fa-envelope me-1"></i> {{ user.email }}
             </p>
           </div>
         </div>
+
+        <button
+          *ngIf="isAdmin"
+          class="btn btn-outline-warning"
+          (click)="editUser()"
+        >
+          <i class="fas fa-pencil-alt me-2"></i> Editar Dados
+        </button>
       </div>
     </div>
 
-    <ng-container *ngIf="!viewingAsManager; else managerView">
-      <!-- layout completo admin -->
-      <!-- Main Content -->
-      <div class="col-12">
-        <div class="row g-4">
-          <!-- Informações Pessoais -->
-          <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                  <i class="fas fa-user-circle me-2"></i>
-                  Informações Pessoais
-                </h5>
+    <ng-container *ngIf="!isManager; else managerView">
+      <div class="col-lg-8 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 text-primary">
+              <i class="fas fa-id-card me-2"></i> Informações Pessoais
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="small text-muted text-uppercase fw-bold"
+                  >Telefone</label
+                >
+                <p class="mb-0 fs-5">{{ user.phone || "Não informado" }}</p>
               </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-user text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted">Nome Completo:</label>
-                        <p class="mb-0 fs-5">{{ user.name }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-envelope text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted">Email:</label>
-                        <p class="mb-0">{{ user.email }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-phone text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted">Telefone:</label>
-                        <p class="mb-0">{{ user.phone }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-user-tag text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted">Função:</label>
-                        <p class="mb-0">{{ translateRole(user.role) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12" *ngIf="user.address">
-                    <div class="info-item">
-                      <i
-                        class="fas fa-map-marker-alt text-primary fs-4 me-3"
-                      ></i>
-                      <div>
-                        <label class="fw-bold text-muted">Endereço:</label>
-                        <p class="mb-0">{{ user.address }}</p>
-                      </div>
-                    </div>
-                  </div>
+              <div class="col-md-6">
+                <label class="small text-muted text-uppercase fw-bold"
+                  >Endereço</label
+                >
+                <p class="mb-0 fs-5">{{ user.address || "Não informado" }}</p>
+              </div>
+              <div class="col-md-6">
+                <label class="small text-muted text-uppercase fw-bold"
+                  >Status Global</label
+                >
+                <div>
+                  <span
+                    class="badge"
+                    [ngClass]="user.isActive ? 'bg-success' : 'bg-danger'"
+                  >
+                    {{ user.isActive ? "Ativo" : "Bloqueado" }}
+                  </span>
                 </div>
+              </div>
+              <div class="col-md-6">
+                <label class="small text-muted text-uppercase fw-bold"
+                  >Data de Cadastro</label
+                >
+                <p class="mb-0">
+                  {{ user.createdAt | date : "dd/MM/yyyy HH:mm" }}
+                </p>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Informações da Empresa -->
-          <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                  <i class="fas fa-building me-2"></i>
-                  Informações da Empresa
-                </h5>
-              </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-building text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Nome da Empresa:</label
-                        >
-                        <p class="mb-0">
-                          {{ user.tenant?.companyName || "N/A" }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-code text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted">Código:</label>
-                        <p class="mb-0">{{ user.tenant?.code || "N/A" }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-credit-card text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Status do Pagamento:</label
-                        >
-                        <p class="mb-0">
-                          {{ user.tenant?.paymentStatus || "N/A" }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i
-                        class="fas fa-money-bill-wave text-primary fs-4 me-3"
-                      ></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Método de Pagamento:</label
-                        >
-                        <p class="mb-0">
-                          {{ user.tenant?.paymentMethod || "N/A" }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <div class="info-item">
-                      <i class="fas fa-calendar-alt text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Frequência de Pagamento:</label
-                        >
-                        <p class="mb-0">
-                          {{ user.tenant?.paymentFrequency || "N/A" }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div class="col-12 mb-4">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-dark text-white py-3">
+            <h5 class="mb-0">
+              <i class="fas fa-network-wired me-2"></i> Vínculos e Acessos
+              (Multi-Tenant)
+            </h5>
           </div>
-
-          <!-- Status e Datas -->
-          <div class="col-12">
-            <div class="card shadow-sm">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                  <i class="fas fa-chart-line me-2"></i>
-                  Status e Informações do Sistema
-                </h5>
-              </div>
-              <div class="card-body">
-                <div class="row g-3">
-                  <div class="col-md-4">
-                    <div class="info-item">
-                      <i
-                        class="fas fa-toggle-on text-primary fs-4 me-3"
-                        *ngIf="user.isActive"
-                      ></i>
-                      <i
-                        class="fas fa-toggle-off text-danger fs-4 me-3"
-                        *ngIf="!user.isActive"
-                      ></i>
-                      <div>
-                        <label class="fw-bold text-muted">Status:</label>
-                        <p class="mb-0">
-                          <span
-                            class="badge"
-                            [class]="user.isActive ? 'bg-success' : 'bg-danger'"
-                          >
-                            {{ user.isActive ? "Ativo" : "Inativo" }}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="info-item">
-                      <i class="fas fa-user-tag text-primary fs-4 me-3"></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Função do Usuário:</label
-                        >
-                        <p class="mb-0">{{ translateRole(user.role) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="info-item">
-                      <i
-                        class="fas fa-calendar-check text-primary fs-4 me-3"
-                      ></i>
-                      <div>
-                        <label class="fw-bold text-muted"
-                          >Vencimento do Pagamento:</label
-                        >
-                        <p class="mb-0">
-                          {{ user.tenant?.paymentDueDate || "N/A" }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-4">Empresa (Tenant)</th>
+                    <th>Papel (Role)</th>
+                    <th>Desde</th>
+                    <th class="text-end pe-4">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let t of userTenants">
+                    <td class="ps-4 fw-medium">{{ t.companyName }}</td>
+                    <td>
+                      <span
+                        class="badge rounded-pill border"
+                        [ngClass]="{
+                          'bg-warning-subtle text-warning-emphasis border-warning-subtle':
+                            t.role === 'MANAGER_REVIEWERS' ||
+                            t.role === 'manager_reviewers',
+                          'bg-info-subtle text-info-emphasis border-info-subtle':
+                            t.role === 'ASSISTANT_REVIEWERS' ||
+                            t.role === 'assistant_reviewers'
+                        }"
+                      >
+                        {{ translateRole(t.role) }}
+                      </span>
+                    </td>
+                    <td class="text-muted">
+                      {{ t.linkedAt | date : "shortDate" }}
+                    </td>
+                    <td class="text-end pe-4">
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        disabled
+                        title="Gestão de vínculo"
+                      >
+                        <i class="fas fa-unlink"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="!userTenants?.length">
+                    <td colspan="4" class="text-center py-4 text-muted">
+                      Nenhum vínculo ativo encontrado.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -249,142 +161,127 @@
     </ng-container>
 
     <ng-template #managerView>
-      <!-- Layout reduzido para gerente visualizando assistente -->
       <div class="col-12">
         <div class="row g-4">
-          <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                  <i class="fas fa-user-circle me-2"></i>
-                  Dados do Assistente
-                </h5>
-              </div>
-              <div class="card-body">
-                <div class="mb-3"><strong>Email:</strong> {{ user.email }}</div>
+          <div class="col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+              <div class="card-body text-center py-4">
                 <div class="mb-3">
-                  <strong>Telefone:</strong> {{ user.phone || "-" }}
-                </div>
-                <div class="mb-3">
-                  <strong>Status:</strong>
-                  <span
-                    class="badge"
-                    [class]="user.isActive ? 'bg-success' : 'bg-danger'"
+                  <div
+                    class="avatar-circle bg-light text-primary mx-auto fs-1 d-flex align-items-center justify-content-center"
+                    style="width: 80px; height: 80px; border-radius: 50%"
                   >
-                    {{ user.isActive ? "Ativo" : "Inativo" }}
-                  </span>
+                    <i class="fas fa-user-tie"></i>
+                  </div>
                 </div>
-                <div class="mb-3">
-                  <strong>Função:</strong> Assistente de Revisores
+                <h5 class="card-title text-primary mb-1">Dados de Contato</h5>
+                <p class="text-muted small mb-3">Assistente da sua equipe</p>
+
+                <ul class="list-group list-group-flush text-start">
+                  <li class="list-group-item px-0 border-0">
+                    <i class="fas fa-envelope text-muted me-2"></i>
+                    {{ user.email }}
+                  </li>
+                  <li class="list-group-item px-0 border-0">
+                    <i class="fas fa-phone text-muted me-2"></i>
+                    {{ user.phone || "Não informado" }}
+                  </li>
+                  <li class="list-group-item px-0 border-0">
+                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                    {{ user.address || "Não informado" }}
+                  </li>
+                </ul>
+
+                <div class="mt-3 alert alert-info small text-start">
+                  <i class="fas fa-info-circle me-1"></i>
+                  Para remover este assistente da sua equipe, utilize a opção
+                  "Excluir" na listagem anterior.
                 </div>
               </div>
             </div>
           </div>
-          <div class="col-lg-6">
-            <div class="card h-100 shadow-sm">
+
+          <div class="col-lg-8">
+            <div class="card h-100 shadow-sm border-0">
               <div
-                class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+                class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center"
               >
-                <h5 class="mb-0">
-                  <i class="fas fa-tasks me-2"></i>
-                  Funcionalidades Atribuídas
+                <h5 class="mb-0 text-primary">
+                  <i class="fas fa-tasks me-2"></i> Tarefas Atribuídas
                 </h5>
+                <span class="badge bg-light text-dark border"
+                  >{{ functionalities.length }} tarefas</span
+                >
               </div>
-              <div
-                class="card-body"
-                *ngIf="functionalities.length; else noFunc"
-              >
-                <div class="list-group small">
+
+              <div class="card-body p-0">
+                <div
+                  *ngIf="functionalities.length; else noTasks"
+                  class="list-group list-group-flush"
+                >
                   <div
                     *ngFor="let f of functionalities"
-                    class="list-group-item d-flex flex-column"
+                    class="list-group-item p-3"
                   >
-                    <div class="d-flex justify-content-between">
-                      <strong>{{ f.functionalityName }}</strong>
+                    <div
+                      class="d-flex justify-content-between align-items-start mb-2"
+                    >
+                      <div>
+                        <h6 class="mb-0 fw-bold text-dark">
+                          {{ f.functionalityName }}
+                        </h6>
+                        <small class="text-muted"
+                          >Ordem: #{{ f.orderNumber || "N/A" }}</small
+                        >
+                      </div>
                       <span
-                        class="badge"
-                        [class]="
-                          f.delivered ? 'bg-primary' : 'bg-warning text-dark'
+                        class="badge rounded-pill"
+                        [ngClass]="
+                          f.delivered ? 'bg-success' : 'bg-warning text-dark'
                         "
                       >
                         {{ f.delivered ? "Entregue" : "Pendente" }}
                       </span>
                     </div>
-                    <div class="text-muted">
-                      {{ f.functionalityDescription || f.description || "-" }}
-                    </div>
-                    <div class="mt-1">
-                      <small
-                        ><i class="fas fa-calendar me-1"></i> Prazo:
-                        {{ f.assistantDeadline || "-" }}</small
-                      >
+                    <p class="mb-2 text-secondary small">
+                      {{
+                        f.functionalityDescription ||
+                          f.description ||
+                          "Sem descrição."
+                      }}
+                    </p>
+                    <div class="d-flex align-items-center text-muted small">
+                      <span class="me-3">
+                        <i class="far fa-calendar me-1"></i> Prazo:
+                        {{ f.assistantDeadline | date : "shortDate" }}
+                      </span>
+                      <span *ngIf="f.assistantAmount">
+                        <i class="fas fa-dollar-sign me-1"></i> Valor:
+                        {{ f.assistantAmount | currency : "BRL" }}
+                      </span>
                     </div>
                   </div>
                 </div>
+
+                <ng-template #noTasks>
+                  <div class="text-center py-5 text-muted">
+                    <i class="fas fa-clipboard-check fs-1 mb-3 opacity-25"></i>
+                    <p class="mb-0">
+                      Nenhuma tarefa pendente para este assistente.
+                    </p>
+                  </div>
+                </ng-template>
               </div>
-              <ng-template #noFunc>
-                <p class="text-muted mb-0">Nenhuma funcionalidade atribuída.</p>
-              </ng-template>
             </div>
           </div>
         </div>
       </div>
     </ng-template>
 
-    <div class="d-flex justify-content-end mt-4">
-      <button class="btn btn-secondary" (click)="goBack()">
-        <i class="bi bi-arrow-left-circle"></i> Voltar
+    <div class="col-12 mt-4 d-flex justify-content-end">
+      <button class="btn btn-secondary px-4" (click)="goBack()">
+        <i class="fas fa-arrow-left me-2"></i> Voltar
       </button>
     </div>
   </div>
-
-  <div class="col-12 mb-4" *ngIf="isAdmin && user.tenants?.length">
-    <div class="card shadow-sm">
-      <div class="card-header bg-dark text-white">
-        <h5 class="mb-0">
-          <i class="fas fa-network-wired me-2"></i>
-          Vínculos e Acessos (Visão Admin)
-        </h5>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-striped mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Empresa (Tenant)</th>
-                <th>Papel (Role)</th>
-                <th>Desde</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let t of user.tenants">
-                <td>{{ t.companyName }}</td>
-                <td>
-                  <span
-                    class="badge"
-                    [class.bg-info]="t.role === 'ASSISTANT_REVIEWERS'"
-                    [class.bg-warning]="t.role === 'MANAGER_REVIEWERS'"
-                  >
-                    {{ translateRole(t.role) }}
-                  </span>
-                </td>
-                <td>{{ t.linkedAt | date : "shortDate" }}</td>
-                <td>
-                  <button
-                    class="btn btn-sm btn-outline-danger"
-                    title="Remover este vínculo"
-                  >
-                    <i class="fas fa-unlink"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <ng-template [ngIf]="viewingAsManager"> </ng-template>
 </div>

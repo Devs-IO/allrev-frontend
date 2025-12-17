@@ -172,7 +172,7 @@ export const routes: Routes = [
           ).then((m) => m.UserCreateComponent),
         title: 'Novo Usuário',
       },
-      // ✅ NOVA ROTA: Visualizar Usuário (Admin ou Gestor vendo assistente)
+      // Rota de visualização vem DEPOIS de create
       {
         path: 'users/:id',
         canActivate: [roleGuard],
@@ -217,7 +217,7 @@ export const routes: Routes = [
           ).then((m) => m.ClientsCreateComponent),
         title: 'Novo Cliente',
       },
-      // ✅ NOVA ROTA: Visualizar Cliente (Assistente também precisa ver detalhes)
+      // Rota de visualização vem DEPOIS de create
       {
         path: 'clients/:id',
         canActivate: [roleGuard],
@@ -292,7 +292,6 @@ export const routes: Routes = [
           ).then((m) => m.FunctionalitiesCreateComponent),
         title: 'Novo Serviço',
       },
-      // ✅ Adicionei visualização de Funcionalidade também (geralmente útil)
       {
         path: 'functionalities/:id',
         canActivate: [roleGuard],

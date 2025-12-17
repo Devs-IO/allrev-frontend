@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 // Services
 import { UsersService } from '../../services/users.service';
 import { AuthService } from '../../../../../app/core/services/auth.service';
 
-// Tipos
+// Tipos e Enums
 import { Role } from '../../../../../app/core/enum/roles.enum';
 
+// Interface para as tarefas (Visão do Gestor)
 interface AssistantFunctionality {
   assignmentId: string;
   orderNumber?: string;
@@ -21,22 +22,33 @@ interface AssistantFunctionality {
   description?: string;
 }
 
+// Interface para os vínculos (Visão do Admin)
+interface TenantLink {
+  tenantId: string;
+  companyName: string;
+  role: string;
+  linkedAt: string;
+}
+
 @Component({
   selector: 'app-user-view',
   templateUrl: './user-view.component.html',
   styleUrls: ['./user-view.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
 })
 export class UserViewComponent implements OnInit {
   user: any | null = null;
   loading = true;
   error: string | null = null;
 
-  // Controle de Permissão
+  // Controle de Permissão e Visualização
   isAdmin = false;
-  viewingAsManager = false;
-  functionalities: AssistantFunctionality[] = [];
+  isManager = false; // Padronizado com o HTML
+
+  // Dados Específicos por Perfil
+  functionalities: AssistantFunctionality[] = []; // Para Gestor ver tarefas
+  userTenants: TenantLink[] = []; // Para Admin ver vínculos
 
   constructor(
     private route: ActivatedRoute,
@@ -46,10 +58,12 @@ export class UserViewComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 1. Verifica quem está logado para definir permissões de visualização
+    // 1. Identifica o papel do usuário logado para ajustar a UI
     this.authService.currentUser$.subscribe((currentUser) => {
       if (currentUser) {
         this.isAdmin = currentUser.role === Role.ADMIN;
+        // Verifica se é Gestor (usado no *ngIf do HTML)
+        this.isManager = currentUser.role === Role.MANAGER_REVIEWERS;
       }
     });
 
@@ -64,24 +78,36 @@ export class UserViewComponent implements OnInit {
   }
 
   private loadUser(id: string): void {
+    this.loading = true;
     this.usersService.getUserById(id).subscribe({
       next: (data: any) => {
-        // Se for um assistente sendo visto por um gestor/admin, a API pode retornar funcionalidades
-        if (data.functionalities && Array.isArray(data.functionalities)) {
-          this.viewingAsManager = true;
+        this.user = data;
+
+        // LÓGICA DE DADOS POR PERFIL
+
+        // Se for ADMIN, o backend (findByIdSmart) retorna 'tenants'
+        if (this.isAdmin && Array.isArray(data.tenants)) {
+          this.userTenants = data.tenants;
+        }
+
+        // Se for GESTOR, o backend retorna 'functionalities' (tarefas do assistente)
+        // ou você pode extrair do payload se vier aninhado diferente
+        if (this.isManager && Array.isArray(data.functionalities)) {
           this.functionalities = data.functionalities;
         }
 
-        this.user = data;
         this.loading = false;
       },
       error: (err) => {
         console.error('Erro ao carregar usuário:', err);
         if (err.status === 403) {
-          this.error = 'Você não tem permissão para visualizar este usuário.';
-          setTimeout(() => this.router.navigate(['/users']), 2500);
+          this.error =
+            'Você não tem permissão para visualizar os detalhes deste usuário.';
+          setTimeout(() => this.goBack(), 3000);
+        } else if (err.status === 404) {
+          this.error = 'Usuário não encontrado.';
         } else {
-          this.error = 'Erro ao carregar dados do usuário.';
+          this.error = 'Erro interno ao carregar dados do usuário.';
         }
         this.loading = false;
       },
@@ -93,7 +119,8 @@ export class UserViewComponent implements OnInit {
   }
 
   editUser(): void {
-    if (this.user) {
+    // Apenas Admin pode editar dados globais (Nome, Email)
+    if (this.isAdmin && this.user) {
       this.router.navigate(['/users', this.user.id, 'edit']);
     }
   }
@@ -101,15 +128,19 @@ export class UserViewComponent implements OnInit {
   translateRole(role: string): string {
     switch (role) {
       case Role.ADMIN:
+      case 'ADMIN':
         return 'Administrador';
       case Role.MANAGER_REVIEWERS:
+      case 'MANAGER_REVIEWERS':
         return 'Gestor';
       case Role.CLIENT:
+      case 'CLIENT':
         return 'Cliente';
       case Role.ASSISTANT_REVIEWERS:
+      case 'ASSISTANT_REVIEWERS':
         return 'Assistente';
       default:
-        return role;
+        return role || 'Nenhum';
     }
   }
 }
