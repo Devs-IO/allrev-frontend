@@ -129,4 +129,8 @@ export class OrdersService {
   getDashboardSummary(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/dashboard/summary`);
   }
+
+  getAdminDashboard(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/dashboard/admin`);
+  }
 }

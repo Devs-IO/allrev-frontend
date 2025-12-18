@@ -164,17 +164,17 @@
             <td>
               <span
                 class="badge border"
-                [ngClass]="getStatusBadgeClass(order.paymentStatus)"
+                [ngClass]="getStatusBadgeClass(getComputedPaymentStatus(order))"
               >
-                {{ getStatusLabel(order.paymentStatus) }}
+                {{ getStatusLabel(getComputedPaymentStatus(order)) }}
               </span>
             </td>
             <td>
               <span
                 class="badge border"
-                [ngClass]="getStatusBadgeClass(order.workStatus)"
+                [ngClass]="getStatusBadgeClass(getComputedWorkStatus(order))"
               >
-                {{ getStatusLabel(order.workStatus) }}
+                {{ getStatusLabel(getComputedWorkStatus(order)) }}
               </span>
             </td>
             <td class="text-end pe-3 font-monospace">

@@ -258,6 +258,53 @@ export class OrdersListComponent implements OnInit, OnDestroy {
 
   // --- Helpers de UI ---
 
+  getComputedPaymentStatus(order: IOrder): string {
+    if (!order) return 'PENDING';
+
+    const paid = this.getComputedAmountPaid(order);
+
+    if (paid >= order.amountTotal) return 'PAID';
+    if (paid > 0) return 'PARTIALLY_PAID';
+    return 'PENDING';
+  }
+
+  private getComputedAmountPaid(order: IOrder): number {
+    // Usa amountPaid se vier atualizado; senão soma parcelas marcadas como pagas
+    if (order.amountPaid && order.amountPaid > 0) {
+      return order.amountPaid;
+    }
+
+    if (order.installments?.length) {
+      return order.installments
+        .filter((i) => !!i.paidAt)
+        .reduce((sum, i) => sum + (i.amount || 0), 0);
+    }
+
+    return 0;
+  }
+
+  getComputedWorkStatus(order: IOrder): string {
+    if (!order?.items?.length) return order?.workStatus || 'PENDING';
+
+    const statuses = order.items.map((i) => i.itemStatus);
+    if (statuses.some((s) => s === 'OVERDUE')) return 'OVERDUE';
+
+    const allFinished = statuses.every((s) =>
+      ['FINISHED', 'COMPLETED', 'DELIVERED', 'CANCELED'].includes(s)
+    );
+    if (allFinished) return 'FINISHED';
+
+    if (
+      statuses.some((s) =>
+        ['IN_PROGRESS', 'AWAITING_CLIENT', 'AWAITING_ADVISOR'].includes(s)
+      )
+    ) {
+      return 'IN_PROGRESS';
+    }
+
+    return order.workStatus || 'PENDING';
+  }
+
   getClientName(clientId: string | undefined): string {
     if (!clientId) return '—';
     return this.clientsList.find((c) => c.id === clientId)?.name || '—';

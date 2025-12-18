@@ -95,9 +95,9 @@ export class OrdersDetailComponent implements OnInit {
     this.ordersService
       .updateItemStatus(this.order.id, item.id, newStatus)
       .subscribe({
-        next: () => {
-          // Atualiza localmente para feedback instantâneo (ou recarrega tudo se preferir)
-          item.itemStatus = newStatus as any;
+        next: (updatedOrder) => {
+          // Atualiza com a ordem completa vinda do backend
+          this.order = updatedOrder;
           this.toast.success('Status atualizado!');
           this.loadingItems[item.id] = false;
           this.cdr.markForCheck();

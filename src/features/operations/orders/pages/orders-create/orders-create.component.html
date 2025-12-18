@@ -139,10 +139,12 @@
             </button>
 
             <div class="row g-3">
-              <div class="col-12 col-md-6">
-                <label class="form-label">Funcionalidade / Serviço</label>
+              <div class="col-12 col-lg-8">
+                <label class="form-label fw-semibold"
+                  >Funcionalidade / Serviço</label
+                >
                 <select
-                  class="form-select"
+                  class="form-select form-select-lg"
                   formControlName="functionalityId"
                   (change)="onServiceSelected(i, $any($event.target).value)"
                 >
@@ -166,8 +168,8 @@
                 </select>
               </div>
 
-              <div class="col-12 col-md-6">
-                <label class="form-label">Responsável (Automático)</label>
+              <div class="col-12 col-lg-4">
+                <label class="form-label fw-semibold">Responsável (Auto)</label>
                 <input
                   type="text"
                   class="form-control bg-light"

@@ -264,7 +264,20 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   // 4. LÓGICA DE SELEÇÃO DE SERVIÇO (POR ITEM)
   // ============================================================
   onServiceSelected(index: number, funcId: string) {
+    // Garante que há um valor selecionado
+    if (!funcId || funcId.trim() === '') {
+      return;
+    }
+
     this.setItemService(index, funcId);
+
+    // Força a atualização da view imediatamente
+    setTimeout(() => {
+      this.updateTotalValue();
+      // Force form validation update
+      const itemGroup = this.items.at(index) as FormGroup;
+      itemGroup.markAsTouched();
+    }, 100);
   }
 
   private setItemService(index: number, funcId: string) {
@@ -502,11 +515,6 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       // IMPORTANTE: Só envia responsibleUserId se tiver valor real (evita erro de UUID)
       if (item.responsibleId && item.responsibleId.length > 5) {
         payloadItem.responsibleUserId = item.responsibleId;
-      }
-
-      // Adiciona descrição/observação se houver
-      if (item.description && item.description.trim()) {
-        payloadItem.description = item.description.trim();
       }
 
       return payloadItem;
