@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ClientsService } from '../../services/clients.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Client } from '../../interfaces/client.interface';
 import { finalize, take } from 'rxjs/operators';
+import { AuthService } from '../../../../../app/core/services/auth.service';
 
 @Component({
   selector: 'app-clients-list',
@@ -17,11 +18,20 @@ export class ClientsListComponent implements OnInit {
   clients: Client[] = [];
   loading = false;
   error: string | null = null;
+  private authService = inject(AuthService);
 
   constructor(private clientsService: ClientsService, private router: Router) {}
 
   ngOnInit() {
-    this.loadClients();
+    this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
+      console.log('ClientsListComponent - User:', user);
+      console.log(
+        'ClientsListComponent - currentTenantIdGerente:',
+        user?.currentTenantIdGerente
+      );
+      console.log('ClientsListComponent - User role:', user?.role);
+      this.loadClients();
+    });
   }
 
   loadClients() {
@@ -38,8 +48,10 @@ export class ClientsListComponent implements OnInit {
         next: (resp) => {
           this.clients = resp || [];
           this.error = null;
+          console.log('Clientes carregados:', this.clients);
         },
-        error: () => {
+        error: (err) => {
+          console.error('Erro ao carregar clientes:', err);
           this.error = 'Falha ao carregar clientes.';
           this.clients = [];
         },

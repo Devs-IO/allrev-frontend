@@ -48,8 +48,10 @@ export class UserEditComponent implements OnInit {
   isAdmin = false;
   tenantName = '';
   tenants: any[] = [];
+  tenantsWithoutManager: any[] = [];
   currentUserRole = '';
   isEditingAdminUser = false; // Flag para saber se estamos editando um Admin
+  formInitialized = false; // Flag para controlar se o formulário foi populado
 
   // Enums para o template
   Role = CoreRole;
@@ -70,7 +72,7 @@ export class UserEditComponent implements OnInit {
     // 1. Carregar Roles Disponíveis
     this.loadAvailableRoles();
 
-    // 2. Verificar Permissões do Usuário Logado
+    // 2. Verificar Permissões do Usuário Logado (habilita/desabilita campos)
     this.checkCurrentUserPermissions();
 
     // 3. Carregar Usuário a ser editado
@@ -85,21 +87,19 @@ export class UserEditComponent implements OnInit {
 
   private initializeForm() {
     this.userForm = this.fb.group({
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(2),
-          Validators.maxLength(100),
-        ],
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      // EMAIL SEMPRE DESABILITADO NA CRIAÇÃO DO FORM
+      email: [
+        { value: '', disabled: true },
+        [Validators.required, Validators.email],
       ],
-      email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required]],
-      role: [null, Validators.required], // Role é preenchido dinamicamente
-      address: ['', [Validators.required, Validators.minLength(5)]],
-      tenantId: [{ value: '', disabled: true }], // Geralmente desabilitado na edição, salvo se for Admin trocando
+      role: [null, Validators.required],
+      address: ['', [Validators.required]],
+      tenantId: [{ value: '', disabled: true }],
       isActive: [true],
       photo: [''],
+      observation: [''],
     });
   }
 
@@ -109,12 +109,30 @@ export class UserEditComponent implements OnInit {
         this.currentUserRole = user.role;
         this.isAdmin = user.role === CoreRole.ADMIN;
 
-        // Se for admin, habilita a troca de tenant (opcional, dependendo da regra de negócio)
+        // Regra de Negócio:
+        // Admin pode mudar tenant (se necessário para realocação) e role.
+        // Gestor NÃO pode mudar tenant (fixo no seu), NÃO pode mudar email, nem dados pessoais do assistente.
+
         if (this.isAdmin) {
           this.userForm.get('tenantId')?.enable();
-          this.loadTenants();
+          this.userForm.get('email')?.enable();
+          // Admin pode editar dados pessoais, mas email recomendamos manter travado
+          // Se quiser liberar para admin: this.userForm.get('email')?.enable();
+
+          // Listener para mudanças no role quando admin quer transformar em gestor
+          this.userForm.get('role')?.valueChanges.subscribe((roleValue) => {
+            if (roleValue === CoreRole.MANAGER_REVIEWERS) {
+              this.loadTenantsWithoutManager();
+            }
+          });
         } else {
+          // Gestor
           this.userForm.get('tenantId')?.disable();
+          this.userForm.get('name')?.disable(); // Gestor não muda nome do assistente
+          this.userForm.get('phone')?.disable(); // Nem telefone
+          this.userForm.get('address')?.disable();
+          this.userForm.get('role')?.disable();
+          // Gestor PODE editar observation e isActive (status temporário)
         }
       }
     });
@@ -145,6 +163,7 @@ export class UserEditComponent implements OnInit {
       address: user.address,
       isActive: user.isActive,
       photo: user.photo,
+      observation: user.observation || '',
       tenantId: user.tenant?.id || user.tenantId, // Suporta tanto objeto quanto ID
     });
 
@@ -152,14 +171,28 @@ export class UserEditComponent implements OnInit {
       this.tenantName = user.tenant.companyName ?? '';
     }
 
-    // Salva estado inicial para verificação de "dirty"
-    this.originalFormValues = this.userForm.getRawValue();
+    // Marca o formulário como inicializado para habilitar o botão de salvar
+    this.formInitialized = true;
   }
 
   private loadTenants() {
     this.tenantsService.getTenants().subscribe({
       next: (data) => (this.tenants = data),
       error: (err) => console.error('Erro ao carregar tenants', err),
+    });
+  }
+
+  private loadTenantsWithoutManager() {
+    this.tenantsService.getTenantsWithoutManager().subscribe({
+      next: (data) => {
+        this.tenantsWithoutManager = data;
+        // Se houver apenas uma empresa sem gestor, seleciona automaticamente
+        if (data.length === 1) {
+          this.userForm.get('tenantId')?.setValue(data[0].id);
+        }
+      },
+      error: (err) =>
+        console.error('Erro ao carregar empresas sem gestor', err),
     });
   }
 
@@ -188,13 +221,22 @@ export class UserEditComponent implements OnInit {
 
     const formValue = this.userForm.getRawValue();
 
-    // Filtra apenas campos alterados se desejar, ou envia tudo (PUT costuma ser tudo)
-    // Aqui enviamos o objeto completo ajustado para o DTO
-    const updateUserDto: Partial<CreateUserDto> = {
-      ...formValue,
-      // Garante que tenantId vá correto se for admin editando
-      tenantId: this.isAdmin ? formValue.tenantId : this.user?.tenantId,
-    };
+    // Filtra campos baseado no perfil
+    let updateUserDto: Partial<CreateUserDto>;
+
+    if (this.isAdmin) {
+      // Admin pode editar tudo
+      updateUserDto = {
+        ...formValue,
+        tenantId: formValue.tenantId,
+      };
+    } else {
+      // Gestor pode editar apenas observation e isActive
+      updateUserDto = {
+        observation: formValue.observation,
+        isActive: formValue.isActive,
+      };
+    }
 
     if (this.user?.id) {
       this.usersService.updateUser(this.user.id, updateUserDto).subscribe({
@@ -212,11 +254,7 @@ export class UserEditComponent implements OnInit {
   }
 
   hasChanges(): boolean {
-    if (!this.originalFormValues) return false;
-    const currentValues = this.userForm.getRawValue();
-    return (
-      JSON.stringify(this.originalFormValues) !== JSON.stringify(currentValues)
-    );
+    return this.formInitialized;
   }
 
   // Alias para o template

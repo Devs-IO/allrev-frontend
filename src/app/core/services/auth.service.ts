@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError, timer } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
-import { map, switchMap, tap, catchError, shareReplay } from 'rxjs/operators';
+import { map, switchMap, tap, catchError, finalize } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+
+// Imports de Interfaces e Enums
 import { UserProfile } from '../../../features/admin/users/interfaces/user-profile.interface';
 import { User } from '../../../features/admin/users/interfaces/user.interface';
+import { Role } from '../enum/roles.enum'; // Certifique-se que o caminho está correto
 
-// Interface para tipar a resposta do Login (Boas Práticas)
+// Interface para tipar a resposta do Login
 export interface AuthResponse {
   accessToken: string;
   refreshToken?: string;
@@ -70,7 +73,7 @@ export class AuthService {
   }
 
   // ============================================================
-  // LOGIN CLIENTE (Otimizado)
+  // LOGIN CLIENTE
   // ============================================================
   loginClient(credentials: {
     email: string;
@@ -88,18 +91,63 @@ export class AuthService {
   }
 
   // ============================================================
-  // GESTÃO DE SESSÃO (Centralizada)
+  // GESTÃO DE SESSÃO (CORRIGIDA)
   // ============================================================
+
+  /**
+   * Enriquece o objeto User com IDs de contexto baseados nas roles.
+   * Usa (user as any) para evitar erro de TS se a interface User não tiver os campos opcionais ainda.
+   */
+  private enrichUserWithTenantContext(user: User): User {
+    const u = user as any; // Casting para flexibilidade
+
+    // Limpa contextos anteriores para evitar lixo
+    u.currentTenantIdGerente = undefined;
+    u.currentTenantIdAssistentes = undefined;
+
+    // Extrai currentTenantIdGerente do array de tenants
+    if (user.tenants && Array.isArray(user.tenants)) {
+      const managerTenant = user.tenants.find(
+        (t) =>
+          t.role === Role.MANAGER_REVIEWERS ||
+          t.role === Role.MANAGER_REVIEWERS.toString()
+      );
+      if (managerTenant) {
+        u.currentTenantIdGerente = managerTenant.tenantId;
+      }
+    }
+
+    // Extrai currentTenantIdAssistentes
+    if (user.tenants && Array.isArray(user.tenants)) {
+      const assistantTenants = user.tenants
+        .filter(
+          (t) =>
+            t.role === Role.ASSISTANT_REVIEWERS ||
+            t.role === Role.ASSISTANT_REVIEWERS.toString()
+        )
+        .map((t) => t.tenantId);
+
+      if (assistantTenants.length > 0) {
+        u.currentTenantIdAssistentes = assistantTenants;
+      }
+    }
+
+    return u as User;
+  }
+
   private setSession(response: AuthResponse): void {
     if (response?.accessToken && response?.user) {
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // Enriquece o usuário com contexto de tenant
+      const enrichedUser = this.enrichUserWithTenantContext(response.user);
+
+      localStorage.setItem('user', JSON.stringify(enrichedUser));
       localStorage.setItem('token', response.accessToken);
 
       if (response.refreshToken) {
         localStorage.setItem('refreshToken', response.refreshToken);
       }
 
-      this.currentUserSubject.next(response.user);
+      this.currentUserSubject.next(enrichedUser);
       this.startTokenRefresh();
     } else {
       throw new Error('Resposta de login inválida.');
@@ -107,6 +155,12 @@ export class AuthService {
   }
 
   logout() {
+    // 1. Identificar o tipo de usuário ANTES de limpar os dados para redirecionar corretamente
+    const user = this.currentUserSubject.value;
+    const isClient =
+      user?.role === Role.CLIENT || user?.role === Role.CLIENT.toString();
+
+    // 2. Limpeza
     this.stopRefreshToken();
     localStorage.removeItem('user');
     localStorage.removeItem('token');
@@ -115,14 +169,17 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.profileSubject.next(null);
 
-    this.router.navigate(['/login']);
+    // 3. Redirecionamento Inteligente
+    if (isClient) {
+      this.router.navigate(['/portal/login']);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   // ============================================================
-  // OPTIMIZATION: getUserCached Refatorado
+  // PERFIL & UTILITÁRIOS
   // ============================================================
-  // Antes: Fazia subscribe interno (perdia controle de erro).
-  // Agora: Retorna o Observable direto.
   getUserCached(): Observable<User | null> {
     const user = this.currentUserSubject.value;
     if (user) {
@@ -130,18 +187,18 @@ export class AuthService {
     }
 
     return this.http.get<User>(`${this.apiUrl}/users/me`).pipe(
-      tap((u) => this.currentUserSubject.next(u)), // Atualiza estado global
+      tap((u) => {
+        // Precisamos enriquecer aqui também, caso o usuário dê F5 na página
+        const enriched = this.enrichUserWithTenantContext(u);
+        this.currentUserSubject.next(enriched);
+        localStorage.setItem('user', JSON.stringify(enriched));
+      }),
       catchError(() => {
-        // Se der erro (ex: 401), garante que o estado local limpe
-        // this.logout(); // Opcional: forçar logout se falhar o /me
         return of(null);
       })
     );
   }
 
-  // ============================================================
-  // PERFIL & UTILITÁRIOS
-  // ============================================================
   loadUserProfile(): Observable<UserProfile> {
     return this.http
       .get<UserProfile>(`${this.apiUrl}/users/profile`)
@@ -180,7 +237,7 @@ export class AuthService {
   }
 
   // ============================================================
-  // REFRESH TOKEN (Com limpeza de Timer)
+  // REFRESH TOKEN
   // ============================================================
   private stopRefreshToken() {
     if (this.refreshTokenTimeout) {
@@ -190,20 +247,19 @@ export class AuthService {
   }
 
   startTokenRefresh() {
-    this.stopRefreshToken(); // Garante que não tenha timer duplicado
+    this.stopRefreshToken();
 
     const token = this.getToken();
     if (token && !this.jwtHelper.isTokenExpired(token)) {
       const expirationDate = this.jwtHelper.getTokenExpirationDate(token);
       const exp = expirationDate ? expirationDate.getTime() : 0;
 
-      // Renova 2 minutos antes de expirar (mais seguro que 5)
+      // Renova 2 minutos antes de expirar
       const delay = exp - Date.now() - 2 * 60 * 1000;
 
       if (delay > 0) {
         this.refreshTokenTimeout = setTimeout(() => this.refreshToken(), delay);
       } else {
-        // Se o token ainda é válido mas o delay é negativo, renova agora
         this.refreshToken();
       }
     }
@@ -212,7 +268,6 @@ export class AuthService {
   refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      // Sem refresh token, deixa a sessão morrer naturalmente ou força logout
       return;
     }
 
@@ -229,11 +284,10 @@ export class AuthService {
             if (res.refreshToken) {
               localStorage.setItem('refreshToken', res.refreshToken);
             }
-            this.startTokenRefresh(); // Reinicia o ciclo
+            this.startTokenRefresh();
           }
         },
         error: () => {
-          // Se falhar renovar (ex: refresh expirado), logout obrigatório
           this.logout();
         },
       });

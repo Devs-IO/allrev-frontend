@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { TenantsService } from '../../services/tenants.service';
 import { Tenant } from '../../interfaces/tenant.interface';
 import {
@@ -15,7 +15,7 @@ import {
   templateUrl: './tenant-list.component.html',
   styleUrls: ['./tenant-list.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
 })
 export class TenantListComponent implements OnInit {
   tenants: WritableSignal<Tenant[]> = signal<Tenant[]>([]);

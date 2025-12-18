@@ -56,7 +56,13 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     'Cheque',
     'Outro',
   ];
-  installmentsOptions: number[] = [1, 2, 3, 4, 5, 6, 10, 12];
+  installmentPaymentMethods: string[] = [
+    'BOLETO',
+    'CREDIT_CARD',
+    'PIX',
+    'OTHER',
+  ];
+  installmentsOptions: number[] = [1, 2, 3, 4, 5];
 
   loading = false;
   submitting = false;
@@ -96,6 +102,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       clientId: [null, Validators.required],
       contractDate: [today, Validators.required],
       description: ['Trabalho Acadêmico', Validators.required], // Valor padrão da master
+      hasInvoice: [false],
 
       // Arrays
       items: this.fb.array([]), // Lista de Serviços
@@ -132,6 +139,9 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       // Responsável
       responsibleId: [''],
       responsibleName: [''], // Apenas exibição
+
+      // Observação
+      description: ['', [Validators.maxLength(500)]],
     });
 
     // Listener para recalcular total quando preço mudar
@@ -157,6 +167,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       amount: [amount, [Validators.required, Validators.min(0.01)]],
       dueDate: [date, Validators.required],
       paymentMethod: [method, Validators.required],
+      paymentMethodDescription: [''],
     });
 
     // Listener individual para recálculo inteligente ao editar valor manual
@@ -260,6 +271,16 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const func = this.functionalities.find((f) => f.id === funcId);
     if (!func) return;
 
+    // Validar se o responsável do serviço está inativo (não pode selecionar)
+    if (func.inactiveReason) {
+      const reason = this.getInactiveReasonText(func.inactiveReason);
+      this.toastService.error(reason);
+      // Limpar a seleção
+      const itemGroup = this.items.at(index) as FormGroup;
+      itemGroup.patchValue({ functionalityId: '' });
+      return;
+    }
+
     const itemGroup = this.items.at(index) as FormGroup;
 
     // Calcula Prazos
@@ -308,9 +329,16 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   // 5. GESTÃO FINANCEIRA E PARCELAS
   // ============================================================
   private setupGlobalListeners() {
-    // Quando mudar o número de parcelas, regenerar tudo
+    // Quando mudar o número de parcelas, regenerar tudo (máximo 5)
     this.orderForm.get('installmentsCount')?.valueChanges.subscribe((count) => {
-      this.generateInstallments(count);
+      // Limita a 5 parcelas máximo
+      const limitedCount = Math.min(count, 5);
+      if (limitedCount !== count) {
+        this.orderForm.get('installmentsCount')?.setValue(limitedCount, {
+          emitEvent: false,
+        });
+      }
+      this.generateInstallments(limitedCount);
     });
   }
 
@@ -369,6 +397,11 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       );
     }
     this.isRecalculating = false;
+  }
+
+  // Verifica se pode adicionar mais parcelas (máximo 5)
+  canAddInstallments(): boolean {
+    return this.installmentsList.length < 5;
   }
 
   // Lógica Inteligente: Recalcular parcelas restantes ao mudar uma manualmente
@@ -471,6 +504,11 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         payloadItem.responsibleUserId = item.responsibleId;
       }
 
+      // Adiciona descrição/observação se houver
+      if (item.description && item.description.trim()) {
+        payloadItem.description = item.description.trim();
+      }
+
       return payloadItem;
     });
 
@@ -480,6 +518,11 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       amount: parseFloat(inst.amount),
       dueDate: new Date(inst.dueDate).toISOString(),
       channel: this.mapToBackendChannel(inst.paymentMethod),
+      paymentMethod: inst.paymentMethod,
+      paymentMethodDescription:
+        inst.paymentMethod === 'OTHER'
+          ? inst.paymentMethodDescription
+          : undefined,
     }));
 
     // 4. Montagem Final do Payload
@@ -487,6 +530,7 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       clientId: formVal.clientId,
       contractDate: new Date(formVal.contractDate).toISOString(),
       description: formVal.description,
+      hasInvoice: formVal.hasInvoice || false,
       paymentMethod: cleanPaymentMethod as any,
       items: itemsPayload,
       installments: installmentsPayload,
@@ -538,5 +582,17 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   // Helpers de Template
   isInvalid(control: AbstractControl | null): boolean {
     return !!(control && control.invalid && (control.touched || control.dirty));
+  }
+
+  // Tradução amigável do motivo de inativação
+  getInactiveReasonText(reason?: string): string {
+    const reasons: Record<string, string> = {
+      RESPONSIBLE_DELETED:
+        'Serviço indisponível: responsável foi removido do sistema',
+      RESPONSIBLE_INACTIVE: 'Serviço indisponível: responsável foi desativado',
+      RESPONSIBLE_TEMPORARILY_INACTIVE:
+        'Serviço indisponível: responsável está temporariamente inativo',
+    };
+    return reasons[reason || ''] || 'Serviço indisponível';
   }
 }

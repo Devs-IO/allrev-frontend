@@ -1,5 +1,5 @@
 <div class="container my-4">
-  <h2 class="text-primary">
+  <h2 class="text-wine">
     <i class="fas fa-user-plus"></i> Cadastrar Novo Usuário
   </h2>
 
@@ -22,8 +22,12 @@
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading" [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
-
+  <form
+    *ngIf="!loading"
+    [formGroup]="userForm"
+    (ngSubmit)="onSubmit()"
+    class="user-form"
+  >
     <!-- Dados Pessoais -->
     <div class="card mb-4">
       <div class="card-header">
@@ -46,7 +50,7 @@
               maxlength="100"
             />
             <div *ngIf="getFieldError('name')" class="invalid-feedback">
-              {{ getFieldError('name') }}
+              {{ getFieldError("name") }}
             </div>
           </div>
 
@@ -65,7 +69,7 @@
               maxlength="150"
             />
             <div *ngIf="getFieldError('email')" class="invalid-feedback">
-              {{ getFieldError('email') }}
+              {{ getFieldError("email") }}
             </div>
           </div>
 
@@ -85,7 +89,7 @@
               placeholder="(11) 99999-9999"
             />
             <div *ngIf="getFieldError('phone')" class="invalid-feedback">
-              {{ getFieldError('phone') }}
+              {{ getFieldError("phone") }}
             </div>
           </div>
 
@@ -102,7 +106,7 @@
                 id="isActive"
               />
               <label class="form-check-label" for="isActive">
-                {{ userForm.get('isActive')?.value ? 'Ativo' : 'Inativo' }}
+                {{ userForm.get("isActive")?.value ? "Ativo" : "Inativo" }}
               </label>
             </div>
           </div>
@@ -121,7 +125,7 @@
               placeholder="Digite o endereço completo"
             />
             <div *ngIf="getFieldError('address')" class="invalid-feedback">
-              {{ getFieldError('address') }}
+              {{ getFieldError("address") }}
             </div>
           </div>
         </div>
@@ -152,7 +156,7 @@
               </option>
             </select>
             <div *ngIf="getFieldError('role')" class="invalid-feedback">
-              {{ getFieldError('role') }}
+              {{ getFieldError("role") }}
             </div>
           </div>
 
@@ -188,16 +192,17 @@
               placeholder="Empresa do usuário logado"
             />
             <small *ngIf="!isAdmin" class="form-text text-muted">
-              Usuários não-administradores são criados apenas na empresa do usuário logado
+              Usuários não-administradores são criados apenas na empresa do
+              usuário logado
             </small>
 
             <div *ngIf="getFieldError('tenantId')" class="invalid-feedback">
-              {{ getFieldError('tenantId') }}
+              {{ getFieldError("tenantId") }}
             </div>
           </div>
         </div>
 
-  <!-- Senha removida: backend gera automaticamente uma senha temporária e envia por e-mail -->
+        <!-- Senha removida: backend gera automaticamente uma senha temporária e envia por e-mail -->
       </div>
     </div>
 
@@ -214,12 +219,12 @@
 
       <button
         type="submit"
-        class="btn btn-primary"
+        class="btn btn-wine"
         [disabled]="!userForm.valid || loading"
       >
         <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
         <i class="fas fa-save" *ngIf="!loading"></i>
-        {{ loading ? 'Salvando...' : 'Cadastrar Usuário' }}
+        {{ loading ? "Salvando..." : "Cadastrar Usuário" }}
       </button>
     </div>
   </form>

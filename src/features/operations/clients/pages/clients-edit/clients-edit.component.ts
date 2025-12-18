@@ -32,6 +32,9 @@ export class ClientsEditComponent implements OnInit {
       | 'course'
       | 'observation'
       | 'university'
+      | 'legalNature'
+      | 'cpf'
+      | 'cnpj'
       | 'isActive'
     >
   > = {};
@@ -46,6 +49,9 @@ export class ClientsEditComponent implements OnInit {
       | 'course'
       | 'observation'
       | 'university'
+      | 'legalNature'
+      | 'cpf'
+      | 'cnpj'
       | 'isActive'
     >
   > | null = null;
@@ -102,6 +108,9 @@ export class ClientsEditComponent implements OnInit {
       course: source?.course,
       observation: source?.observation,
       university: source?.university,
+      legalNature: source?.legalNature,
+      cpf: source?.cpf,
+      cnpj: source?.cnpj,
       isActive: source?.isActive,
     } as Partial<
       Pick<
@@ -113,6 +122,9 @@ export class ClientsEditComponent implements OnInit {
         | 'course'
         | 'observation'
         | 'university'
+        | 'legalNature'
+        | 'cpf'
+        | 'cnpj'
         | 'isActive'
       >
     >;
@@ -137,6 +149,9 @@ export class ClientsEditComponent implements OnInit {
         | 'course'
         | 'observation'
         | 'university'
+        | 'legalNature'
+        | 'cpf'
+        | 'cnpj'
         | 'isActive'
       >
     >
@@ -149,6 +164,9 @@ export class ClientsEditComponent implements OnInit {
       course: (obj.course ?? '').toString().trim(),
       observation: (obj.observation ?? '').toString().trim(),
       university: (obj.university ?? '').toString().trim(),
+      legalNature: (obj.legalNature ?? '').toString().trim(),
+      cpf: (obj.cpf ?? '').toString().trim(),
+      cnpj: (obj.cnpj ?? '').toString().trim(),
       isActive: String(obj.isActive ?? ''),
     };
   }

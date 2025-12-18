@@ -33,7 +33,7 @@
     </div>
 
     <div class="row g-4">
-      <div class="col-12 col-xl-8">
+      <div class="col-12 col-xl-6">
         <div class="card mb-4">
           <div class="card-header">
             <h5><i class="bi bi-person-lines-fill me-2"></i>Dados Iniciais</h5>
@@ -85,6 +85,24 @@
                   placeholder="Ex: TCC Engenharia Civil - Matheus"
                 />
               </div>
+
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="hasInvoice"
+                    formControlName="hasInvoice"
+                  />
+                  <label class="form-check-label" for="hasInvoice">
+                    <i class="bi bi-receipt me-1"></i>
+                    <strong>Nota Fiscal?</strong>
+                    <span class="small text-muted ms-2">
+                      Marque se a ordem possui nota fiscal
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -132,8 +150,18 @@
                   <option
                     *ngFor="let func of functionalities"
                     [value]="func.id"
+                    [hidden]="!!func.deletedAt"
+                    [disabled]="!!func.inactiveReason"
+                    [attr.title]="
+                      func.inactiveReason
+                        ? getInactiveReasonText(func.inactiveReason)
+                        : ''
+                    "
                   >
                     {{ func.name }}
+                    <span *ngIf="func.inactiveReason" class="text-muted">
+                      [INATIVO]</span
+                    >
                   </option>
                 </select>
               </div>
@@ -194,12 +222,26 @@
                   />
                 </div>
               </div>
+
+              <div class="col-12">
+                <label class="form-label">Observação</label>
+                <textarea
+                  class="form-control"
+                  formControlName="description"
+                  rows="3"
+                  placeholder="Adicione observações sobre este serviço..."
+                  maxlength="500"
+                ></textarea>
+                <small class="form-text text-muted">
+                  Máximo 500 caracteres
+                </small>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="col-12 col-xl-4">
+      <div class="col-12 col-xl-6">
         <div
           class="card shadow-sm border-0 sticky-top"
           style="top: 1rem; z-index: 10"
@@ -224,11 +266,21 @@
               <select
                 class="form-select form-select-lg mb-3"
                 formControlName="installmentsCount"
+                [disabled]="
+                  !canAddInstallments() && installmentsList.length >= 5
+                "
               >
                 <option *ngFor="let opt of installmentsOptions" [value]="opt">
                   {{ opt }}x Parcelas
                 </option>
               </select>
+              <small
+                *ngIf="installmentsList.length >= 5"
+                class="text-danger d-block"
+              >
+                <i class="bi bi-exclamation-circle me-1"></i>
+                Máximo de 5 parcelas permitidas
+              </small>
             </div>
 
             <div class="table-responsive bg-white rounded border">
@@ -238,6 +290,8 @@
                     <th class="text-center" style="width: 30px">#</th>
                     <th>Valor</th>
                     <th>Vencimento</th>
+                    <th>Método de Pagamento</th>
+                    <th>Descrição</th>
                   </tr>
                 </thead>
                 <tbody formArrayName="installmentsList">
@@ -262,6 +316,29 @@
                         type="date"
                         class="form-control form-control-sm text-muted"
                         formControlName="dueDate"
+                      />
+                    </td>
+                    <td>
+                      <select
+                        class="form-select form-select-sm"
+                        formControlName="paymentMethod"
+                      >
+                        <option value="BOLETO">Boleto</option>
+                        <option value="CREDIT_CARD">Cartão</option>
+                        <option value="PIX">PIX</option>
+                        <option value="OTHER">Outro</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        class="form-control form-control-sm"
+                        formControlName="paymentMethodDescription"
+                        [placeholder]="
+                          inst.get('paymentMethod')?.value === 'OTHER'
+                            ? 'Especifique o método'
+                            : 'Observação'
+                        "
                       />
                     </td>
                   </tr>

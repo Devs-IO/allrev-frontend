@@ -49,12 +49,21 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: 'bi bi-grid-1x2-fill',
       route: '/home',
       exact: true,
-      roles: [
-        Role.MANAGER_REVIEWERS,
-        Role.ADMIN,
-        Role.ASSISTANT_REVIEWERS,
-        Role.USER,
-      ],
+      roles: [Role.MANAGER_REVIEWERS, Role.ASSISTANT_REVIEWERS, Role.USER],
+    },
+    {
+      label: 'Painel Admin',
+      icon: 'bi bi-speedometer2',
+      route: '/admin/home',
+      exact: true,
+      roles: [Role.ADMIN],
+    },
+    {
+      label: 'Empresas',
+      icon: 'bi bi-building',
+      route: '/tenants',
+      separator: true,
+      roles: [Role.ADMIN],
     },
     {
       label: 'Nova Ordem',
@@ -62,7 +71,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       route: '/orders/create',
       separator: true,
       exact: true,
-      roles: [Role.MANAGER_REVIEWERS, Role.ADMIN],
+      roles: [Role.MANAGER_REVIEWERS],
     },
     {
       label: 'Minhas Tarefas', // Visão Assistente
@@ -75,26 +84,26 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: 'Gestão de Vendas', // Visão Gestor
       icon: 'bi bi-receipt',
       route: '/orders',
-      roles: [Role.MANAGER_REVIEWERS, Role.ADMIN],
+      roles: [Role.MANAGER_REVIEWERS],
     },
     {
       label: 'Relatórios',
       icon: 'bi bi-bar-chart-fill',
       route: '/reports',
-      roles: [Role.MANAGER_REVIEWERS, Role.ADMIN],
+      roles: [Role.MANAGER_REVIEWERS],
     },
     {
       label: 'Clientes',
       icon: 'bi bi-people-fill',
       route: '/clients',
-      roles: [Role.MANAGER_REVIEWERS, Role.ADMIN],
+      roles: [Role.MANAGER_REVIEWERS],
     },
     {
       label: 'Serviços',
       icon: 'bi bi-tools',
       route: '/functionalities',
       separator: true,
-      roles: [Role.MANAGER_REVIEWERS, Role.ADMIN],
+      roles: [Role.MANAGER_REVIEWERS],
     },
     {
       label: 'Usuários',
@@ -107,7 +116,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: 'bi bi-gear',
       route: '/settings',
       separator: true,
-      roles: [Role.ADMIN, Role.MANAGER_REVIEWERS],
+      roles: [Role.MANAGER_REVIEWERS],
     },
   ];
 

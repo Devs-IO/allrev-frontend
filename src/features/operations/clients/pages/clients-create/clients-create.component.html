@@ -1,8 +1,5 @@
-
 <div class="container my-4">
-  <h2 class="text-primary">
-    <i class="fas fa-user-plus"></i> Novo Cliente
-  </h2>
+  <h2 class="text-wine"><i class="fas fa-user-plus"></i> Novo Cliente</h2>
 
   <!-- Error Alert -->
   <div *ngIf="error" class="alert alert-danger">
@@ -11,7 +8,6 @@
 
   <!-- Form -->
   <form (ngSubmit)="submit()">
-
     <!-- Dados Pessoais -->
     <div class="card mb-4">
       <div class="card-header">
@@ -65,6 +61,64 @@
               appPhoneMask
               inputmode="numeric"
               placeholder="(11) 99999-9999"
+            />
+          </div>
+        </div>
+
+        <!-- Natureza Jurídica -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="legalNature" class="form-label">
+              <i class="fas fa-building"></i> Natureza Jurídica
+            </label>
+            <select
+              id="legalNature"
+              class="form-control"
+              [(ngModel)]="formData.legalNature"
+              name="legalNature"
+            >
+              <option [value]="undefined">Selecione...</option>
+              <option value="PERSON_PHYSICAL">Pessoa Física</option>
+              <option value="PERSON_LEGAL">Pessoa Jurídica</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CPF (mostrar apenas se Pessoa Física) -->
+        <div
+          class="row"
+          *ngIf="
+            !formData.legalNature || formData.legalNature === 'PERSON_PHYSICAL'
+          "
+        >
+          <div class="col-md-6 mb-3">
+            <label for="cpf" class="form-label">
+              <i class="fas fa-id-card"></i> CPF
+            </label>
+            <input
+              id="cpf"
+              class="form-control"
+              [(ngModel)]="formData.cpf"
+              name="cpf"
+              placeholder="00000000000"
+              inputmode="numeric"
+            />
+          </div>
+        </div>
+
+        <!-- CNPJ (mostrar apenas se Pessoa Jurídica) -->
+        <div class="row" *ngIf="formData.legalNature === 'PERSON_LEGAL'">
+          <div class="col-md-6 mb-3">
+            <label for="cnpj" class="form-label">
+              <i class="fas fa-building"></i> CNPJ
+            </label>
+            <input
+              id="cnpj"
+              class="form-control"
+              [(ngModel)]="formData.cnpj"
+              name="cnpj"
+              placeholder="00000000000000"
+              inputmode="numeric"
             />
           </div>
         </div>
@@ -151,18 +205,11 @@
 
     <!-- Form Actions -->
     <div class="d-flex justify-content-end gap-2">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        routerLink="/clients"
-      >
+      <button type="button" class="btn btn-secondary" routerLink="/clients">
         <i class="fas fa-times"></i> Cancelar
       </button>
 
-      <button
-        type="submit"
-        class="btn btn-primary"
-      >
+      <button type="submit" class="btn btn-primary">
         <i class="fas fa-plus"></i> Criar Cliente
       </button>
     </div>

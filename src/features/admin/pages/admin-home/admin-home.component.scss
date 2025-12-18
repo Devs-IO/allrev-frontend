@@ -1,0 +1,82 @@
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.icon-box {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-shape {
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  opacity: 0.1;
+}
+
+.bg-shape-white {
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.text-brand {
+  color: #57040f !important;
+}
+
+.bg-brand {
+  background-color: #57040f !important;
+}
+
+.btn-outline-brand {
+  border: 2px solid #57040f;
+  color: #57040f;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-brand:hover {
+  background-color: #57040f;
+  color: white;
+}
+
+.btn-outline-brand:hover i {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+// Cards de status com cores
+.bg-success-subtle {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-primary-subtle {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.bg-info-subtle {
+  background-color: rgba(13, 202, 240, 0.1);
+}
+
+.bg-danger-subtle {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.bg-warning-subtle {
+  background-color: rgba(255, 193, 7, 0.1);
+}

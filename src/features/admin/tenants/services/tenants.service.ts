@@ -29,4 +29,10 @@ export class TenantsService {
   deleteTenant(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/tenants/${id}`);
   }
+
+  getTenantsWithoutManager(): Observable<Tenant[]> {
+    return this.http.get<Tenant[]>(
+      `${this.apiUrl}/tenants/without-manager/list`
+    );
+  }
 }
