@@ -22,7 +22,14 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
         return true;
       }
 
-      const hasPermission = requiredRoles.includes(user.role as Role);
+      // Normaliza role do usuário para case-insensitive
+      const userRole = (user.role as unknown as string)
+        ?.toString()
+        .toLowerCase();
+      const required = (requiredRoles || []).map((r) =>
+        r.toString().toLowerCase()
+      );
+      const hasPermission = required.includes(userRole);
 
       if (!hasPermission) {
         toast.error(
@@ -30,7 +37,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
         );
 
         // Redireciona para a home adequada
-        if (user.role === Role.CLIENT) {
+        if (userRole === Role.CLIENT) {
           router.navigate(['/portal/home']);
         } else {
           router.navigate(['/home']);

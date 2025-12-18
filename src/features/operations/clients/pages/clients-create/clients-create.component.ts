@@ -19,11 +19,11 @@ import { PhoneMaskDirective } from '../../../../../app/shared/directives/phone-m
 })
 export class ClientsCreateComponent {
   formData: Partial<Client> = {
-    isActive: true,
     legalNature: undefined,
     cpf: undefined,
     cnpj: undefined,
   };
+  sendPassword = true;
   error: string | null = null;
   loading = false;
 
@@ -46,18 +46,33 @@ export class ClientsCreateComponent {
           return;
         }
 
-        // Tenta extrair o Tenant ID de várias fontes possíveis no objeto User
-        // 1. Propriedade direta tenantId (padrão DTO login)
-        // 2. Objeto tenant aninhado (se houver populate)
-        const tenantId = user.tenantIds || (user as any).tenant?.id;
+        // Extrai o Tenant ID baseado no role do usuário
+        let tenantId = '';
 
-        if (tenantId) {
-          this.formData.tenantId = tenantId;
-        } else if (!user.isAdmin) {
-          // Se não é admin e não tem tenant, é erro de cadastro
+        // Se for Gestor, pega o tenant do objeto tenant.id
+        if ((user as any).tenant?.id) {
+          tenantId = (user as any).tenant.id;
+        }
+        // Se for Assistente, pega o primeiro tenant disponível
+        else if (
+          Array.isArray((user as any).tenants) &&
+          (user as any).tenants.length > 0
+        ) {
+          tenantId = (user as any).tenants[0].tenantId;
+        }
+        // Se for Admin, pode deixar em branco (não precisa de tenant)
+        else if (
+          !(user as any).isAdmin &&
+          !(user as any).role?.includes('admin')
+        ) {
+          // Não é admin e não tem tenant
           this.error = 'Erro: Usuário sem empresa vinculada.';
           this.loading = false;
           return;
+        }
+
+        if (tenantId) {
+          this.formData.tenantId = tenantId;
         }
 
         this.createClient();
@@ -70,7 +85,12 @@ export class ClientsCreateComponent {
   }
 
   private createClient() {
-    this.clientsService.createClients(this.formData).subscribe({
+    const payload = {
+      ...this.formData,
+      sendPassword: this.sendPassword,
+    } as any;
+
+    this.clientsService.createClients(payload).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/clients']);

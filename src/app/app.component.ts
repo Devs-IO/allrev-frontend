@@ -1,6 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { Role } from './core/enum/roles.enum';
+import { take } from 'rxjs/operators';
 import * as bootstrap from 'bootstrap';
 
 @Component({
@@ -17,8 +19,13 @@ export class AppComponent implements OnInit {
     // Apenas inicializa os listeners do estado do usuário.
     // O redirecionamento de segurança agora é responsabilidade exclusiva do authGuard.
     if (this.authService.isAuthenticated()) {
-      this.authService.loadUserProfile().subscribe();
-      this.authService.currentUser$.subscribe();
+      this.authService.currentUser$.pipe(take(1)).subscribe((user) => {
+        const role = (user?.role as any)?.toString().toLowerCase();
+        const isClient = role === Role.CLIENT;
+        if (!isClient) {
+          this.authService.loadUserProfile().subscribe();
+        }
+      });
     }
   }
 

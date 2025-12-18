@@ -58,6 +58,14 @@ export const routes: Routes = [
           ),
         title: 'Portal do Cliente',
       },
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import(
+            '../features/portal/pages/portal-orders/portal-orders.component'
+          ).then((m) => m.PortalOrdersComponent),
+        title: 'Minhas Ordens',
+      },
     ],
   },
 

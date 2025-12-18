@@ -1,11 +1,141 @@
-<div class="home-page">
-  <h1>{{ title }}</h1>
-  <p>Este é o dashboard do portal. Adicione widgets e atalhos aqui.</p>
+<div class="container-fluid py-5">
+  <!-- Header -->
+  <div class="row mb-5">
+    <div class="col">
+      <h1 class="display-5 fw-bold">{{ title }}</h1>
+      <p class="lead text-muted">
+        Gerencie seus trabalhos e acompanhe os pagamentos
+      </p>
+    </div>
+  </div>
 
-  <!-- Exemplos rápidos -->
-  <div class="cards">
-    <div class="card">Resumo 1</div>
-    <div class="card">Resumo 2</div>
-    <div class="card">Resumo 3</div>
+  <!-- Atalhos Rápidos -->
+  <div class="row g-4 mb-5">
+    <!-- Minhas Ordens -->
+    <div class="col-md-6 col-lg-4">
+      <div
+        class="card border-0 shadow-sm h-100 cursor-pointer card-hover"
+        (click)="goToOrders()"
+      >
+        <div class="card-body text-center py-5">
+          <i class="bi bi-briefcase display-1 text-primary mb-3"></i>
+          <h5 class="card-title fw-bold">Minhas Ordens</h5>
+          <p class="card-text text-muted small">
+            Visualize e acompanhe todos seus trabalhos
+          </p>
+          <a href="/portal/orders" class="btn btn-sm btn-primary mt-3">
+            <i class="bi bi-arrow-right me-1"></i>Acessar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alterar Senha -->
+    <div class="col-md-6 col-lg-4">
+      <div
+        class="card border-0 shadow-sm h-100 cursor-pointer card-hover"
+        (click)="goToChangePassword()"
+      >
+        <div class="card-body text-center py-5">
+          <i class="bi bi-shield-lock display-1 text-warning mb-3"></i>
+          <h5 class="card-title fw-bold">Alterar Senha</h5>
+          <p class="card-text text-muted small">
+            Atualize sua senha de acesso com segurança
+          </p>
+          <a href="/change-password" class="btn btn-sm btn-warning mt-3">
+            <i class="bi bi-arrow-right me-1"></i>Acessar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Perfil -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm h-100 cursor-pointer card-hover">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-person display-1 text-info mb-3"></i>
+          <h5 class="card-title fw-bold">Meu Perfil</h5>
+          <p class="card-text text-muted small">
+            Visualize seus dados cadastrais
+          </p>
+          <button class="btn btn-sm btn-info mt-3" disabled>
+            <i class="bi bi-arrow-right me-1"></i>Em Breve
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações Úteis -->
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title fw-bold mb-4">
+            <i class="bi bi-info-circle me-2"></i>Dicas de Uso
+          </h5>
+          <div class="list-group list-group-flush">
+            <div class="list-group-item px-0 py-3 border-0">
+              <h6 class="mb-1">
+                <i class="bi bi-check-circle text-success me-2"></i>Acompanhe
+                suas ordens
+              </h6>
+              <small class="text-muted"
+                >Visualize o status de todos seus trabalhos em uma única
+                página.</small
+              >
+            </div>
+            <div class="list-group-item px-0 py-3 border-0">
+              <h6 class="mb-1">
+                <i class="bi bi-check-circle text-success me-2"></i>Verifique os
+                pagamentos
+              </h6>
+              <small class="text-muted"
+                >Veja o status das parcelas e valores de cada trabalho.</small
+              >
+            </div>
+            <div class="list-group-item px-0 py-3 border-0">
+              <h6 class="mb-1">
+                <i class="bi bi-check-circle text-success me-2"></i>Mantenha sua
+                senha segura
+              </h6>
+              <small class="text-muted"
+                >Altere sua senha regularmente para manter sua conta
+                segura.</small
+              >
+            </div>
+            <div class="list-group-item px-0 py-3 border-0">
+              <h6 class="mb-1">
+                <i class="bi bi-check-circle text-success me-2"></i>Suporte
+                disponível
+              </h6>
+              <small class="text-muted"
+                >Entre em contato conosco em caso de dúvidas ou
+                problemas.</small
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm bg-light">
+        <div class="card-body">
+          <h5 class="card-title fw-bold mb-3">
+            <i class="bi bi-telephone me-2"></i>Precisa de Ajuda?
+          </h5>
+          <p class="text-muted small mb-3">
+            Estamos aqui para ajudar! Se você tiver dúvidas ou encontrar
+            problemas, entre em contato conosco.
+          </p>
+          <div class="d-grid">
+            <button class="btn btn-outline-primary" disabled>
+              <i class="bi bi-envelope me-2"></i>Enviar Mensagem
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

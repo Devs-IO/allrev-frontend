@@ -133,4 +133,14 @@ export class OrdersService {
   getAdminDashboard(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/dashboard/admin`);
   }
+
+  // --- LISTAGEM DO CLIENTE (PORTAL) ---
+  listForClientPortal(page = 1, pageSize = 10): Observable<PaginatedOrders> {
+    let params = new HttpParams();
+    params = params.set('page', String(page));
+    params = params.set('pageSize', String(pageSize));
+    return this.http.get<PaginatedOrders>(`${this.baseUrl}/portal/my`, {
+      params,
+    });
+  }
 }

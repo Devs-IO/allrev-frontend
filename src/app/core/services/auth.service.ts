@@ -137,6 +137,23 @@ export class AuthService {
 
   private setSession(response: AuthResponse): void {
     if (response?.accessToken && response?.user) {
+      // Normaliza role para evitar divergência de casing (ex: 'CLIENT' -> 'client')
+      const normalizedRole = (response.user.role as unknown as string)
+        ?.toString()
+        .toLowerCase();
+      const roleMap: Record<string, Role> = {
+        admin: Role.ADMIN,
+        user: Role.USER,
+        manager_reviewers: Role.MANAGER_REVIEWERS,
+        assistant_reviewers: Role.ASSISTANT_REVIEWERS,
+        client: Role.CLIENT,
+        none: Role.NONE,
+      };
+      const mappedRole = normalizedRole && roleMap[normalizedRole];
+      if (mappedRole) {
+        (response.user as any).role = mappedRole;
+      }
+
       // Enriquece o usuário com contexto de tenant
       const enrichedUser = this.enrichUserWithTenantContext(response.user);
 
@@ -294,6 +311,12 @@ export class AuthService {
   }
 
   changePassword(data: any) {
-    return this.http.put(`${this.apiUrl}/auth/change-password`, data);
+    const user = this.currentUserSubject.value;
+    const isClient =
+      user?.role === Role.CLIENT || user?.role === Role.CLIENT.toString();
+    const path = isClient
+      ? '/auth/client/change-password'
+      : '/auth/change-password';
+    return this.http.put(`${this.apiUrl}${path}`, data);
   }
 }

@@ -9,6 +9,7 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../../app/core/services/auth.service';
 import { ToastService } from '../../../../../app/core/services/toast.service';
+import { Role } from '../../../../../app/core/enum/roles.enum';
 
 @Component({
   selector: 'app-change-password',
@@ -67,8 +68,12 @@ export class ChangePasswordComponent {
 
         // Redireciona para o login após alterar a senha
         setTimeout(() => {
+          const user = this.authService['currentUserSubject']?.value;
+          const isClient =
+            user?.role === Role.CLIENT || user?.role === Role.CLIENT.toString();
+
           this.authService.logout();
-          this.router.navigate(['/auth/login']);
+          this.router.navigate([isClient ? '/portal/login' : '/auth/login']);
         }, this.SUCCESS_REDIRECT_DELAY_MS);
       },
       error: (err) => {
