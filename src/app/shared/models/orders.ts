@@ -80,6 +80,8 @@ export interface OrderResponseDto {
   client: {
     id: string;
     name?: string;
+    note?: string;
+    description?: string;
   };
 
   contractDate: string; // YYYY-MM-DD

@@ -273,6 +273,35 @@
 
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-bottom py-2">
+          <h6 class="card-title fw-bold m-0 text-info">
+            <i class="bi bi-person-badge me-2"></i>Informações Adicionais do
+            Cliente
+          </h6>
+        </div>
+        <div class="card-body p-2 small">
+          <div
+            class="mb-2 p-2 bg-info-subtle rounded border border-info-subtle"
+          >
+            <div class="text-muted x-small text-uppercase fw-bold mb-1">
+              Descrição
+            </div>
+            <div class="text-dark fw-medium">
+              {{ order.client.description || "—" }}
+            </div>
+          </div>
+          <div class="p-2 bg-light rounded border border-light-subtle">
+            <div class="text-muted x-small text-uppercase fw-bold mb-1">
+              Observação
+            </div>
+            <div class="text-dark fw-medium">
+              {{ order.client.note || "—" }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-2">
           <h6 class="card-title fw-bold m-0 text-success">
             <i class="bi bi-wallet2 me-2"></i>Recebimentos
           </h6>
