@@ -139,6 +139,9 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
       // Responsável
       responsibleId: [''],
       responsibleName: [''], // Apenas exibição
+
+      // Observação
+      description: ['', [Validators.maxLength(500)]],
     });
 
     // Listener para recalcular total quando preço mudar
@@ -267,6 +270,16 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   private setItemService(index: number, funcId: string) {
     const func = this.functionalities.find((f) => f.id === funcId);
     if (!func) return;
+
+    // Validar se o serviço está inativo
+    if (!func.isActive) {
+      const reason = this.getInactiveReasonText(func.inactiveReason);
+      this.toastService.error(reason);
+      // Limpar a seleção
+      const itemGroup = this.items.at(index) as FormGroup;
+      itemGroup.patchValue({ functionalityId: '' });
+      return;
+    }
 
     const itemGroup = this.items.at(index) as FormGroup;
 
@@ -491,6 +504,11 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
         payloadItem.responsibleUserId = item.responsibleId;
       }
 
+      // Adiciona descrição/observação se houver
+      if (item.description && item.description.trim()) {
+        payloadItem.description = item.description.trim();
+      }
+
       return payloadItem;
     });
 
@@ -564,5 +582,17 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
   // Helpers de Template
   isInvalid(control: AbstractControl | null): boolean {
     return !!(control && control.invalid && (control.touched || control.dirty));
+  }
+
+  // Tradução amigável do motivo de inativação
+  getInactiveReasonText(reason?: string): string {
+    const reasons: Record<string, string> = {
+      RESPONSIBLE_DELETED:
+        'Serviço indisponível: responsável foi removido do sistema',
+      RESPONSIBLE_INACTIVE: 'Serviço indisponível: responsável foi desativado',
+      RESPONSIBLE_TEMPORARILY_INACTIVE:
+        'Serviço indisponível: responsável está temporariamente inativo',
+    };
+    return reasons[reason || ''] || 'Serviço indisponível';
   }
 }

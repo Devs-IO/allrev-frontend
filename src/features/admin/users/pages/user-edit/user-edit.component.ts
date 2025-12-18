@@ -48,8 +48,10 @@ export class UserEditComponent implements OnInit {
   isAdmin = false;
   tenantName = '';
   tenants: any[] = [];
+  tenantsWithoutManager: any[] = [];
   currentUserRole = '';
   isEditingAdminUser = false; // Flag para saber se estamos editando um Admin
+  formInitialized = false; // Flag para controlar se o formulário foi populado
 
   // Enums para o template
   Role = CoreRole;
@@ -70,7 +72,7 @@ export class UserEditComponent implements OnInit {
     // 1. Carregar Roles Disponíveis
     this.loadAvailableRoles();
 
-    // 2. Verificar Permissões do Usuário Logado
+    // 2. Verificar Permissões do Usuário Logado (habilita/desabilita campos)
     this.checkCurrentUserPermissions();
 
     // 3. Carregar Usuário a ser editado
@@ -116,6 +118,13 @@ export class UserEditComponent implements OnInit {
           this.userForm.get('email')?.enable();
           // Admin pode editar dados pessoais, mas email recomendamos manter travado
           // Se quiser liberar para admin: this.userForm.get('email')?.enable();
+
+          // Listener para mudanças no role quando admin quer transformar em gestor
+          this.userForm.get('role')?.valueChanges.subscribe((roleValue) => {
+            if (roleValue === CoreRole.MANAGER_REVIEWERS) {
+              this.loadTenantsWithoutManager();
+            }
+          });
         } else {
           // Gestor
           this.userForm.get('tenantId')?.disable();
@@ -162,14 +171,28 @@ export class UserEditComponent implements OnInit {
       this.tenantName = user.tenant.companyName ?? '';
     }
 
-    // Salva estado inicial para verificação de "dirty"
-    this.originalFormValues = this.userForm.getRawValue();
+    // Marca o formulário como inicializado para habilitar o botão de salvar
+    this.formInitialized = true;
   }
 
   private loadTenants() {
     this.tenantsService.getTenants().subscribe({
       next: (data) => (this.tenants = data),
       error: (err) => console.error('Erro ao carregar tenants', err),
+    });
+  }
+
+  private loadTenantsWithoutManager() {
+    this.tenantsService.getTenantsWithoutManager().subscribe({
+      next: (data) => {
+        this.tenantsWithoutManager = data;
+        // Se houver apenas uma empresa sem gestor, seleciona automaticamente
+        if (data.length === 1) {
+          this.userForm.get('tenantId')?.setValue(data[0].id);
+        }
+      },
+      error: (err) =>
+        console.error('Erro ao carregar empresas sem gestor', err),
     });
   }
 
@@ -231,11 +254,7 @@ export class UserEditComponent implements OnInit {
   }
 
   hasChanges(): boolean {
-    if (!this.originalFormValues) return false;
-    const currentValues = this.userForm.getRawValue();
-    return (
-      JSON.stringify(this.originalFormValues) !== JSON.stringify(currentValues)
-    );
+    return this.formInitialized;
   }
 
   // Alias para o template

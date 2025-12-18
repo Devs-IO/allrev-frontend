@@ -6,6 +6,11 @@ export interface FunctionalityDto {
   defaultAssistantPrice?: number;
   status: 'ACTIVE' | 'INACTIVE';
   responsibleUserId: string;
+  isActive: boolean;
+  inactiveReason?:
+    | 'RESPONSIBLE_DELETED'
+    | 'RESPONSIBLE_INACTIVE'
+    | 'RESPONSIBLE_TEMPORARILY_INACTIVE';
   createdAt: string;
   updatedAt: string;
 }

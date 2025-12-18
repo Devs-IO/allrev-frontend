@@ -1,6 +1,6 @@
 <div class="container my-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="text-primary mb-0">
+    <h2 class="text-wine mb-0">
       <i class="fas fa-user-edit"></i> Editar Usuário
     </h2>
 
@@ -197,7 +197,46 @@
             <label for="tenantId" class="form-label">
               <i class="fas fa-building"></i> Empresa *
             </label>
-            <ng-container>
+            <!-- Caso 1: Admin transformando assistente em Gestor -->
+            <ng-container
+              *ngIf="
+                isAdmin &&
+                userForm.get('role')?.value === Role.MANAGER_REVIEWERS
+              "
+            >
+              <select
+                id="tenantId"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('tenantId')"
+                formControlName="tenantId"
+              >
+                <option value="" disabled>Selecione a empresa</option>
+                <option
+                  *ngFor="let tenant of tenantsWithoutManager"
+                  [value]="tenant.id"
+                >
+                  {{ tenant.companyName }}
+                </option>
+              </select>
+              <div *ngIf="getFieldError('tenantId')" class="invalid-feedback">
+                {{ getFieldError("tenantId") }}
+              </div>
+              <small
+                *ngIf="tenantsWithoutManager.length === 0"
+                class="text-warning d-block mt-2"
+              >
+                <i class="fas fa-info-circle"></i>
+                Todas as empresas já possuem gestores vinculados.
+              </small>
+            </ng-container>
+
+            <!-- Caso 2: Outros cenários ou Gestor editando -->
+            <ng-container
+              *ngIf="
+                !isAdmin ||
+                userForm.get('role')?.value !== Role.MANAGER_REVIEWERS
+              "
+            >
               <select
                 id="tenantId"
                 class="form-control"
@@ -213,16 +252,6 @@
                 {{ getFieldError("tenantId") }}
               </div>
             </ng-container>
-            <ng-template #tenantReadonly>
-              <input
-                id="tenantId"
-                type="text"
-                class="form-control"
-                [value]="tenantName"
-                readonly
-                disabled
-              />
-            </ng-template>
           </div>
 
           <!-- Observação (apenas para Gestor) -->
@@ -287,7 +316,7 @@
 
       <button
         type="submit"
-        class="btn btn-primary"
+        class="btn btn-wine"
         [disabled]="!userForm.valid || loading || !hasFormChanged()"
       >
         <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>

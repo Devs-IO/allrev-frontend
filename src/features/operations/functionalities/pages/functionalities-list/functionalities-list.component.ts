@@ -109,4 +109,26 @@ export class FunctionalitiesListComponent implements OnInit {
         ),
     });
   }
+
+  // Tradução amigável do motivo de inativação
+  getInactiveReasonText(reason?: string): string {
+    const reasons: Record<string, string> = {
+      RESPONSIBLE_DELETED:
+        'Serviço indisponível: responsável foi removido do sistema',
+      RESPONSIBLE_INACTIVE: 'Serviço indisponível: responsável foi desativado',
+      RESPONSIBLE_TEMPORARILY_INACTIVE:
+        'Serviço indisponível: responsável está temporariamente inativo',
+    };
+    return reasons[reason || ''] || 'Serviço indisponível';
+  }
+
+  // Label para a coluna de status
+  getStatusLabel(reason?: string): string {
+    const labels: Record<string, string> = {
+      RESPONSIBLE_DELETED: 'Removido',
+      RESPONSIBLE_INACTIVE: 'Desativado',
+      RESPONSIBLE_TEMPORARILY_INACTIVE: 'Inativo (Temp.)',
+    };
+    return labels[reason || ''] || 'Indisponível';
+  }
 }
