@@ -150,15 +150,16 @@
                   <option
                     *ngFor="let func of functionalities"
                     [value]="func.id"
-                    [disabled]="!func.isActive"
+                    [hidden]="!!func.deletedAt"
+                    [disabled]="!!func.inactiveReason"
                     [attr.title]="
-                      !func.isActive
+                      func.inactiveReason
                         ? getInactiveReasonText(func.inactiveReason)
                         : ''
                     "
                   >
                     {{ func.name }}
-                    <span *ngIf="!func.isActive" class="text-muted">
+                    <span *ngIf="func.inactiveReason" class="text-muted">
                       [INATIVO]</span
                     >
                   </option>

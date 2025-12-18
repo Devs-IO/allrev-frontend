@@ -271,8 +271,8 @@ export class OrdersCreateComponent implements OnInit, OnDestroy {
     const func = this.functionalities.find((f) => f.id === funcId);
     if (!func) return;
 
-    // Validar se o serviço está inativo
-    if (!func.isActive) {
+    // Validar se o responsável do serviço está inativo (não pode selecionar)
+    if (func.inactiveReason) {
       const reason = this.getInactiveReasonText(func.inactiveReason);
       this.toastService.error(reason);
       // Limpar a seleção

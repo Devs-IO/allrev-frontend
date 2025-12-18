@@ -11,6 +11,7 @@ export interface FunctionalityDto {
     | 'RESPONSIBLE_DELETED'
     | 'RESPONSIBLE_INACTIVE'
     | 'RESPONSIBLE_TEMPORARILY_INACTIVE';
+  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

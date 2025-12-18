@@ -115,9 +115,9 @@
                   ></i>
                   {{ functionality.status === "ACTIVE" ? "Ativo" : "Inativo" }}
                 </span>
-                <!-- Indicador de status do responsável -->
+                <!-- Indicador de status do responsável (apenas quando inativo por causa do responsável) -->
                 <span
-                  *ngIf="!functionality.isActive"
+                  *ngIf="functionality.inactiveReason"
                   class="badge bg-warning ms-2"
                   [title]="getInactiveReasonText(functionality.inactiveReason)"
                 >
