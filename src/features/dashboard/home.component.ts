@@ -15,13 +15,16 @@ import { OrdersService } from '../operations/orders/services/orders.service';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  stats$!: Observable<any>;
+  // Observables para cada papel
+  adminStats$!: Observable<any>;
+  managerStats$!: Observable<any>;
   assistantStats$!: Observable<any>;
 
+  // Flags de papel
   currentDate = new Date();
-  isManager = false;
   isAdmin = false;
-  adminStats = { activeTenants: 0, totalUsers: 0, overduePayments: 0 };
+  isManager = false;
+  isAssistant = false;
 
   private userSub!: Subscription;
 
@@ -32,78 +35,88 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // 1. Usar currentUser$ (Observable) é mais seguro que take(1) para recargas de página
     this.userSub = this.authService.currentUser$.subscribe((user) => {
       if (!user) return;
 
       const userRole = user.role;
 
-      // Identifica se é ADMIN
+      // Determina qual dashboard exibir baseado no role
       if (userRole === Role.ADMIN) {
         this.isAdmin = true;
         this.isManager = false;
-        // Admin não carrega dados de dashboard operacional
-        // Valores placeholder para admin
-        this.adminStats = {
-          activeTenants: 0,
-          totalUsers: 0,
-          overduePayments: 0,
-        };
-        return;
-      }
-
-      this.isAdmin = false;
-
-      // Verifica se é Gestor
-      this.isManager = userRole === Role.MANAGER_REVIEWERS;
-
-      if (this.isManager) {
-        // --- VISÃO GESTOR (Carrega Dashboard Financeiro) ---
-        this.stats$ = this.ordersService.getDashboardSummary().pipe(
+        this.isAssistant = false;
+        // Carrega dados do admin dashboard
+        this.adminStats$ = this.ordersService.getAdminDashboard().pipe(
           shareReplay(1),
           catchError((err) => {
-            console.error('Erro ao carregar dashboard gerente', err);
-            return of(null);
+            console.error('Erro ao carregar dashboard admin', err);
+            return of({
+              activeTenants: 0,
+              totalUsers: 0,
+              overduePayments: 0,
+            });
           })
         );
-      } else {
-        // --- VISÃO ASSISTENTE (Carrega Contagem de Tarefas) ---
-        this.assistantStats$ = this.ordersService
-          .list({ page: 1, pageSize: 100 }) // Lista as ordens (o backend já deve filtrar por user)
-          .pipe(
-            map((response: any) => {
-              const orders = response.data || [];
+      } else if (userRole === Role.MANAGER_REVIEWERS) {
+        this.isAdmin = false;
+        this.isManager = true;
+        this.isAssistant = false;
+        // Carrega dashboard do gestor com dados financeiros
+        this.managerStats$ = this.ordersService.getDashboardSummary().pipe(
+          shareReplay(1),
+          catchError((err) => {
+            console.error('Erro ao carregar dashboard gestor', err);
+            return of({
+              totalOrders: 0,
+              revenue: 0,
+              cost: 0,
+              netProfit: 0,
+              margin: 0,
+              overdueItemsCount: 0,
+              paymentStats: [],
+              workStats: [],
+            });
+          })
+        );
+      } else if (userRole === Role.ASSISTANT_REVIEWERS) {
+        this.isAdmin = false;
+        this.isManager = false;
+        this.isAssistant = true;
+        // Carrega dashboard do assistente com suas tarefas
+        this.assistantStats$ = this.ordersService.getDashboardSummary().pipe(
+          map((response: any) => {
+            // Assistente vê seus pedidos específicos
+            const pendingCount =
+              response.workStats?.find((s: any) => s.status === 'PENDING')
+                ?.count || 0;
+            const inProgressCount =
+              response.workStats?.find((s: any) => s.status === 'IN_PROGRESS')
+                ?.count || 0;
+            const completedCount =
+              response.workStats?.find(
+                (s: any) => s.status === 'COMPLETED' || s.status === 'FINISHED'
+              )?.count || 0;
 
-              // Contadores simples baseados no status da ordem (ou item)
-              // Idealmente o backend teria um endpoint /dashboard/assistant-summary
-              const pending = orders.filter(
-                (o: any) => o.workStatus === 'PENDING'
-              ).length;
-              const inProgress = orders.filter(
-                (o: any) => o.workStatus === 'IN_PROGRESS'
-              ).length;
-              const completed = orders.filter(
-                (o: any) =>
-                  o.workStatus === 'FINISHED' || o.workStatus === 'COMPLETED'
-              ).length;
-
-              return {
-                pendingCount: pending,
-                inProgressCount: inProgress,
-                completedThisMonth: completed,
-                nextDeadlines: [], // Implementar lógica de extração de itens depois
-              };
-            }),
-            // Em caso de erro, retorna zerado para não quebrar a tela
-            catchError(() =>
-              of({
-                pendingCount: 0,
-                inProgressCount: 0,
-                completedThisMonth: 0,
-                nextDeadlines: [],
-              })
-            )
-          );
+            return {
+              pendingCount,
+              inProgressCount,
+              completedCount,
+              overdueCount: response.overdueItemsCount || 0,
+              totalOrders: response.totalOrders || 0,
+            };
+          }),
+          shareReplay(1),
+          catchError((err) => {
+            console.error('Erro ao carregar dashboard assistente', err);
+            return of({
+              pendingCount: 0,
+              inProgressCount: 0,
+              completedCount: 0,
+              overdueCount: 0,
+              totalOrders: 0,
+            });
+          })
+        );
       }
     });
   }

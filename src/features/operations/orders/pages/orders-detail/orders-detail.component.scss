@@ -1,86 +1,104 @@
+// --- Variáveis e Utilitários ---
+$primary-color: #0d6efd;
+$border-radius-card: 10px;
 
-// Estilo para o novo card de resumo financeiro
-.card-financial-summary {
-  .list-group-item {
-    span {
-      display: flex;
-      align-items: center;
-    }
-    .bi {
-      font-size: 1.2rem;
-    }
-  }
-  // Destaca o lucro
-  .list-group-item:last-child {
-    strong {
-      font-size: 1.75rem; // Tamanho maior para o lucro
-    }
-  }
+.dashboard-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-// Estilo para o novo alerta de prazo
-.deadline-alert {
-  .bi {
-    // Garante que o ícone fique alinhado
-    vertical-align: -0.125em;
-  }
+.x-small { font-size: 0.75rem !important; }
+.avatar-xs { width: 24px; height: 24px; font-size: 0.7rem; }
 
-  // Destaca mais o texto de atraso
-  &.text-danger {
-    background-color: rgba(220, 53, 69, 0.1); // Usando cor RGB diretamente
-    padding: 2px 5px;
-    border-radius: 4px;
-  }
-}
-
-
-// Reutiliza o estilo de badge moderno
-.badge.border {
-    border-width: 1px !important;
-    font-weight: 500;
-}
-
-// Cards compactos e limpos
+// --- Cards ---
 .card {
-    border-radius: 8px;
-    overflow: hidden; // para a tabela não vazar bordas
+    border-radius: $border-radius-card;
+    overflow: hidden;
+    // Sombra mais suave para ficar "prettier"
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.06) !important;
 }
 
-// Tabelas com linhas mais sutis
-.table > :not(caption) > * > * {
-    padding: 0.75rem 0.5rem;
-    border-bottom-color: #f0f0f0;
-}
+// Utilitários de Overflow para permitir que o dropdown saia
+.card-overflow-visible { overflow: visible !important; }
+.table-overflow-visible { overflow: visible !important; }
 
-// Tabela lateral ainda mais compacta
-.table-sm > :not(caption) > * > * {
-    padding: 0.5rem 0.25rem;
-}
 
-// Botões "ghost" para ações secundárias
-.btn-outline-secondary {
-    border-color: #e2e8f0;
-    color: #64748b;
-    &:hover {
-        background-color: #f1f5f9;
-        color: #0f172a;
-        border-color: #cbd5e1;
+// --- Tabelas ---
+.custom-table {
+    thead th {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        border-bottom-width: 1px;
+    }
+
+    // Reduz o padding das células para "informação para cima"
+    tbody td {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+        border-bottom-color: #f0f0f0;
     }
 }
 
-// Ajuste para o dropdown manual aparecer corretamente sobre a tabela
-.dropdown-menu.show {
-    animation: fadeIn 0.2s ease-out;
-    min-width: 180px;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+// Tabela de pagamentos ainda mais compacta
+.table-sm td, .table-sm th {
+    padding: 0.4rem 0.3rem;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
+// --- CORREÇÃO DO DROPDOWN (SELECT) ---
+// O segredo é o z-index alto e garantir que o posicionamento seja relativo ao container do botão
+.dropdown-container {
+    position: relative;
+
+    .dropdown-menu {
+        // Garante que ele fique POR CIMA de tudo, inclusive de outras linhas da tabela
+        z-index: 9999 !important;
+
+        // Animação suave
+        display: none; // O Angular controla o [class.show]
+        &.show {
+            display: block;
+            animation: fadeInDropdown 0.15s ease-out forwards;
+        }
+
+        // Estilo do menu
+        min-width: 190px;
+        padding: 0.5rem 0;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        border-radius: 8px;
+        margin-top: 4px !important; // Um pequeno espaço abaixo do botão
+
+        .dropdown-item {
+             padding: 0.4rem 1rem;
+             &:hover { background-color: #f8f9fa; }
+             &:active { background-color: #e9ecef; color: inherit;}
+        }
+    }
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-// Coluna financeira mais compacta
-.table td {
-    vertical-align: middle;
+// --- Botões ---
+.btn-icon {
+    width: 34px; height: 34px; display: grid; place-items: center;
 }
+
+// Botão extra pequeno para tabela de pagamentos
+.btn-xs {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-radius: 4px;
+}
+
+// Badges com cores de fundo mais suaves (subtle) do Bootstrap 5.3
+.bg-success-subtle { background-color: #d1e7dd !important; color: #0f5132; }
+.bg-warning-subtle { background-color: #fff3cd !important; color: #664d03; }
+.bg-danger-subtle { background-color: #f8d7da !important; color: #842029; }
+.bg-primary-subtle { background-color: #cfe2ff !important; color: #084298; }

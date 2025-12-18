@@ -203,6 +203,31 @@
       </div>
     </div>
 
+    <!-- Acesso ao Portal -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="fas fa-lock"></i> Acesso ao Portal</h5>
+      </div>
+      <div class="card-body">
+        <div class="form-check">
+          <input
+            id="sendPassword"
+            type="checkbox"
+            class="form-check-input"
+            [(ngModel)]="sendPassword"
+            name="sendPassword"
+          />
+          <label for="sendPassword" class="form-check-label">
+            Gerar/Enviar senha por e-mail para o cliente
+          </label>
+          <div class="form-text">
+            Se o e-mail já existir em outro gestor, a mesma senha será aplicada
+            e enviada.
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Form Actions -->
     <div class="d-flex justify-content-end gap-2">
       <button type="button" class="btn btn-secondary" routerLink="/clients">

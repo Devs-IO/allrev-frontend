@@ -27,4 +27,11 @@ export class ClientsService {
   deleteClients(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/clients/${id}`);
   }
+
+  sendPassword(id: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/clients/${id}/send-password`,
+      {}
+    );
+  }
 }
